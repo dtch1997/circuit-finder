@@ -394,35 +394,24 @@ model = cast(tl.HookedTransformer, model)
 
 #%%
 
+tokens = model.to_tokens(["When John and Mary were at the store, John gave a bottle to Mary"])
+corrupt_tokens = model.to_tokens(["When Alice and Bob were at the store, Alice gave a bottle to Bob"])
+cfg = CircuitFinderConfig(threshold=0.2, contrast_pairs=False)
+finder = CircuitFinder(cfg, tokens, model, attn_saes, transcoders, corrupt_tokens=corrupt_tokens)
+#%%
+finder.metric_step()
+print("num edges = ", len(finder.graph))
 
-# Main script
+for layer in reversed(range(1, model.cfg.n_layers)):
+    print("layer : ", layer)
+    finder.mlp_step(layer)
+    print("num edges = ", len(finder.graph))
+    finder.ov_step(layer)
+    print("num edges = ", len(finder.graph))
+    print()
+#%%
+finder.graph
 
-if __name__ == "__main__":
-    
-    attn_saes = load_attn_saes()
-    transcoders = load_transcoders()
-    print(len(attn_saes))
-    print(len(transcoders))
-    print(transcoders.keys())
-    print(attn_saes.keys())
-
-    model = tl.HookedTransformer.from_pretrained("gpt2").cuda()
-    model = cast(tl.HookedTransformer, model)
-
-    tokens = model.to_tokens(["One two three four (wait for it) five"])
-    cfg = CircuitFinderConfig(threshold=0.2)
-    finder = CircuitFinder(cfg, tokens, model, attn_saes, transcoders)
-
-    # finder.metric_step()
-    # print("num edges = ", len(finder.graph))
-
-    # for layer in reversed(range(1, model.cfg.n_layers)):
-    #     print("layer : ", layer)
-    #     finder.mlp_step(layer)
-    #     print("num edges = ", len(finder.graph))
-    #     finder.ov_step(layer)
-    #     print("num edges = ", len(finder.graph))
-    #     print()
 
 
 # %%
