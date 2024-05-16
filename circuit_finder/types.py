@@ -1,0 +1,2 @@
+HookName = str
+LayerIndex = int
