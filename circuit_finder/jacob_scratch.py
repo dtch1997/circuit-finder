@@ -14,7 +14,6 @@ from typing import Callable, cast
 from types_newname import LayerIndex
 from download import load_attn_saes as _load_attn_saes
 
-
 def clear_mem():
     gc.collect()
     torch.cuda.empty_cache()
@@ -51,7 +50,6 @@ def load_attn_saes() -> dict[LayerIndex, tl.HookedSAE]:
 
     return attn_saes
 
-
 def load_transcoders() -> dict[LayerIndex, Transcoder]:
     transcoders_dict = load_pretrained()
     transcoders = {}
@@ -60,9 +58,21 @@ def load_transcoders() -> dict[LayerIndex, Transcoder]:
         transcoders[layer] = transcoder
     return transcoders
 
+model = tl.HookedTransformer.from_pretrained("gpt2").cuda()
+model = cast(tl.HookedTransformer, model)
+
+attn_saes = load_attn_saes()
+transcoders = load_transcoders()
+
+print(len(attn_saes))
+print(len(transcoders))
+print(transcoders.keys())
+print(attn_saes.keys())
 
 MetricFn = Callable[[tl.HookedTransformer, Int[Tensor, "batch seq"]], Tensor]
 
+
+#%%
 @dataclass
 class CircuitFinderConfig:
     threshold : float = 0.01
@@ -88,6 +98,8 @@ class CircuitFinder:
         self.metric = metric
         self.corrupt_tokens = corrupt_tokens
 
+        if self.cfg.contrast_pairs:
+            assert self.tokens.shape == self.corrupt_tokens.shape
 
         # Store some params for convenience
         self.d_trans = transcoders[0].W_enc.size(1)
@@ -132,7 +144,7 @@ class CircuitFinder:
                                         names_filter = names_filter)
         
         # Save attention patterns (avg over batch and head) and layernorm scales (avg over batch)
-        self.headmean_pattern = torch.stack([cache["pattern", layer].mean(dim=[0,1]) for layer in self.layers]) # [layer qpos kpos]
+        self.pattern = torch.stack([cache["pattern", layer].mean(0) for layer in self.layers]) # [layer head qpos kpos]
         self.attn_layernorm_scales = torch.stack([cache[f"blocks.{layer}.ln1.hook_scale"].mean(dim=0) for layer in self.layers]) # [layer pos]
         self.mlp_layernorm_scales  = torch.stack([cache[f"blocks.{layer}.ln2.hook_scale"].mean(dim=0) for layer in self.layers]) # [layer pos]
 
@@ -225,14 +237,15 @@ class CircuitFinder:
         # For each imp downstream (feature_id, pos) pair, get batchmeaned is_active, encoder row, and pattern
         imp_active = self.attn_is_active[imp_down_pos, down_layer, imp_down_feature_ids] # [imp_id]
         imp_enc_rows = self.attn_saes[down_layer].W_enc[:, imp_down_feature_ids] # [d_model, imp_id]
-        imp_patterns = self.headmean_pattern[down_layer, imp_down_pos] # [imp_id, kpos]
-        imp_layernorm_scales = self.attn_layernorm_scales[down_layer, imp_down_pos].unsqueeze(0) # [1, imp_id, 1]
+        imp_enc_rows_z = rearrange(imp_enc_rows, "(head_id d_head) imp_id -> head_id d_head imp_id", head_id=self.model.cfg.n_heads)
+        imp_patterns = self.pattern[down_layer, :, imp_down_pos, :] # [head imp_id, kpos]
+        imp_layernorm_scales = self.attn_layernorm_scales[down_layer].unsqueeze(1) # [kpos, 1, 1]
         
         # ..
-        W_V_concat = rearrange(self.model.W_V[down_layer], "head_id d_model d_head -> d_model (head_id d_head)")
-        grad = einsum(imp_active, imp_enc_rows, W_V_concat, imp_patterns,
-                          "imp_id, concat imp_id, d_model concat, imp_id kpos -> kpos imp_id d_model")
+        grad = einsum(imp_active, imp_enc_rows_z, self.model.W_V[down_layer], imp_patterns,
+                          "imp_id, head_id d_head imp_id, head_id d_model d_head, head_id imp_id kpos -> kpos imp_id d_model")
         grad /= imp_layernorm_scales
+    
 
         self.compute_and_save_attribs(grad, "attn", down_layer, imp_down_feature_ids, imp_down_pos)
  
@@ -257,10 +270,13 @@ class CircuitFinder:
         mlp_active_W_dec = torch.stack([self.transcoders[i].W_dec for i in range(down_layer)])[mlp_up_active_layers, mlp_up_active_feature_ids, :]
         return mlp_active_W_dec, mlp_up_active_layers, mlp_up_active_feature_ids
     
-    def get_active_attn_W_dec(self, down_layer):
+    def get_active_attn_W_dec(self, down_layer, down_module):
         '''so we don't have to dot with *every* upstream feature'''
-        attn_up_active_layers = self.attn_active_feature_ids[0][self.attn_active_feature_ids[0]<down_layer]
-        attn_up_active_feature_ids = self.attn_active_feature_ids[1][self.attn_active_feature_ids[0]<down_layer]
+        max_layer = down_layer
+        if down_module == "mlp": # mlp sees attn from same layer!
+            max_layer += 1
+        attn_up_active_layers = self.attn_active_feature_ids[0][self.attn_active_feature_ids[0]<max_layer]
+        attn_up_active_feature_ids = self.attn_active_feature_ids[1][self.attn_active_feature_ids[0]<max_layer]
         attn_active_W_dec = self.attn_all_W_dec_resid[attn_up_active_layers, attn_up_active_feature_ids, :]
         return attn_active_W_dec, attn_up_active_layers, attn_up_active_feature_ids
     
@@ -303,7 +319,7 @@ class CircuitFinder:
         clear_mem()
 
         # ----- UPSTREAM ATTENTION ATTRIBS (do exactly the same for attention) -----
-        attn_active_W_dec, attn_up_active_layers, attn_up_active_feature_ids = self.get_active_attn_W_dec(down_layer)
+        attn_active_W_dec, attn_up_active_layers, attn_up_active_feature_ids = self.get_active_attn_W_dec(down_layer, down_module)
         imp_attn_feature_acts = self.attn_feature_acts[:, attn_up_active_layers, attn_up_active_feature_ids] # [imp_id, up_active_id]
         
         if down_module in ["mlp", "metric"]: # down mlp doesn't mix positions 
@@ -381,22 +397,9 @@ class CircuitFinder:
 
 # %% 
 
-attn_saes = load_attn_saes()
-transcoders = load_transcoders()
-
-print(len(attn_saes))
-print(len(transcoders))
-print(transcoders.keys())
-print(attn_saes.keys())
-
-model = tl.HookedTransformer.from_pretrained("gpt2").cuda()
-model = cast(tl.HookedTransformer, model)
-
-#%%
-
 tokens = model.to_tokens(["When John and Mary were at the store, John gave a bottle to Mary"])
 corrupt_tokens = model.to_tokens(["When Alice and Bob were at the store, Alice gave a bottle to Bob"])
-cfg = CircuitFinderConfig(threshold=0.2, contrast_pairs=False)
+cfg = CircuitFinderConfig(threshold=0.2, contrast_pairs=True)
 finder = CircuitFinder(cfg, tokens, model, attn_saes, transcoders, corrupt_tokens=corrupt_tokens)
 #%%
 finder.metric_step()
@@ -409,9 +412,14 @@ for layer in reversed(range(1, model.cfg.n_layers)):
     finder.ov_step(layer)
     print("num edges = ", len(finder.graph))
     print()
-#%%
-finder.graph
 
+# %%
+attn_attn = [(edge, attrib) for (edge, attrib) in finder.graph[1:] if edge[0].startswith("attn") and edge[1].startswith("attn")]
+attn_mlp  = [(edge, attrib) for (edge, attrib) in finder.graph[1:] if edge[0].startswith("attn") and edge[1].startswith("mlp")]
+mlp_attn  = [(edge, attrib) for (edge, attrib) in finder.graph[1:] if edge[0].startswith("mlp") and edge[1].startswith("attn")]
+mlp_mlp   = [(edge, attrib) for (edge, attrib) in finder.graph[1:] if edge[0].startswith("mlp") and edge[1].startswith("mlp")]
 
-
+print(len(attn_attn), len(attn_mlp), len(mlp_attn), len(mlp_mlp))
+# %%
+mlp_attn
 # %%
