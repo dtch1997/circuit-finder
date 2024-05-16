@@ -15,6 +15,7 @@ def attn_sae_cfg_to_hooked_sae_cfg(attn_sae_cfg):
     }
     return HookedSAEConfig.from_dict(new_cfg)
 
+
 auto_encoder_runs = [
     "gpt2-small_L0_Hcat_z_lr1.20e-03_l11.80e+00_ds24576_bs4096_dc1.00e-06_rsanthropic_rie25000_nr4_v9",
     "gpt2-small_L1_Hcat_z_lr1.20e-03_l18.00e-01_ds24576_bs4096_dc1.00e-06_rsanthropic_rie25000_nr4_v5",
@@ -32,8 +33,9 @@ auto_encoder_runs = [
 
 hf_repo = "ckkissane/attn-saes-gpt2-small-all-layers"
 
+
 def load_attn_saes() -> dict[str, HookedSAE]:
-    """ Load the attention-out SAEs trained by Connor Kissane and Rob Kryzgowski
+    """Load the attention-out SAEs trained by Connor Kissane and Rob Kryzgowski
 
     Reference: https://www.lesswrong.com/posts/DtdzGwFh9dCfsekZZ/sparse-autoencoders-work-on-attention-layer-outputs
     """
@@ -41,10 +43,12 @@ def load_attn_saes() -> dict[str, HookedSAE]:
     for auto_encoder_run in auto_encoder_runs:
         attn_sae_cfg = download_file_from_hf(hf_repo, f"{auto_encoder_run}_cfg.json")
         cfg = attn_sae_cfg_to_hooked_sae_cfg(attn_sae_cfg)
-        state_dict = download_file_from_hf(hf_repo, f"{auto_encoder_run}.pt", force_is_torch=True)
+        state_dict = download_file_from_hf(
+            hf_repo, f"{auto_encoder_run}.pt", force_is_torch=True
+        )
         assert state_dict is not None, f"Could not download {auto_encoder_run}.pt"
         hooked_sae = HookedSAE(cfg)
-        hooked_sae.load_state_dict(state_dict) # type: ignore
-        
+        hooked_sae.load_state_dict(state_dict)  # type: ignore
+
         hook_name_to_sae[cfg.hook_name] = hooked_sae
     return hook_name_to_sae

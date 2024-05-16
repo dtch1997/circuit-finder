@@ -1,2 +1,0 @@
-HookName = str
-LayerIndex = int
