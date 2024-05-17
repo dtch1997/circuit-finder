@@ -1,5 +1,6 @@
 from transformer_lens.utils import download_file_from_hf
-from transformer_lens import HookedSAE, HookedSAEConfig
+from circuit_finder.core.hooked_sae import HookedSAE
+from circuit_finder.core.hooked_sae_config import HookedSAEConfig
 from circuit_finder.core.types import LayerIndex, ALL_GPT_2_SMALL_LAYERS
 
 
@@ -41,7 +42,7 @@ def load_attn_saes(
 
     Reference: https://www.lesswrong.com/posts/DtdzGwFh9dCfsekZZ/sparse-autoencoders-work-on-attention-layer-outputs
     """
-    hook_name_to_sae = {}
+    layer_to_sae = {}
     for auto_encoder_run in auto_encoder_runs:
         layer = parse_layer_for_autoencoder_run(auto_encoder_run)
         if layers is not None and layer not in layers:
@@ -55,5 +56,5 @@ def load_attn_saes(
         hooked_sae = HookedSAE(cfg)
         hooked_sae.load_state_dict(state_dict)  # type: ignore
 
-        hook_name_to_sae[layer] = hooked_sae
-    return hook_name_to_sae
+        layer_to_sae[layer] = hooked_sae
+    return layer_to_sae

@@ -144,7 +144,49 @@ def test_error_term(model, act_name):
     assert torch.allclose(sae_output, x, atol=1e-6)
 
 
-# %%
+@pytest.mark.parametrize(
+    "act_name",
+    [
+        "blocks.0.attn.hook_z",
+        "blocks.0.hook_mlp_out",
+        "blocks.0.mlp.hook_post",
+        "blocks.0.hook_resid_pre",
+    ],
+)
+def test_error_grads(model, act_name):
+    """Verifies that if we use error terms, the error term has a gradient"""
+    sae_cfg = get_sae_config(model, act_name)
+    sae_cfg.use_error_term = True
+    hooked_sae = HookedSAE(sae_cfg)
+
+    _, cache = model.run_with_cache(prompt, names_filter=act_name)
+    x = cache[act_name]
+
+    grad_cache = {}
+    hooked_sae.reset_hooks()
+
+    def backward_cache_hook(act, hook):
+        grad_cache[hook.name] = act.detach()
+
+    hooked_sae.add_hook("hook_sae_error", backward_cache_hook, "bwd")
+
+    sae_output = hooked_sae(x)
+    assert sae_output.shape == x.shape
+    assert torch.allclose(sae_output, x, atol=1e-6)
+
+    value = sae_output.sum()
+    value.backward()
+    hooked_sae.reset_hooks()
+
+    assert len(grad_cache) == 1
+    assert "hook_sae_error" in grad_cache
+
+    # NOTE: The output is linear in the error, hence analytic gradient is one
+    grad = grad_cache["hook_sae_error"]
+    analytic_grad = torch.ones_like(grad)
+    assert torch.allclose(grad, analytic_grad, atol=1e-6)
+
+
 @pytest.mark.parametrize(
     "act_name",
     [

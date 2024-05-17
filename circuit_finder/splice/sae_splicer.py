@@ -1,9 +1,11 @@
-from typing import Literal, Protocol
-
 import torch
+import transformer_lens as tl
+
 from jaxtyping import Float
-from sae_lens import SparseAutoencoder
 from transformer_lens.hook_points import HookPoint
+from transformer_lens import ActivationCache
+from typing import Literal, Protocol
+from circuit_finder.core.hooked_sae import HookedSAE
 
 
 class TransformerLensForwardHook(Protocol):
@@ -22,6 +24,40 @@ BackwardHookData = tuple[str, TransformerLensBackwardHook]
 NodeType = Literal["feature", "error", "all"]
 
 
+def forward_hook_fn(
+    orig: Float[torch.Tensor, "n_batch n_token d_model"],
+    hook: HookPoint,  # noqa: ARG002
+    sae: HookedSAE,
+    cache: ActivationCache,
+) -> Float[torch.Tensor, "n_batch n_token d_model"]:
+    """Forward hook to patch the SAE into the computational graph
+
+    orig: Original activations
+    """
+    assert sae.cfg.use_error_term
+    assert sae.cfg.retain_grad
+    a_orig = orig
+    z_sae = sae.encode(a_orig)
+    a_sae = sae.decode(z_sae, a_orig)
+
+    # keep pyright happy
+    assert isinstance(z_sae, torch.Tensor)
+    a_err = a_orig - a_sae.detach()
+
+    # Track the gradients
+    assert z_sae.requires_grad
+    z_sae.retain_grad()
+    assert a_err.requires_grad
+    a_err.retain_grad()
+
+    # Store values for later use
+    self.sae_feature_acts = z_sae
+    self.sae_errors = a_err
+
+    a_rec = a_sae + a_err
+    return a_rec
+
+
 class SAESplicer:
     """Splices a single SAE into the computational graph of a HookedTransformer
 
@@ -36,43 +72,22 @@ class SAESplicer:
         cache = sae_patcher.update_cache(cache)
     """
 
-    sae: SparseAutoencoder
+    sae: HookedSAE
     sae_feature_acts: Float[torch.Tensor, "n_batch n_token d_sae"]
     sae_errors: Float[torch.Tensor, "n_batch n_token d_model"]
 
-    def __init__(self, sae: SparseAutoencoder):
+    def __init__(self, sae: HookedSAE):
         self.sae = sae
         self.sae_feature_acts = torch.tensor([])
         self.sae_errors = torch.tensor([])
 
-    def _forward_hook_fn(
-        self,
-        orig: Float[torch.Tensor, "n_batch n_token d_model"],
-        hook: HookPoint,  # noqa: ARG002
-    ) -> Float[torch.Tensor, "n_batch n_token d_model"]:
-        """Forward hook to patch the SAE into the computational graph
+    @property
+    def hook_name(self) -> str:
+        return self.sae.cfg.hook_name
 
-        orig: Original activations
-        """
-
-        a_orig = orig
-        a_sae, z_sae = self.sae(a_orig)[:2]
-        # keep pyright happy
-        assert isinstance(z_sae, torch.Tensor)
-        a_err = a_orig - a_sae.detach()
-
-        # Track the gradients
-        assert z_sae.requires_grad
-        z_sae.retain_grad()
-        assert a_err.requires_grad
-        a_err.retain_grad()
-
-        # Store values for later use
-        self.sae_feature_acts = z_sae
-        self.sae_errors = a_err
-
-        a_rec = a_sae + a_err
-        return a_rec
+    # @property
+    # def output_hook_name(self) -> str:
+    #     return self.sae.cfg.hook_name
 
     @property
     def sae_nodes(self) -> Float[torch.Tensor, "n_batch n_token (d_sae+d_model)"]:
@@ -98,11 +113,11 @@ class SAESplicer:
 
     def get_forward_hook(self) -> ForwardHookData:
         """Return a forward hook that patches the activation."""
-        return (self.sae.cfg.hook_point, self._forward_hook_fn)
+        return (self.hook_name, self._forward_hook_fn)
 
     def get_backward_hook(self) -> BackwardHookData:
         """Return a backward hook that patches the gradients."""
-        return (self.sae.cfg.hook_point, self._backward_hook_fn)
+        return (self.hook_name, self._backward_hook_fn)
 
     def get_node_values(
         self, node_type: NodeType = "all"
@@ -134,20 +149,15 @@ class SAESplicer:
         else:
             raise ValueError(f"Invalid node_type: {node_type}")
 
-    # @contextmanager
-    # def splice(self, model: HookedTransformer) -> HookedTransformer:
-    #     with model.hooks(
-    #         fwd_hooks=[self.get_forward_hook()],
-    #         bwd_hooks=[self.get_backward_hook()],
-    #     ):
-    #         yield model
-
-    # def update_cache(self, cache: ActivationCache) -> ActivationCache:
-    #     cache[self.sae.cfg.hook_point + ".sae_acts"] = self.sae_feature_acts
-    #     cache[self.sae.cfg.hook_point + ".sae_acts_grads"] = self.sae_feature_acts.grad
-    #     cache[self.sae.cfg.hook_point + ".sae_errs"] = self.sae_errors
-    #     cache[self.sae.cfg.hook_point + ".sae_errs_grads"] = self.sae_errors.grad
-    #     return cache
+    def splice(self, model: tl.HookedTransformer) -> tl.HookedTransformer:
+        try:
+            with model.hooks(
+                fwd_hooks=[self.get_forward_hook()],
+                bwd_hooks=[self.get_backward_hook()],
+            ):
+                return model
+        finally:
+            pass
 
 
 # class SAESplicer:
