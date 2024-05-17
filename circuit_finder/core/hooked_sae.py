@@ -2,14 +2,7 @@ import einops
 import torch
 import torch.nn.functional as F
 from jaxtyping import Float
-
-# from transformer_lens.hook_points import (  # Hooking utilities
-#     HookedRootModule,
-#     HookPoint,
-# )
-
 import transformer_lens as tl
-# from circuit_finder.core.hooked_sae_config import HookedSAEConfig
 
 
 class HookedSAE(tl.HookedSAE):
@@ -31,8 +24,6 @@ class HookedSAE(tl.HookedSAE):
         Reshape the input to have correct dim.
         No-op for standard SAEs, but useful for hook_z SAEs.
         """
-        if self.cfg.retain_grad:
-            input.retain_grad()
         if apply_hooks:
             self.hook_sae_input(input)
 
@@ -71,15 +62,11 @@ class HookedSAE(tl.HookedSAE):
             einops.einsum(x_cent, self.W_enc, "... d_in, d_in d_sae -> ... d_sae")
             + self.b_enc  # [..., d_sae]
         )
-        if self.cfg.retain_grad:
-            sae_acts_pre.retain_grad()
         if apply_hooks:
             sae_acts_pre = self.hook_sae_acts_pre(sae_acts_pre)
 
         # SAE hidden layer post-RELU activation
         sae_acts_post = F.relu(sae_acts_pre)  # [..., d_sae]
-        if self.cfg.retain_grad:
-            sae_acts_post.retain_grad()
         if apply_hooks:
             sae_acts_post = self.hook_sae_acts_post(sae_acts_post)
 
@@ -96,8 +83,6 @@ class HookedSAE(tl.HookedSAE):
             )
             + self.b_dec
         )
-        if self.cfg.retain_grad:
-            x_reconstruct.retain_grad()
         if apply_hooks:
             x_reconstruct = self.hook_sae_recons(x_reconstruct)
         return x_reconstruct
@@ -110,8 +95,8 @@ class HookedSAE(tl.HookedSAE):
             x_reconstruct_clean = self.decode(sae_acts_post_clean, apply_hooks=False)
             sae_error = x - x_reconstruct_clean
 
-        if self.cfg.retain_grad:
-            sae_error.retain_grad()
+        sae_error.requires_grad = True
+        sae_error.retain_grad()
         if apply_hooks:
             sae_error = self.hook_sae_error(sae_error)
         return sae_error
@@ -123,8 +108,6 @@ class HookedSAE(tl.HookedSAE):
         apply_hooks: bool = True,
     ):
         output = output.reshape(input.shape)
-        if self.cfg.retain_grad:
-            output.retain_grad()
         if apply_hooks:
             output = self.hook_sae_output(output)
         return output
