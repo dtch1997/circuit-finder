@@ -30,5 +30,5 @@ def sl_sae_to_tl_sae(
 
     cfg = sl_sae_cfg_to_tl_sae_cfg(sl_sae.cfg)
     tl_sae = HookedSAE(cfg)
-    tl_sae.load_state_dict(sl_sae.state_dict())
+    tl_sae.load_state_dict(state_dict)
     return tl_sae
