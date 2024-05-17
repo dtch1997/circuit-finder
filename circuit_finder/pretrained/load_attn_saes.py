@@ -1,7 +1,8 @@
 from transformer_lens.utils import download_file_from_hf
 from circuit_finder.core.hooked_sae import HookedSAE
 from circuit_finder.core.hooked_sae_config import HookedSAEConfig
-from circuit_finder.core.types import LayerIndex, ALL_GPT_2_SMALL_LAYERS
+from circuit_finder.core.types import LayerIndex
+from circuit_finder.constants import ALL_GPT_2_SMALL_LAYERS, device
 
 
 def attn_sae_cfg_to_hooked_sae_cfg(attn_sae_cfg):
@@ -56,5 +57,5 @@ def load_attn_saes(
         hooked_sae = HookedSAE(cfg)
         hooked_sae.load_state_dict(state_dict)  # type: ignore
 
-        layer_to_sae[layer] = hooked_sae
+        layer_to_sae[layer] = hooked_sae.to(device)
     return layer_to_sae

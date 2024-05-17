@@ -1,6 +1,7 @@
 from transcoders_slim.transcoder import Transcoder
 from transcoders_slim.load_pretrained import load_pretrained
-from circuit_finder.core.types import LayerIndex, ALL_GPT_2_SMALL_LAYERS
+from circuit_finder.core.types import LayerIndex
+from circuit_finder.constants import ALL_GPT_2_SMALL_LAYERS, device
 
 
 def get_filenames(layers: list[int]) -> list[str]:
@@ -21,5 +22,5 @@ def load_mlp_transcoders(
     transcoders = {}
     for module_name, transcoder in transcoders_dict.items():
         layer = parse_layer_of_module_name(module_name)
-        transcoders[layer] = transcoder
+        transcoders[layer] = transcoder.to(device)
     return transcoders
