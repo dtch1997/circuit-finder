@@ -5,11 +5,12 @@ from transformer_lens import HookedTransformer
 
 from tests.helpers import TINYSTORIES_MODEL, build_sae_cfg, load_model_cached
 from circuit_finder.utils import last_token_prediction_loss
+from typing import cast
 
 
 @pytest.fixture()
 def model(device: str) -> HookedTransformer:
-    return load_model_cached(TINYSTORIES_MODEL).to(device)
+    return cast(HookedTransformer, load_model_cached(TINYSTORIES_MODEL).to(device))
 
 
 @pytest.fixture()
