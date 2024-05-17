@@ -1,3 +1,4 @@
+# pyright: ignore
 import transformer_lens as tl
 from rich.table import Table
 from rich import print as rprint
@@ -8,7 +9,7 @@ from circuit_finder.data import ioi
 
 if __name__ == "__main__":
     # Load the data
-    prompts, answers = ioi.get_ioi_data()
+    prompts, _, answers = ioi.get_ioi_data()
 
     # Print the data
     table = Table("Prompt", "Correct", "Incorrect", title="Prompts & Answers:")
@@ -33,7 +34,7 @@ if __name__ == "__main__":
 
     # Load model
     model = tl.HookedSAETransformer.from_pretrained("gpt2").cuda()
-    answer_tokens = get_answer_tokens(answers, model)
+    answer_tokens = get_answer_tokens(answers, model)  # type: ignore
 
     # Run model
     with model.saes(saes=[attn_sae, resid_sae]):

@@ -1,5 +1,6 @@
 import transformer_lens as tl
 
+from typing import cast
 from circuit_finder.constants import GPT_2_SMALL, device
 
 
@@ -25,4 +26,4 @@ def load_model(
     tl_model.eval()
     for param in tl_model.parameters():
         param.requires_grad = False
-    return tl_model
+    return cast(tl.HookedSAETransformer, tl_model)

@@ -11,6 +11,7 @@ import eindex
 import einops
 import transformer_lens as tl
 from transformer_lens import utils
+from transformer_lens import ActivationCache
 
 from torch import Tensor
 from jaxtyping import Int, Float
@@ -29,7 +30,7 @@ def get_answer_tokens(
 ) -> Int[torch.Tensor, "batch 2"]:
     # Define the answer tokens (same shape as the answers)
     return torch.concat(
-        [model.to_tokens(names, prepend_bos=False).T for names in answers]
+        [model.to_tokens(names, prepend_bos=False).T for names in answers]  # type: ignore
     )
 
 
@@ -51,11 +52,11 @@ def logits_to_ave_logit_diff(
         last_token_logits, answer_tokens[:, 1], "batch [batch]"
     )
 
-    logits: Float[Tensor, " batch"] = correct_logits - incorrect_logits
+    logit_diff: Float[Tensor, " batch"] = correct_logits - incorrect_logits
     if per_prompt:
-        return logits
+        return logit_diff
     else:
-        return logits.mean()
+        return logit_diff.mean()
 
 
 def residual_stack_to_logit_diff(
@@ -96,7 +97,7 @@ def patching_metric(
     answer_tokens: Float[Tensor, "batch 2"],
     corrupted_logit_diff: float,
     clean_logit_diff: float,
-) -> float:
+) -> Float[Tensor, " ()"]:
     """
     Linear function of logit diff, calibrated so that it equals 0 when performance is
     same as on corrupted input, and 1 when performance is same as on clean input.
@@ -117,7 +118,7 @@ def patching_metric(
 
 
 def get_cache_fwd_and_bwd(
-    model: tl.HookedSAETransformer, 
+    model: tl.HookedSAETransformer,
     tokens: Int[Tensor, "batch seq"],
     metric_fn: MetricFn,
     filter_fn: HookNameFilterFn,
@@ -128,26 +129,40 @@ def get_cache_fwd_and_bwd(
 
     model.reset_hooks()
     cache = {}
+
     def forward_cache_hook(act, hook):
         cache[hook.name] = act.detach()
+
     model.add_hook(filter_fn, forward_cache_hook, "fwd")
 
     grad_cache = {}
+
     def backward_cache_hook(act, hook):
         grad_cache[hook.name] = act.detach()
+
     model.add_hook(filter_fn, backward_cache_hook, "bwd")
 
-    value = metric(model(tokens))
+    value = metric_fn(model(tokens))
     value.backward()
     model.reset_hooks()
-    return value.item(), ActivationCache(cache, model), ActivationCache(grad_cache, model)
+    return (
+        value.item(),
+        ActivationCache(cache, model),
+        ActivationCache(grad_cache, model),
+    )
+
 
 def attr_patch_sae_acts(
-        clean_cache: ActivationCache, 
-        clean_grad_cache: ActivationCache,
-        site: str, layer: int
-    ):
-    clean_sae_acts_post = clean_cache[utils.get_act_name(site, layer) + ".hook_sae_acts_post"] 
-    clean_grad_sae_acts_post = clean_grad_cache[utils.get_act_name(site, layer) + ".hook_sae_acts_post"] 
+    clean_cache: ActivationCache,
+    clean_grad_cache: ActivationCache,
+    site: str,
+    layer: int,
+):
+    clean_sae_acts_post = clean_cache[
+        utils.get_act_name(site, layer) + ".hook_sae_acts_post"
+    ]
+    clean_grad_sae_acts_post = clean_grad_cache[
+        utils.get_act_name(site, layer) + ".hook_sae_acts_post"
+    ]
     sae_act_attr = clean_grad_sae_acts_post * (0 - clean_sae_acts_post)
     return sae_act_attr

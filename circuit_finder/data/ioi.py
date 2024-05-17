@@ -1,3 +1,6 @@
+# type: ignore
+from typing import Sequence
+
 prompt_format = [
     "Then, Jeremy and Scott were working at the hospital.{} decided to give a snack to",
     # "When Tom and James went to the park,{} gave the ball to",
@@ -19,7 +22,7 @@ corrupt_prompt_for_prompt_format = [
 ]
 
 
-def get_ioi_data():
+def get_ioi_data() -> tuple[Sequence[str], Sequence[str], Sequence[tuple[str, str]]]:
     # Define 8 prompts, in 4 groups of 2 (with adjacent prompts having answers swapped)
     clean_prompts = [
         prompt.format(name)
@@ -29,9 +32,7 @@ def get_ioi_data():
     # Define 8 corrupt prompts
     corrupt_prompts = []
     for i in range(len(prompt_format)):
-        corrupt_prompts.extend(
-            [corrupt_prompt_for_prompt_format[i]] * 2
-        )
+        corrupt_prompts.extend([corrupt_prompt_for_prompt_format[i]] * 2)
 
     # Define the answers for each prompt, in the form (correct, incorrect)
     answers = [names[::i] for names in name_pairs for i in (1, -1)]

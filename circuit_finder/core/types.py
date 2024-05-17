@@ -10,6 +10,7 @@ Logits = Float[torch.Tensor, "batch seq d_vocab"]
 Metric = Float[torch.Tensor, "batch"]
 MetricFn = Callable[[Logits], Metric]
 
+
 class TransformerLensForwardHook(Protocol):
     def __call__(self, orig: torch.Tensor, hook: HookPoint) -> torch.Tensor:
         raise NotImplementedError
