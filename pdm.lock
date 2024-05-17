@@ -5,7 +5,7 @@
 groups = ["default", "test"]
 strategy = ["cross_platform", "inherit_metadata"]
 lock_version = "4.4.1"
-content_hash = "sha256:bf24588af8779e44d5c177ee34fe4ada2a572660e50a7609c4deef4ec57f27e0"
+content_hash = "sha256:2470117f1b54f267424dcfcf0d333ba3686149b95e8597550f14b8f07c6b7bda"
 
 [[package]]
 name = "accelerate"
@@ -247,7 +247,7 @@ files = [
 
 [[package]]
 name = "automated-interpretability"
-version = "0.0.2"
+version = "0.0.3"
 requires_python = "<4.0,>=3.9"
 summary = "OpenAI's implementation of automated-interpretability, with some updates. Not officially affiliated with OpenAI."
 groups = ["default"]
@@ -262,8 +262,8 @@ dependencies = [
     "tiktoken<0.7.0,>=0.6.0",
 ]
 files = [
-    {file = "automated_interpretability-0.0.2-py3-none-any.whl", hash = "sha256:d16ae4d6e62a64fe673b63f310b5ae4ca3b19d42ae557970c69fae94699a7d8b"},
-    {file = "automated_interpretability-0.0.2.tar.gz", hash = "sha256:eb517d285746f38dd02349e1472575254e9d52d3c9726d6310c2d8504a7a9c25"},
+    {file = "automated_interpretability-0.0.3-py3-none-any.whl", hash = "sha256:3370f343b078ad93eb2279324d1e16815aa87764a97507b26e50194e77aa1929"},
+    {file = "automated_interpretability-0.0.3.tar.gz", hash = "sha256:04fa2a0a954ce31e093aacddd869447f0814246d0d12d0f2bbbb6708ed3f1d88"},
 ]
 
 [[package]]
@@ -757,13 +757,13 @@ files = [
 
 [[package]]
 name = "einops"
-version = "0.8.0"
+version = "0.7.0"
 requires_python = ">=3.8"
 summary = "A new flavour of deep learning operations"
 groups = ["default"]
 files = [
-    {file = "einops-0.8.0-py3-none-any.whl", hash = "sha256:9572fb63046264a862693b0a87088af3bdc8c068fde03de63453cbbde245465f"},
-    {file = "einops-0.8.0.tar.gz", hash = "sha256:63486517fed345712a8385c100cb279108d9d47e6ae59099b07657e983deae85"},
+    {file = "einops-0.7.0-py3-none-any.whl", hash = "sha256:0f3096f26b914f465f6ff3c66f5478f9a5e380bb367ffc6493a68143fbbf1fd1"},
+    {file = "einops-0.7.0.tar.gz", hash = "sha256:b2b04ad6081a3b227080c9bf5e3ace7160357ff03043cd66cc5b2319eb7031d1"},
 ]
 
 [[package]]
@@ -989,6 +989,17 @@ dependencies = [
 files = [
     {file = "GitPython-3.1.43-py3-none-any.whl", hash = "sha256:eec7ec56b92aad751f9912a73404bc02ba212a23adb2c7098ee668417051a1ff"},
     {file = "GitPython-3.1.43.tar.gz", hash = "sha256:35f314a9f878467f5453cc1fee295c3e18e52f1b99f10f6cf5b1682e968a9e7c"},
+]
+
+[[package]]
+name = "gprof2dot"
+version = "2022.7.29"
+requires_python = ">=2.7"
+summary = "Generate a dot graph from the output of several profilers."
+groups = ["default"]
+files = [
+    {file = "gprof2dot-2022.7.29-py2.py3-none-any.whl", hash = "sha256:f165b3851d3c52ee4915eb1bd6cca571e5759823c2cd0f71a79bda93c2dc85d6"},
+    {file = "gprof2dot-2022.7.29.tar.gz", hash = "sha256:45b4d298bd36608fccf9511c3fd88a773f7a1abc04d6cd39445b11ba43133ec5"},
 ]
 
 [[package]]
@@ -3023,6 +3034,21 @@ files = [
 ]
 
 [[package]]
+name = "pytest-profiling"
+version = "1.7.0"
+summary = "Profiling plugin for py.test"
+groups = ["default"]
+dependencies = [
+    "gprof2dot",
+    "pytest",
+    "six",
+]
+files = [
+    {file = "pytest-profiling-1.7.0.tar.gz", hash = "sha256:93938f147662225d2b8bd5af89587b979652426a8a6ffd7e73ec4a23e24b7f29"},
+    {file = "pytest_profiling-1.7.0-py2.py3-none-any.whl", hash = "sha256:999cc9ac94f2e528e3f5d43465da277429984a1c237ae9818f8cfd0b06acb019"},
+]
+
+[[package]]
 name = "python-dateutil"
 version = "2.9.0.post0"
 requires_python = "!=3.0.*,!=3.1.*,!=3.2.*,>=2.7"
@@ -3034,6 +3060,17 @@ dependencies = [
 files = [
     {file = "python-dateutil-2.9.0.post0.tar.gz", hash = "sha256:37dd54208da7e1cd875388217d5e00ebd4179249f90fb72437e91a35459a0ad3"},
     {file = "python_dateutil-2.9.0.post0-py2.py3-none-any.whl", hash = "sha256:a8b2bc7bffae282281c8140a97d3aa9c14da0b136dfe83f850eea9a5f7470427"},
+]
+
+[[package]]
+name = "python-dotenv"
+version = "1.0.1"
+requires_python = ">=3.8"
+summary = "Read key-value pairs from a .env file and set them as environment variables"
+groups = ["default"]
+files = [
+    {file = "python-dotenv-1.0.1.tar.gz", hash = "sha256:e324ee90a023d808f1959c46bcbc04446a10ced277783dc6ee09987c37ec10ca"},
+    {file = "python_dotenv-1.0.1-py3-none-any.whl", hash = "sha256:f7b63ef50f1b690dddf550d03497b66d609393b40b564ed0d674909a68ebf16a"},
 ]
 
 [[package]]
@@ -3462,12 +3499,12 @@ files = [
 
 [[package]]
 name = "sae-lens"
-version = "1.2.0"
+version = "2.1.3"
 requires_python = "<4.0,>=3.10"
 summary = "Training and Analyzing Sparse Autoencoders (SAEs)"
 groups = ["default"]
 dependencies = [
-    "automated-interpretability<0.0.3,>=0.0.2",
+    "automated-interpretability<0.0.4,>=0.0.3",
     "babe<0.0.8,>=0.0.7",
     "datasets<3.0.0,>=2.17.1",
     "ipykernel<7.0.0,>=6.29.2",
@@ -3484,37 +3521,41 @@ dependencies = [
     "nltk<4.0.0,>=3.8.1",
     "plotly-express<0.5.0,>=0.4.1",
     "plotly<6.0.0,>=5.19.0",
+    "pytest-profiling<2.0.0,>=1.7.0",
+    "python-dotenv<2.0.0,>=1.0.1",
+    "pyyaml<7.0.0,>=6.0.1",
     "pyzmq==26.0.0",
-    "sae-vis<0.3.0,>=0.2.15",
+    "sae-vis<0.3.0,>=0.2.18",
     "safetensors<0.5.0,>=0.4.2",
     "transformer-lens<2.0.0,>=1.14.0",
     "transformers<5.0.0,>=4.38.1",
     "typer<0.13.0,>=0.12.3",
 ]
 files = [
-    {file = "sae_lens-1.2.0-py3-none-any.whl", hash = "sha256:002d96172f1d869705f0378c807e8429e82d81addffa9917e3e261a4f5684a8b"},
-    {file = "sae_lens-1.2.0.tar.gz", hash = "sha256:948d9ea92c8937f35a943db9f5e0054cb023bce49ccc27d7dcc4d0ab7b50c9b1"},
+    {file = "sae_lens-2.1.3-py3-none-any.whl", hash = "sha256:faef05a001f7c59b84d5b057edb3253c1ab8d7ade35f4506bee2e25514795ba7"},
+    {file = "sae_lens-2.1.3.tar.gz", hash = "sha256:de53006eff1879f128e325e9dc580c225120c9266c34791d8977dff31f119ef7"},
 ]
 
 [[package]]
 name = "sae-vis"
-version = "0.2.15"
+version = "0.2.18"
+requires_python = "<4.0,>=3.10"
 summary = "Open-source SAE visualizer, based on Anthropic's published visualizer."
 groups = ["default"]
 dependencies = [
-    "dataclasses-json",
-    "datasets",
-    "eindex-callum",
-    "einops",
-    "jaxtyping",
-    "pytest",
-    "rich",
-    "torch",
-    "transformer-lens",
+    "dataclasses-json<0.7.0,>=0.6.4",
+    "datasets<3.0.0,>=2.0.0",
+    "eindex-callum<0.2.0,>=0.1.0",
+    "einops<0.8.0,>=0.7.0",
+    "jaxtyping<0.3.0,>=0.2.28",
+    "matplotlib<4.0.0,>=3.8.4",
+    "rich<14.0.0,>=13.7.1",
+    "torch<3.0.0,>=2.0.0",
+    "transformer-lens<2.0.0,>=1.0.0",
 ]
 files = [
-    {file = "sae-vis-0.2.15.tar.gz", hash = "sha256:ca493aa0277b5f697e67b9574605f17ff10209ed50a67a175513835898e8cd2a"},
-    {file = "sae_vis-0.2.15-py3-none-any.whl", hash = "sha256:e59a844a85cecfea9a6c89b037bf1b40d417dbb509d2d3254068298261968bb0"},
+    {file = "sae_vis-0.2.18-py3-none-any.whl", hash = "sha256:7fd0d8991c038ad8c994bb790613ed735081a2b17299acd0ef3ddd7bb873b3c6"},
+    {file = "sae_vis-0.2.18.tar.gz", hash = "sha256:b520afce8a26f72fd3ef43c408698da76870cb058865e78c8a0f8566a50ce4bc"},
 ]
 
 [[package]]
@@ -4180,20 +4221,20 @@ files = [
 
 [[package]]
 name = "transcoders-slim"
-version = "0.1.0"
+version = "0.2.0"
 requires_python = ">=3.10"
 summary = "A template for python projects in PDM"
 groups = ["default"]
 dependencies = [
-    "einops>=0.8.0",
+    "einops>=0.7.0",
     "huggingface-hub>=0.23.0",
     "jaxtyping>=0.2.28",
     "torch>=2.3.0",
-    "transformer-lens>=1.17.0",
+    "transformer-lens>=1.14.0",
 ]
 files = [
-    {file = "transcoders_slim-0.1.0-py3-none-any.whl", hash = "sha256:95815d5328f117146a31a1e638b54330894bc2b3546a8332bc38248c734d03e8"},
-    {file = "transcoders_slim-0.1.0.tar.gz", hash = "sha256:6aea5b94a5f50d248790dc2914da4878b50fd907a6c160e8b7bd44f320aae8da"},
+    {file = "transcoders_slim-0.2.0-py3-none-any.whl", hash = "sha256:5f6d4664821b2c575093ea2745d144b1967c140acb22138bbddbcfad80e7ccc5"},
+    {file = "transcoders_slim-0.2.0.tar.gz", hash = "sha256:72384a92b317d07fedeecedd989417691fa5fe89e5febe3f233565ce5e88c162"},
 ]
 
 [[package]]

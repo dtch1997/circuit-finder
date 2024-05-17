@@ -4,15 +4,14 @@ import torch
 import transformer_lens as tl
 
 from transcoders_slim.transcoder import Transcoder
-from transcoders_slim.load_pretrained import load_pretrained
 from torch import Tensor
 from jaxtyping import Int, Float
 from dataclasses import dataclass
 from einops import rearrange, einsum
 from typing import Callable, cast
 
-from circuit_finder.core.types import LayerIndex
-from circuit_finder.download import load_attn_saes as _load_attn_saes
+
+from circuit_finder.pretrained import load_attn_saes, load_mlp_transcoders
 
 
 @dataclass
@@ -30,24 +29,6 @@ def last_token_logit(model, tokens):
     logits = model(tokens, return_type="logits")[:, -2, :]
     correct_logits = logits[torch.arange(logits.size(0)), tokens[:, -1]]
     return correct_logits.mean()
-
-
-def load_attn_saes() -> dict[LayerIndex, tl.HookedSAE]:
-    sae_dict = _load_attn_saes()
-    attn_saes = {}
-    for module_name, sae in sae_dict.items():
-        layer = int(module_name.split(".")[1])
-        attn_saes[layer] = sae
-    return attn_saes
-
-
-def load_transcoders() -> dict[LayerIndex, Transcoder]:
-    transcoders_dict = load_pretrained()
-    transcoders = {}
-    for module_name, transcoder in transcoders_dict.items():
-        layer = int(module_name.split(".")[1])
-        transcoders[layer] = transcoder
-    return transcoders
 
 
 MetricFn = Callable[[tl.HookedTransformer, Int[Tensor, "batch seq"]], Tensor]
@@ -486,7 +467,7 @@ class CircuitFinder:
 
 if __name__ == "__main__":
     attn_saes = load_attn_saes()
-    transcoders = load_transcoders()
+    transcoders = load_mlp_transcoders()
     print(len(attn_saes))
     print(len(transcoders))
     print(transcoders.keys())

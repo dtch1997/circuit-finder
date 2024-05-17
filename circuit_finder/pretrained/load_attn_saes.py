@@ -1,10 +1,6 @@
-import torch
-
 from transformer_lens.utils import download_file_from_hf
 from transformer_lens import HookedSAE, HookedSAEConfig
-
-
-device = "cuda" if torch.cuda.is_available() else "cpu"
+from circuit_finder.core.types import LayerIndex, ALL_GPT_2_SMALL_LAYERS
 
 
 def attn_sae_cfg_to_hooked_sae_cfg(attn_sae_cfg):
@@ -34,13 +30,22 @@ auto_encoder_runs = [
 hf_repo = "ckkissane/attn-saes-gpt2-small-all-layers"
 
 
-def load_attn_saes() -> dict[str, HookedSAE]:
+def parse_layer_for_autoencoder_run(auto_encoder_run: str) -> int:
+    return int(auto_encoder_run.split("_")[1][1:])
+
+
+def load_attn_saes(
+    layers: list[int] = ALL_GPT_2_SMALL_LAYERS,
+) -> dict[LayerIndex, HookedSAE]:
     """Load the attention-out SAEs trained by Connor Kissane and Rob Kryzgowski
 
     Reference: https://www.lesswrong.com/posts/DtdzGwFh9dCfsekZZ/sparse-autoencoders-work-on-attention-layer-outputs
     """
     hook_name_to_sae = {}
     for auto_encoder_run in auto_encoder_runs:
+        layer = parse_layer_for_autoencoder_run(auto_encoder_run)
+        if layers is not None and layer not in layers:
+            continue
         attn_sae_cfg = download_file_from_hf(hf_repo, f"{auto_encoder_run}_cfg.json")
         cfg = attn_sae_cfg_to_hooked_sae_cfg(attn_sae_cfg)
         state_dict = download_file_from_hf(
@@ -50,5 +55,5 @@ def load_attn_saes() -> dict[str, HookedSAE]:
         hooked_sae = HookedSAE(cfg)
         hooked_sae.load_state_dict(state_dict)  # type: ignore
 
-        hook_name_to_sae[cfg.hook_name] = hooked_sae
+        hook_name_to_sae[layer] = hooked_sae
     return hook_name_to_sae
