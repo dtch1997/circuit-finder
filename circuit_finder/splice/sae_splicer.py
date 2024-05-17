@@ -136,20 +136,20 @@ class SAESplicer:
         else:
             raise ValueError(f"Invalid node_type: {node_type}")
 
-    @contextmanager
-    def splice(self, model: HookedTransformer) -> None:
-        with model.hooks(
-            fwd_hooks=[self.get_forward_hook()],
-            bwd_hooks=[self.get_backward_hook()],
-        ):
-            pass
+    # @contextmanager
+    # def splice(self, model: HookedTransformer) -> HookedTransformer:
+    #     with model.hooks(
+    #         fwd_hooks=[self.get_forward_hook()],
+    #         bwd_hooks=[self.get_backward_hook()],
+    #     ):
+    #         yield model
 
-    def update_cache(self, cache: ActivationCache) -> ActivationCache:
-        cache[self.sae.cfg.hook_point + ".sae_acts"] = self.sae_feature_acts
-        cache[self.sae.cfg.hook_point + ".sae_acts_grads"] = self.sae_feature_acts.grad
-        cache[self.sae.cfg.hook_point + ".sae_errs"] = self.sae_errors
-        cache[self.sae.cfg.hook_point + ".sae_errs_grads"] = self.sae_errors.grad
-        return cache
+    # def update_cache(self, cache: ActivationCache) -> ActivationCache:
+    #     cache[self.sae.cfg.hook_point + ".sae_acts"] = self.sae_feature_acts
+    #     cache[self.sae.cfg.hook_point + ".sae_acts_grads"] = self.sae_feature_acts.grad
+    #     cache[self.sae.cfg.hook_point + ".sae_errs"] = self.sae_errors
+    #     cache[self.sae.cfg.hook_point + ".sae_errs_grads"] = self.sae_errors.grad
+    #     return cache
 
 
 # class SAESplicer:
