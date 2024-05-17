@@ -12,9 +12,9 @@ import einops
 import transformer_lens as tl
 from transformer_lens import utils
 
-
 from torch import Tensor
 from jaxtyping import Int, Float
+from circuit_finder.core.types import HookNameFilterFn, MetricFn
 
 
 def last_token_prediction_loss(model: HookedTransformer, text: str) -> torch.Tensor:
@@ -114,3 +114,40 @@ def patching_metric(
     return (logit_diff - corrupted_logit_diff) / (
         clean_logit_diff - corrupted_logit_diff
     )
+
+
+def get_cache_fwd_and_bwd(
+    model: tl.HookedSAETransformer, 
+    tokens: Int[Tensor, "batch seq"],
+    metric_fn: MetricFn,
+    filter_fn: HookNameFilterFn,
+) -> tuple[float, ActivationCache, ActivationCache]:
+    """
+    Get a cache of the activations and gradients when running a model on an input.
+    """
+
+    model.reset_hooks()
+    cache = {}
+    def forward_cache_hook(act, hook):
+        cache[hook.name] = act.detach()
+    model.add_hook(filter_fn, forward_cache_hook, "fwd")
+
+    grad_cache = {}
+    def backward_cache_hook(act, hook):
+        grad_cache[hook.name] = act.detach()
+    model.add_hook(filter_fn, backward_cache_hook, "bwd")
+
+    value = metric(model(tokens))
+    value.backward()
+    model.reset_hooks()
+    return value.item(), ActivationCache(cache, model), ActivationCache(grad_cache, model)
+
+def attr_patch_sae_acts(
+        clean_cache: ActivationCache, 
+        clean_grad_cache: ActivationCache,
+        site: str, layer: int
+    ):
+    clean_sae_acts_post = clean_cache[utils.get_act_name(site, layer) + ".hook_sae_acts_post"] 
+    clean_grad_sae_acts_post = clean_grad_cache[utils.get_act_name(site, layer) + ".hook_sae_acts_post"] 
+    sae_act_attr = clean_grad_sae_acts_post * (0 - clean_sae_acts_post)
+    return sae_act_attr
