@@ -5,7 +5,7 @@ from jaxtyping import Float
 from sae_lens import SparseAutoencoder
 from contextlib import contextmanager
 from transformer_lens.hook_points import HookPoint
-from transformer_lens import ActivationCache
+from transformer_lens import ActivationCache, HookedTransformer
 
 
 class TransformerLensForwardHook(Protocol):

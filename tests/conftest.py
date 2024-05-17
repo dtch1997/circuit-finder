@@ -8,13 +8,13 @@ from circuit_finder.utils import last_token_prediction_loss
 
 
 @pytest.fixture()
-def model() -> HookedTransformer:
-    return load_model_cached(TINYSTORIES_MODEL)
+def model(device: str) -> HookedTransformer:
+    return load_model_cached(TINYSTORIES_MODEL).to(device)
 
 
 @pytest.fixture()
-def sae() -> SparseAutoencoder:
-    return SparseAutoencoder(build_sae_cfg())
+def sae(device) -> SparseAutoencoder:
+    return SparseAutoencoder(build_sae_cfg()).to(device)
 
 
 # @pytest.fixture()
