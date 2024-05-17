@@ -2,21 +2,23 @@
 from typing import Sequence
 
 prompt_format = [
-    "Then, Jeremy and Scott were working at the hospital.{} decided to give a snack to",
+    "When John and Mary went to the shops,{} gave the bag to",
+    # "Then, Jeremy and Scott were working at the hospital.{} decided to give a snack to",
     # "When Tom and James went to the park,{} gave the ball to",
     # "When Dan and Sid went to the shops,{} gave an apple to",
     # "After Martin and Amy went to the park,{} gave a drink to",
 ]
 name_pairs = [
-    (" Jeremy", " Scott"),
+    (" John", " Mary"),
+    # (" Jeremy", " Scott"),
     # (" Tom", " James"),
     # (" Dan", " Sid"),
     # (" Martin", " Amy"),
 ]
 
 corrupt_prompt_for_prompt_format = [
-    "Then, Michael and Anderson were working at the hospital. Rachel decided to give a snack to",
-    # "When Jim and Timothy went to the park, Alicia gave the ball to",
+    "When Michael and Anderson went to the shops, Jason gave the bag to",
+    # "Then, Michael and Anderson were working at the hospital. Rachel decided to give a snack to",
     # "When Rachel and Laura went to the shops, Sidney gave an apple to",
     # "After Reshel and Lawrence went to the park, Kevin gave a drink to"
 ]
