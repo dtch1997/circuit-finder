@@ -183,7 +183,7 @@ def get_layer_of_hook_name(hook_point):
     return int(hook_point.split(".")[1])
 
 
-class TranscoderReplacementContext:
+class HookedTranscoderReplacementContext:
     """Context manager to replace MLP sublayers with transcoders"""
 
     model: tl.HookedTransformer
@@ -200,10 +200,23 @@ class TranscoderReplacementContext:
         self.model = model
 
     def __enter__(self):
+        # Replace all MLPs with transcoder
         for layer, transcoder in zip(self.layers, self.transcoders):
             mlp = self.model.blocks[layer].mlp
             self.model.blocks[layer].mlp = HookedTranscoderWrapper(transcoder, mlp)
 
+        # # Replace original run_with_cache to include the transcoders' cache
+        # self.orig_run_with_cache = self.model.run_with_cache
+
+        # def run_with_cache(self: tl.HookedTransformer, *args, **kwargs):
+        #     cache = self.model.run_with_cache(*args, **kwargs)
+
+        # self.model.run_with_cache = run_with_cache
+
     def __exit__(self, exc_type, exc_value, exc_tb):
+        # Restore original MLPs
         for layer, mlp in zip(self.layers, self.original_mlps):
             self.model.blocks[layer].mlp = mlp
+
+        # # Restore original run_with_cache
+        # self.model.run_with_cache = self.orig_run_with_cache
