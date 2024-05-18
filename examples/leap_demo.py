@@ -45,8 +45,9 @@ corrupt_tokens = model.to_tokens(
     ["When Alice and Bob were at the store, Alice gave a bottle to Bob"]
 )
 
+#%%
 # Set up LEAP
-cfg = LEAPConfig(threshold=0.2, contrast_pairs=True)
+cfg = LEAPConfig(threshold=0.2, contrast_pairs=False)
 leap = LEAP(cfg, tokens, model, attn_saes, transcoders, corrupt_tokens=corrupt_tokens)
 
 # Run LEAP
@@ -84,19 +85,3 @@ mlp_mlp = [
 ]
 
 print(len(attn_attn), len(attn_mlp), len(mlp_attn), len(mlp_mlp))
-# %%
-# Print edges found via LEAP
-print(len(leap.graph))
-for edge in leap.graph:
-    print(edge)
-
-
-#%% 
-leap.graph
-#%%
-from circuit_finder.neuronpedia import get_neuronpedia_url_for_quick_list
-get_neuronpedia_url_for_quick_list(layer=5,
-                                   features=[6255],
-                                   sae_family = "tres-dc")
-
-# %%

@@ -36,6 +36,7 @@ def clear_mem():
 def last_token_logit(model, tokens):
     """just a simple metric for testing"""
     logits = model(tokens, return_type="logits")[:, -2, :]
+    logits -= logits.mean(dim=-1, keepdim=True) # subtract mean logit
     correct_logits = logits[torch.arange(logits.size(0)), tokens[:, -1]]
     return correct_logits.mean()
 
@@ -303,7 +304,7 @@ class LEAP:
             resid_error = einsum(
                 z_error,
                 self.model.W_O[layer],
-                "seq n_heads d_heads, n_heads d_head d_model -> seq d_model",
+                "seq n_heads d_head, n_heads d_head d_model -> seq d_model",
             )
             self.attn_errors[:, layer, :] = resid_error
 
@@ -604,6 +605,7 @@ class LEAP:
         up_active_layers,
         up_active_feature_ids,
     ):  
+        # If there are no important nodes at this down_layer, do nothing
         if len(imp_down_pos) == 0:
             return
         # Convert lists to PyTorch tensors
@@ -654,11 +656,7 @@ class LEAP:
             # don't bother adding nodes at pos=0, since this is BOS token
             if not edge[1].split(".")[2] == "0":
                 self.graph.append((edge, value.item()))  # type: ignore
-        
-        print("down seqs", down_seqs.shape)
-        print("up seqs", up_seqs.shape)
-        print("imp down pos: ", imp_down_pos.shape)
-        print("error attribs: ", error_attribs.shape)
+
         # Add errors
         if down_module_name in ["mlp", "metric"]:
             # error_attribs : [imp_id, layer]
@@ -679,4 +677,3 @@ class LEAP:
                         attrib = error_attribs[up_seq, imp_id, up_layer]
                         self.error_graph.append((edge, attrib.item()))
 
- 
