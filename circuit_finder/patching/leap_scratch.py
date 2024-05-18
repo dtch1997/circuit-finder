@@ -59,7 +59,13 @@ def preprocess_attn_saes(
 
 
 # model = load_model()
-model = tl.HookedTransformer.from_pretrained("gpt2").cuda()
+model = tl.HookedTransformer.from_pretrained(
+    "gpt2",
+    device="cuda",
+    fold_ln=True,
+    center_writing_weights=True,
+    center_unembed=True,
+)
 attn_saes = load_attn_saes()
 attn_saes = preprocess_attn_saes(attn_saes)
 # transcoders = load_transcoders()
