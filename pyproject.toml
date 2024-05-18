@@ -8,6 +8,7 @@ dependencies = [
     "einops>=0.7.0",
     "huggingface-hub>=0.23.0",
     "syrupy>=4.6.1",
+    "networkx>=3.3",
 ]
 name = "circuit-finder"
 version = "0.0.1"

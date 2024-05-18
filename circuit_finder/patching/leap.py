@@ -1,3 +1,4 @@
+# type: ignore
 """Linear Edge Attribution Patching.
 
 Similar to Edge Attribution Patching, calculates the effect of edges on some downstream metric.
