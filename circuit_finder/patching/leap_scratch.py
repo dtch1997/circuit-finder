@@ -58,7 +58,10 @@ def preprocess_attn_saes(
     return attn_saes
 
 
-# model = load_model()
+# NOTE: for reasons I don't yet understand our current implementation
+# doesn't work if certain flags are set.
+# For now, load the model without using `load_model`
+# model = load_model(requires_grad=True, split_qkv_input=False)
 model = tl.HookedTransformer.from_pretrained(
     "gpt2",
     device="cuda",
@@ -66,9 +69,11 @@ model = tl.HookedTransformer.from_pretrained(
     center_writing_weights=True,
     center_unembed=True,
 )
+# for param in model.parameters():
+#     param.requires_grad = False
+
 attn_saes = load_attn_saes()
 attn_saes = preprocess_attn_saes(attn_saes)
-# transcoders = load_transcoders()
 transcoders = load_mlp_transcoders()
 
 print(len(attn_saes))

@@ -21,7 +21,6 @@ from circuit_finder.core.types import LayerIndex
 from circuit_finder.pretrained import (
     load_attn_saes,
     load_mlp_transcoders,
-    load_model,
 )
 
 
@@ -71,7 +70,14 @@ def preprocess_attn_saes(
     return attn_saes
 
 
-model = load_model()
+model = tl.HookedTransformer.from_pretrained(
+    "gpt2",
+    device="cuda",
+    fold_ln=True,
+    center_writing_weights=True,
+    center_unembed=True,
+)
+
 attn_saes = load_attn_saes()
 attn_saes = preprocess_attn_saes(attn_saes)
 transcoders = load_mlp_transcoders()
