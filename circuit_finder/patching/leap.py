@@ -14,10 +14,17 @@ from torch import Tensor
 from jaxtyping import Int, Float
 from dataclasses import dataclass
 from einops import rearrange, einsum
-from typing import Literal
+from typing import Literal, TypeGuard
 
 from circuit_finder.core.types import LayerIndex, MetricFn, HookNameFilterFn
 from circuit_finder.constants import device
+
+FeatureIndex = int
+TokenIndex = int
+Node = str
+Edge = tuple[Node, Node]  # (downstream, upstream)
+Attrib = float
+ModuleName = Literal["mlp", "attn", "metric"]
 
 
 def clear_mem():
@@ -32,12 +39,8 @@ def last_token_logit(model, tokens):
     return correct_logits.mean()
 
 
-FeatureIndex = int
-TokenIndex = int
-Node = str
-Edge = tuple[Node, Node]  # (downstream, upstream)
-Attrib = float
-ModuleName = Literal["mlp", "attn", "metric"]
+def is_valid_module_name(str) -> TypeGuard[ModuleName]:
+    return str in ["mlp", "attn", "metric"]
 
 
 def parse_node_name(
@@ -45,6 +48,7 @@ def parse_node_name(
 ) -> tuple[ModuleName, LayerIndex, TokenIndex, FeatureIndex]:
     """Parse a node name into its components."""
     module, layer, pos, feature_id = node.split(".")
+    assert is_valid_module_name(module)
     return module, int(layer), int(pos), int(feature_id)
 
 
@@ -396,6 +400,7 @@ class LEAP:
 
     """ Helper functions """
 
+    # TODO: This should be made an attribute of the graph instead
     def get_imp_feature_ids_and_pos(
         self, down_module: ModuleName, down_layer: LayerIndex
     ) -> tuple[list[FeatureIndex], list[TokenIndex]]:
@@ -412,26 +417,17 @@ class LEAP:
         imp_pos: list[TokenIndex] = []
 
         # Get all nodes that are currently in the graph
-        # up_nodes_set: set[Node] = set()
-        # for edge in self.get_important_edges():
-        #     _, upstream = edge
-        #     up_nodes_set.add(upstream)
-        # up_nodes_deduped: list[Node] = list(up_nodes_set)
+        up_nodes_set: set[Node] = set()
+        for edge in self.get_important_edges():
+            _, upstream = edge
+            up_nodes_set.add(upstream)
+        up_nodes_deduped: list[Node] = list(up_nodes_set)
 
-        # up_nodes_deduped: list[Node] = list(set([edge[1] for (edge, _) in self.graph]))
-        # for up_node in up_nodes_deduped:
-        #     down_module_, down_layer_, pos, feature_id = parse_node_name(up_node)
-        #     # Filter by module and layer
-        #     # TODO: It seems like we could do this previously but ig it doesn't matter.
-        #     if down_module_ == down_module and down_layer_ == down_layer:
-        #         imp_feature_ids += [int(feature_id)]
-        #         imp_pos += [int(pos)]
-        imp_feature_ids = []
-        imp_pos = []
-        up_nodes_deduped = list(set([edge[1] for (edge, attrib) in self.graph]))
+        # Filter by module and layer
+        # TODO: It seems like we could do this previously but ig it doesn't matter.
         for up_node in up_nodes_deduped:
-            down_module_, down_layer_, pos, feature_id = up_node.split(".")
-            if down_module_ == down_module and down_layer_ == str(down_layer):
+            down_module_, down_layer_, pos, feature_id = parse_node_name(up_node)
+            if down_module_ == down_module and down_layer_ == down_layer:
                 imp_feature_ids += [int(feature_id)]
                 imp_pos += [int(pos)]
         return imp_feature_ids, imp_pos
