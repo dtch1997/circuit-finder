@@ -84,90 +84,6 @@ print(attn_saes.keys())
 MetricFn = Callable[[tl.HookedTransformer, Int[Tensor, "batch seq"]], Tensor]
 
 
-# type: ignore
-# %%
-import gc
-import torch
-import transformer_lens as tl
-
-from transcoders_slim.transcoder import Transcoder
-from transcoders_slim.load_pretrained import load_pretrained
-from torch import Tensor
-from jaxtyping import Int, Float
-from dataclasses import dataclass
-from einops import rearrange, einsum
-from typing import Callable, cast
-
-from types_newname import LayerIndex
-from download import load_attn_saes as _load_attn_saes
-
-
-def clear_mem():
-    gc.collect()
-    torch.cuda.empty_cache()
-
-
-def last_token_logit(model, tokens):
-    """just a simple metric for testing"""
-    logits = model(tokens, return_type="logits")[:, -2, :]
-    correct_logits = logits[torch.arange(logits.size(0)), tokens[:, -1]]
-    return correct_logits.mean()
-
-
-def load_attn_saes() -> dict[LayerIndex, tl.HookedSAE]:
-    sae_dict = _load_attn_saes()
-    attn_saes = {}
-    for module_name, sae in sae_dict.items():
-        layer = int(module_name.split(".")[1])
-
-        # chop off features so all have same size TODO fix this
-        sae.W_enc = torch.nn.Parameter(sae.W_enc[:, :24575], requires_grad=False)
-        sae.b_enc = torch.nn.Parameter(sae.b_enc[:24575], requires_grad=False)
-        sae.W_dec = torch.nn.Parameter(sae.W_dec[:24575, :], requires_grad=False)
-        sae.b_dec = torch.nn.Parameter(sae.b_dec, requires_grad=False)
-
-        # normalize so decoder ols have norm=1 when viewd as resid vectors
-        W_dec_z = rearrange(
-            sae.W_dec, "nf (nhead dhead) -> nf nhead dhead", nhead=model.cfg.n_heads
-        )
-        W_dec_resid = einsum(
-            W_dec_z, model.W_O[layer], "nf nhead dhead, nhead dhead dmodel -> nf dmodel"
-        )
-        norms = W_dec_resid.norm(dim=-1, keepdim=True)  # [nf, 1]
-
-        normed_sae = sae
-        normed_sae.W_dec = torch.nn.Parameter(sae.W_dec / norms)
-        normed_sae.W_enc = torch.nn.Parameter(sae.W_enc * norms.T)
-        normed_sae.b_enc = torch.nn.Parameter(sae.b_enc * norms.squeeze())
-
-        attn_saes[layer] = normed_sae
-
-    return attn_saes
-
-
-def load_transcoders() -> dict[LayerIndex, Transcoder]:
-    transcoders_dict = load_pretrained()
-    transcoders = {}
-    for module_name, transcoder in transcoders_dict.items():
-        layer = int(module_name.split(".")[1])
-        transcoders[layer] = transcoder
-    return transcoders
-
-
-model = tl.HookedTransformer.from_pretrained("gpt2").cuda()
-model = cast(tl.HookedTransformer, model)
-
-attn_saes = load_attn_saes()
-transcoders = load_transcoders()
-
-print(len(attn_saes))
-print(len(transcoders))
-print(transcoders.keys())
-print(attn_saes.keys())
-
-MetricFn = Callable[[tl.HookedTransformer, Int[Tensor, "batch seq"]], Tensor]
-
-
 # %%
 @dataclass
 class CircuitFinderConfig:
@@ -175,7 +91,13 @@ class CircuitFinderConfig:
     contrast_pairs: bool = False
 
 
-class CircuitFinder:
+class LEAP:
+    """
+    Linear Edge Attribution Patching
+
+    Similar to edge attribution patching, but fully linearises the network to compute attributions exactly
+    """
+
     def __init__(
         self,
         cfg: CircuitFinderConfig,
@@ -638,63 +560,6 @@ class CircuitFinder:
             # don't bother adding nodes at pos=0, since this is BOS token
             if not edge[1].split(".")[2] == "0":
                 self.graph.append((edge, value.item()))  # type: ignore
-
-
-# %%
-
-tokens = model.to_tokens(
-    ["When John and Mary were at the store, John gave a bottle to Mary"]
-)
-corrupt_tokens = model.to_tokens(
-    ["When Alice and Bob were at the store, Alice gave a bottle to Bob"]
-)
-cfg = CircuitFinderConfig(threshold=0.2, contrast_pairs=True)
-finder = CircuitFinder(
-    cfg, tokens, model, attn_saes, transcoders, corrupt_tokens=corrupt_tokens
-)
-# %%
-finder.metric_step()
-print("num edges = ", len(finder.graph))
-
-for layer in reversed(range(1, model.cfg.n_layers)):
-    print("layer : ", layer)
-    finder.mlp_step(layer)
-    print("num edges = ", len(finder.graph))
-    finder.ov_step(layer)
-    print("num edges = ", len(finder.graph))
-    print()
-
-# %%
-attn_attn = [
-    (edge, attrib)
-    for (edge, attrib) in finder.graph[1:]
-    if edge[0].startswith("attn") and edge[1].startswith("attn")
-]
-attn_mlp = [
-    (edge, attrib)
-    for (edge, attrib) in finder.graph[1:]
-    if edge[0].startswith("attn") and edge[1].startswith("mlp")
-]
-mlp_attn = [
-    (edge, attrib)
-    for (edge, attrib) in finder.graph[1:]
-    if edge[0].startswith("mlp") and edge[1].startswith("attn")
-]
-mlp_mlp = [
-    (edge, attrib)
-    for (edge, attrib) in finder.graph[1:]
-    if edge[0].startswith("mlp") and edge[1].startswith("mlp")
-]
-
-print(len(attn_attn), len(attn_mlp), len(mlp_attn), len(mlp_mlp))
-# %%
-mlp_attn
-# %%
-print(len(finder.graph))
-for edge in finder.graph:
-    print(edge)
-
-# %%
 
 
 # %%

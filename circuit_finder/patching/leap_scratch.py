@@ -5,6 +5,7 @@ import torch
 import transformer_lens as tl
 
 from transcoders_slim.transcoder import Transcoder
+
 from transcoders_slim.load_pretrained import load_pretrained
 from torch import Tensor
 from jaxtyping import Int, Float
@@ -13,7 +14,7 @@ from einops import rearrange, einsum
 from typing import Callable, cast
 
 from circuit_finder.core.types import LayerIndex
-from circuit_finder.pretrained import load_attn_saes as _load_attn_saes
+from circuit_finder.pretrained import load_attn_saes, load_model, load_mlp_transcoders
 
 
 def clear_mem():
@@ -28,10 +29,11 @@ def last_token_logit(model, tokens):
     return correct_logits.mean()
 
 
-def load_attn_saes() -> dict[LayerIndex, tl.HookedSAE]:
-    sae_dict = _load_attn_saes()
+def preprocess_attn_saes(
+    attn_saes_in: dict[LayerIndex, tl.HookedSAE],
+) -> dict[LayerIndex, tl.HookedSAE]:
     attn_saes = {}
-    for layer, sae in sae_dict.items():
+    for layer, sae in attn_saes_in.items():
         # chop off features so all have same size TODO fix this
         sae.W_enc = torch.nn.Parameter(sae.W_enc[:, :24575], requires_grad=False)
         sae.b_enc = torch.nn.Parameter(sae.b_enc[:24575], requires_grad=False)
@@ -66,11 +68,12 @@ def load_transcoders() -> dict[LayerIndex, Transcoder]:
     return transcoders
 
 
+# model = load_model()
 model = tl.HookedTransformer.from_pretrained("gpt2").cuda()
-model = cast(tl.HookedTransformer, model)
-
 attn_saes = load_attn_saes()
+attn_saes = preprocess_attn_saes(attn_saes)
 transcoders = load_transcoders()
+# transcoders = load_mlp_transcoders()
 
 print(len(attn_saes))
 print(len(transcoders))
