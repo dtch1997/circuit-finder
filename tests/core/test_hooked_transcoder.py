@@ -181,42 +181,47 @@ def test_error_grads(model):
     assert torch.allclose(grad, analytic_grad, atol=1e-6)
 
 
-# def test_feature_grads_with_error_term(model, act_name):
-#     """Verifies that pytorch backward computes the correct feature gradients when using error_terms. Motivated by the need to compute feature gradients for attribution patching."""
+def test_feature_grads_with_error_term(model):
+    """Verifies that pytorch backward computes the correct feature gradients when using error_terms. Motivated by the need to compute feature gradients for attribution patching."""
 
-#     # Load SAE
-#     sae_cfg = get_sae_config(model, act_name)
-#     sae_cfg.use_error_term = True
-#     hooked_sae = HookedSAE(sae_cfg)
+    # Load Transcoder
+    act_in = "blocks.0.ln2.hook_normalized"
+    act_out = "blocks.0.hook_mlp_out"
+    tc_cfg = get_transcoder_config(
+        model,
+        act_in,
+        act_out,
+    )
+    tc_cfg.use_error_term = True
+    hooked_tc = HookedTranscoder(tc_cfg)
+    wrapped_hook_tc = HookedTranscoderWrapper(hooked_tc, model.blocks[0].mlp)
 
-#     # Get input activations
-#     _, cache = model.run_with_cache(prompt, names_filter=act_name)
-#     x = cache[act_name]
+    # Define SAE input
+    _, orig_cache = model.run_with_cache(prompt)
+    x = orig_cache[act_in]
+    x_out = orig_cache[act_out]
 
-#     # Cache gradients with respect to feature acts
-#     hooked_sae.reset_hooks()
-#     grad_cache = {}
+    # Cache gradients with respect to feature acts
+    grad_cache = {}
 
-#     def backward_cache_hook(act, hook):
-#         grad_cache[hook.name] = act.detach()
+    def backward_cache_hook(act, hook):
+        grad_cache[hook.name] = act.detach()
 
-#     hooked_sae.add_hook("hook_sae_acts_post", backward_cache_hook, "bwd")
-#     hooked_sae.add_hook("hook_sae_output", backward_cache_hook, "bwd")
+    wrapped_hook_tc.add_hook(
+        "transcoder.hook_sae_acts_post", backward_cache_hook, "bwd"
+    )
+    wrapped_hook_tc.add_hook("hook_sae_output", backward_cache_hook, "bwd")
 
-#     sae_output = hooked_sae(x)
-#     assert torch.allclose(sae_output, x, atol=1e-6)
-#     value = sae_output.sum()
-#     value.backward()
-#     hooked_sae.reset_hooks()
+    sae_output = wrapped_hook_tc(x)
+    assert torch.allclose(sae_output, x_out, atol=1e-6)
+    value = sae_output.sum()
+    value.backward()
+    wrapped_hook_tc.reset_hooks()
 
-#     # Compute gradient analytically
-#     if act_name.endswith("hook_z"):
-#         reshaped_output_grad = einops.rearrange(
-#             grad_cache["hook_sae_output"], "... n_heads d_head -> ... (n_heads d_head)"
-#         )
-#         analytic_grad = reshaped_output_grad @ hooked_sae.W_dec.T
-#     else:
-#         analytic_grad = grad_cache["hook_sae_output"] @ hooked_sae.W_dec.T
+    # Compute gradient analytically
+    analytic_grad = grad_cache["hook_sae_output"] @ wrapped_hook_tc.W_dec.T
 
-#     # Compare analytic gradient with pytorch computed gradient
-#     assert torch.allclose(grad_cache["hook_sae_acts_post"], analytic_grad, atol=1e-6)
+    # Compare analytic gradient with pytorch computed gradient
+    assert torch.allclose(
+        grad_cache["transcoder.hook_sae_acts_post"], analytic_grad, atol=1e-6
+    )
