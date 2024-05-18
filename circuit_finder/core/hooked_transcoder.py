@@ -154,12 +154,16 @@ class HookedTranscoderWrapper(HookedRootModule):
     ):
         super().__init__()
         self.transcoder = transcoder
-        self.mlp = mlp
 
         self.hook_sae_error = HookPoint()
         self.hook_sae_output = HookPoint()
-        self.mlp.to(transcoder.cfg.device)
         self.setup()
+
+        # NOTE: we want to exclude the MLP from the HookedTransformer's hook points.
+        # So we add mlp after setup.
+        # Suggested by Arthur
+        self.mlp = mlp
+        self.mlp.to(transcoder.cfg.device)
 
     @property
     def cfg(self):
@@ -189,13 +193,13 @@ class HookedTranscoderReplacementContext:
     model: tl.HookedTransformer
     transcoders: Sequence[HookedTranscoder]
     layers: Sequence[LayerIndex]
-    original_mlps: Sequence[nn.Module]
+    original_mlps: dict[LayerIndex, nn.Module]
 
     def __init__(
         self, model: tl.HookedTransformer, transcoders: Sequence[HookedTranscoder]
     ):
         self.layers = [get_layer_of_hook_name(t.cfg.hook_name) for t in transcoders]
-        self.original_mlps = [model.blocks[layer].mlp for layer in self.layers]
+        self.original_mlps = {layer: model.blocks[layer].mlp for layer in self.layers}
         self.transcoders = transcoders
         self.model = model
 
@@ -204,6 +208,8 @@ class HookedTranscoderReplacementContext:
         for layer, transcoder in zip(self.layers, self.transcoders):
             mlp = self.model.blocks[layer].mlp
             self.model.blocks[layer].mlp = HookedTranscoderWrapper(transcoder, mlp)
+
+        self.model.setup()
 
         # # Replace original run_with_cache to include the transcoders' cache
         # self.orig_run_with_cache = self.model.run_with_cache
@@ -215,8 +221,9 @@ class HookedTranscoderReplacementContext:
 
     def __exit__(self, exc_type, exc_value, exc_tb):
         # Restore original MLPs
-        for layer, mlp in zip(self.layers, self.original_mlps):
+        for layer, mlp in self.original_mlps.items():
             self.model.blocks[layer].mlp = mlp
 
         # # Restore original run_with_cache
         # self.model.run_with_cache = self.orig_run_with_cache
+        self.model.setup()

@@ -1,5 +1,6 @@
 from circuit_finder.core.hooked_transcoder import (
     HookedTranscoder,
+    HookedTranscoderWrapper,
     HookedTranscoderReplacementContext,
 )
 from circuit_finder.core.hooked_transcoder_config import HookedTranscoderConfig
@@ -76,7 +77,6 @@ def test_forward_reconstructs_input(model):
     assert sae_output.shape == x_out.shape
 
 
-@pytest.mark.xfail
 def test_run_with_cache(model):
     """Verifies that run_with_cache caches SAE activations"""
     act_in = "blocks.0.ln2.hook_normalized"
@@ -86,60 +86,57 @@ def test_run_with_cache(model):
         act_in,
         act_out,
     )
+    tc_cfg.use_error_term = True
     hooked_tc = HookedTranscoder(tc_cfg)
 
-    _, cache = model.run_with_cache(prompt)
-    x_in = cache[act_in]
-    x_out = cache[act_out]
+    expected_hook_names = [
+        "transcoder.hook_sae_input",
+        "transcoder.hook_sae_recons",
+        "transcoder.hook_sae_acts_pre",
+        "transcoder.hook_sae_acts_post",
+        "hook_sae_error",
+        "hook_sae_output",
+    ]
 
     with HookedTranscoderReplacementContext(model, [hooked_tc]):
         _, cache = model.run_with_cache(prompt)
 
-        assert "hook_sae_input" in cache
-        assert "hook_sae_acts_pre" in cache
-        assert "hook_sae_acts_post" in cache
-        assert "hook_sae_recons" in cache
-        assert "hook_sae_error" in cache
-        assert "hook_sae_output" in cache
+    for hook_name in expected_hook_names:
+        assert "blocks.0.mlp." + hook_name in cache
 
 
-# def test_run_with_hooks(model, act_name):
-#     """Verifies that run_with_hooks works with SAE activations"""
-#     c = Counter()
-#     sae_cfg = get_sae_config(model, act_name)
-#     hooked_sae = HookedSAE(sae_cfg)
+def test_error_term(model):
+    """Verifies that that if we use error_terms, HookedSAE returns an output that is equal to the input activations."""
+    act_in = "blocks.0.ln2.hook_normalized"
+    act_out = "blocks.0.hook_mlp_out"
+    tc_cfg = get_transcoder_config(
+        model,
+        act_in,
+        act_out,
+    )
+    tc_cfg.use_error_term = True
+    hooked_tc = HookedTranscoder(tc_cfg)
 
-#     _, cache = model.run_with_cache(prompt, names_filter=act_name)
-#     x = cache[act_name]
+    _, orig_cache = model.run_with_cache(prompt)
 
-#     sae_hooks = [
-#         "hook_sae_input",
-#         "hook_sae_acts_pre",
-#         "hook_sae_acts_post",
-#         "hook_sae_recons",
-#         "hook_sae_output",
-#     ]
+    # Test hooked transcoder wrapper
+    wrapped_hook_tc = HookedTranscoderWrapper(hooked_tc, model.blocks[0].mlp)
 
-#     sae_output = hooked_sae.run_with_hooks(
-#         x, fwd_hooks=[(sae_hook_name, c.inc) for sae_hook_name in sae_hooks]
-#     )
-#     assert sae_output.shape == x.shape
+    in_orig = orig_cache[act_in]
+    out_orig = orig_cache[act_out]
+    sae_out = wrapped_hook_tc(in_orig)
+    assert sae_out.shape == out_orig.shape
+    assert torch.allclose(sae_out, out_orig, atol=1e-6)
 
-#     assert c.count == len(sae_hooks)
+    # Test replacement context
+    with HookedTranscoderReplacementContext(model, [hooked_tc]):
+        _, spliced_cache = model.run_with_cache(prompt)
 
+    out_orig = orig_cache[act_out]
+    out_spliced = spliced_cache[act_out]
 
-# def test_error_term(model, act_name):
-#     """Verifies that that if we use error_terms, HookedSAE returns an output that is equal to the input activations."""
-#     sae_cfg = get_sae_config(model, act_name)
-#     sae_cfg.use_error_term = True
-#     hooked_sae = HookedSAE(sae_cfg)
-
-#     _, cache = model.run_with_cache(prompt, names_filter=act_name)
-#     x = cache[act_name]
-
-#     sae_output = hooked_sae(x)
-#     assert sae_output.shape == x.shape
-#     assert torch.allclose(sae_output, x, atol=1e-6)
+    assert out_orig.shape == out_spliced.shape
+    assert torch.allclose(out_orig, out_spliced, atol=1e-6)
 
 
 # def test_error_grads(model, act_name):
