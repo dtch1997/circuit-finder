@@ -1,90 +1,4 @@
 # type: ignore
-"""Linear Edge Attribution Patching.
-
-Similar to Edge Attribution Patching, calculates the effect of edges on some downstream metric.
-However, takes advantage of linearity afforded by transcoders and MLPs to parallelize
-"""
-
-# %%
-import gc
-import torch
-import transformer_lens as tl
-
-from transcoders_slim.transcoder import Transcoder
-from torch import Tensor
-from jaxtyping import Int, Float
-from dataclasses import dataclass
-from einops import rearrange, einsum
-from typing import Callable
-
-from circuit_finder.core.types import LayerIndex
-from circuit_finder.pretrained import (
-    load_attn_saes,
-    load_mlp_transcoders,
-    load_model,
-)
-
-
-def clear_mem():
-    gc.collect()
-    torch.cuda.empty_cache()
-
-
-def last_token_logit(model, tokens):
-    """just a simple metric for testing"""
-    logits = model(tokens, return_type="logits")[:, -2, :]
-    correct_logits = logits[torch.arange(logits.size(0)), tokens[:, -1]]
-    return correct_logits.mean()
-
-
-def preprocess_attn_saes(
-    attn_saes_in: dict[LayerIndex, tl.HookedSAE],
-) -> dict[LayerIndex, tl.HookedSAE]:
-    """Preprocess the SAEs to have the same feature dimension."""
-    # NOTE: currently do this by chopping off features, but this loses information
-    # A simple fix is to extend all SAEs to have the same feature dimension by adding zeros
-    # TODO: implement fix
-    attn_saes = {}
-    for layer, sae in attn_saes_in.items():
-        # chop off features so all have same size TODO fix this
-        sae.W_enc = torch.nn.Parameter(sae.W_enc[:, :24576], requires_grad=False)
-        sae.b_enc = torch.nn.Parameter(sae.b_enc[:24576], requires_grad=False)
-        sae.W_dec = torch.nn.Parameter(sae.W_dec[:24576, :], requires_grad=False)
-        sae.b_dec = torch.nn.Parameter(sae.b_dec, requires_grad=False)
-
-        # normalize so decoder ols have norm=1 when viewed as resid vectors
-        W_dec_z = rearrange(
-            sae.W_dec, "nf (nhead dhead) -> nf nhead dhead", nhead=model.cfg.n_heads
-        )
-        W_dec_resid = einsum(
-            W_dec_z, model.W_O[layer], "nf nhead dhead, nhead dhead dmodel -> nf dmodel"
-        )
-        norms = W_dec_resid.norm(dim=-1, keepdim=True)  # [nf, 1]
-
-        normed_sae = sae
-        normed_sae.W_dec = torch.nn.Parameter(sae.W_dec / norms)
-        normed_sae.W_enc = torch.nn.Parameter(sae.W_enc * norms.T)
-        normed_sae.b_enc = torch.nn.Parameter(sae.b_enc * norms.squeeze())
-
-        attn_saes[layer] = normed_sae
-
-    return attn_saes
-
-
-model = load_model()
-attn_saes = load_attn_saes()
-attn_saes = preprocess_attn_saes(attn_saes)
-transcoders = load_mlp_transcoders()
-
-print(len(attn_saes))
-print(len(transcoders))
-print(transcoders.keys())
-print(attn_saes.keys())
-
-MetricFn = Callable[[tl.HookedTransformer, Int[Tensor, "batch seq"]], Tensor]
-
-
-# type: ignore
 # %%
 import gc
 import torch
@@ -98,8 +12,8 @@ from dataclasses import dataclass
 from einops import rearrange, einsum
 from typing import Callable, cast
 
-from types_newname import LayerIndex
-from download import load_attn_saes as _load_attn_saes
+from circuit_finder.core.types import LayerIndex
+from circuit_finder.pretrained import load_attn_saes as _load_attn_saes
 
 
 def clear_mem():
@@ -117,9 +31,7 @@ def last_token_logit(model, tokens):
 def load_attn_saes() -> dict[LayerIndex, tl.HookedSAE]:
     sae_dict = _load_attn_saes()
     attn_saes = {}
-    for module_name, sae in sae_dict.items():
-        layer = int(module_name.split(".")[1])
-
+    for layer, sae in sae_dict.items():
         # chop off features so all have same size TODO fix this
         sae.W_enc = torch.nn.Parameter(sae.W_enc[:, :24575], requires_grad=False)
         sae.b_enc = torch.nn.Parameter(sae.b_enc[:24575], requires_grad=False)
@@ -692,61 +604,6 @@ mlp_attn
 # %%
 print(len(finder.graph))
 for edge in finder.graph:
-    print(edge)
-
-# %%
-
-
-# %%
-
-tokens = model.to_tokens(
-    ["When John and Mary were at the store, John gave a bottle to Mary"]
-)
-corrupt_tokens = model.to_tokens(
-    ["When Alice and Bob were at the store, Alice gave a bottle to Bob"]
-)
-cfg = CircuitFinderConfig(threshold=0.2, contrast_pairs=True)
-leap = LEAP(cfg, tokens, model, attn_saes, transcoders, corrupt_tokens=corrupt_tokens)
-# %%
-leap.metric_step()
-print("num edges = ", len(leap.graph))
-
-for layer in reversed(range(1, model.cfg.n_layers)):
-    print("layer : ", layer)
-    leap.mlp_step(layer)
-    print("num edges = ", len(leap.graph))
-    leap.ov_step(layer)
-    print("num edges = ", len(leap.graph))
-    print()
-
-# %%
-attn_attn = [
-    (edge, attrib)
-    for (edge, attrib) in leap.graph[1:]
-    if edge[0].startswith("attn") and edge[1].startswith("attn")
-]
-attn_mlp = [
-    (edge, attrib)
-    for (edge, attrib) in leap.graph[1:]
-    if edge[0].startswith("attn") and edge[1].startswith("mlp")
-]
-mlp_attn = [
-    (edge, attrib)
-    for (edge, attrib) in leap.graph[1:]
-    if edge[0].startswith("mlp") and edge[1].startswith("attn")
-]
-mlp_mlp = [
-    (edge, attrib)
-    for (edge, attrib) in leap.graph[1:]
-    if edge[0].startswith("mlp") and edge[1].startswith("mlp")
-]
-
-print(len(attn_attn), len(attn_mlp), len(mlp_attn), len(mlp_mlp))
-# %%
-mlp_attn
-# %%
-print(len(leap.graph))
-for edge in leap.graph:
     print(edge)
 
 # %%
