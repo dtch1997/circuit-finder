@@ -139,38 +139,46 @@ def test_error_term(model):
     assert torch.allclose(out_orig, out_spliced, atol=1e-6)
 
 
-# def test_error_grads(model, act_name):
-#     """Verifies that if we use error terms, the error term has a gradient"""
-#     sae_cfg = get_sae_config(model, act_name)
-#     sae_cfg.use_error_term = True
-#     hooked_sae = HookedSAE(sae_cfg)
+def test_error_grads(model):
+    """Verifies that if we use error terms, the error term has a gradient"""
+    act_in = "blocks.0.ln2.hook_normalized"
+    act_out = "blocks.0.hook_mlp_out"
+    tc_cfg = get_transcoder_config(
+        model,
+        act_in,
+        act_out,
+    )
+    tc_cfg.use_error_term = True
+    hooked_tc = HookedTranscoder(tc_cfg)
+    wrapped_hook_tc = HookedTranscoderWrapper(hooked_tc, model.blocks[0].mlp)
 
-#     _, cache = model.run_with_cache(prompt, names_filter=act_name)
-#     x = cache[act_name]
+    # Define SAE input
+    _, orig_cache = model.run_with_cache(prompt)
+    x = orig_cache[act_in]
+    x_out = orig_cache[act_out]
 
-#     grad_cache = {}
-#     hooked_sae.reset_hooks()
+    grad_cache = {}
 
-#     def backward_cache_hook(act, hook):
-#         grad_cache[hook.name] = act.detach()
+    def backward_cache_hook(act, hook):
+        grad_cache[hook.name] = act.detach()
 
-#     hooked_sae.add_hook("hook_sae_error", backward_cache_hook, "bwd")
+    wrapped_hook_tc.add_hook("hook_sae_error", backward_cache_hook, "bwd")
 
-#     sae_output = hooked_sae(x)
-#     assert sae_output.shape == x.shape
-#     assert torch.allclose(sae_output, x, atol=1e-6)
+    sae_output = wrapped_hook_tc(x)
+    assert sae_output.shape == x_out.shape
+    assert torch.allclose(sae_output, x_out, atol=1e-6)
 
-#     value = sae_output.sum()
-#     value.backward()
-#     hooked_sae.reset_hooks()
+    value = sae_output.sum()
+    value.backward()
+    wrapped_hook_tc.reset_hooks()
 
-#     assert len(grad_cache) == 1
-#     assert "hook_sae_error" in grad_cache
+    assert len(grad_cache) == 1
+    assert "hook_sae_error" in grad_cache
 
-#     # NOTE: The output is linear in the error, hence analytic gradient is one
-#     grad = grad_cache["hook_sae_error"]
-#     analytic_grad = torch.ones_like(grad)
-#     assert torch.allclose(grad, analytic_grad, atol=1e-6)
+    # NOTE: The output is linear in the error, hence analytic gradient is one
+    grad = grad_cache["hook_sae_error"]
+    analytic_grad = torch.ones_like(grad)
+    assert torch.allclose(grad, analytic_grad, atol=1e-6)
 
 
 # def test_feature_grads_with_error_term(model, act_name):
