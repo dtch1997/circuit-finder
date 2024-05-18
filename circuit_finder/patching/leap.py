@@ -7,6 +7,7 @@ However, takes advantage of linearity afforded by transcoders and MLPs to parall
 
 # %%
 import gc
+from msilib import Feature
 import torch
 import transformer_lens as tl
 
@@ -33,10 +34,27 @@ def last_token_logit(model, tokens):
     return correct_logits.mean()
 
 
+FeatureIndex = int
+TokenIndex = int
 Node = str
 Edge = tuple[Node, Node]  # (downstream, upstream)
 Attrib = float
 ModuleName = Literal["mlp", "attn", "metric"]
+
+
+def parse_node_name(
+    node: Node,
+) -> tuple[ModuleName, LayerIndex, TokenIndex, FeatureIndex]:
+    """Parse a node name into its components."""
+    module, layer, pos, feature_id = node.split(".")
+    return module, int(layer), int(pos), int(feature_id)
+
+
+def get_node_name(
+    module: ModuleName, layer: LayerIndex, pos: TokenIndex, feature_id: FeatureIndex
+) -> Node:
+    """Get a node name from its components."""
+    return f"{module}.{layer}.{pos}.{feature_id}"
 
 
 def preprocess_attn_saes(
@@ -165,6 +183,9 @@ class LEAP:
         self.graph: list[tuple[Edge, Attrib]] = [
             (("null", f"metric.{self.n_layers}.{self.n_seq-2}.0"), 0)
         ]
+
+    def get_important_edges(self) -> list[Edge]:
+        return [edge for edge, _ in self.graph]
 
     def get_initial_cache(self):
         """Run model on tokens. Grab acts at mlp_in, and run them through
@@ -375,20 +396,43 @@ class LEAP:
             grad, "attn", down_layer, imp_down_feature_ids, imp_down_pos
         )
 
-    def get_imp_feature_ids_and_pos(self, down_module, down_layer):
-        """only compute attributions of nodes we've already deemed important!
-        module : str is name of upstream module. Options "mlp", "attn", "metric" """
-        imp_feature_ids = []
-        imp_pos = []
-        up_nodes_deduped = list(set([edge[1] for (edge, attrib) in self.graph]))
+    """ Helper functions """
+
+    def get_imp_feature_ids_and_pos(
+        self, down_module: ModuleName, down_layer: LayerIndex
+    ) -> tuple[list[FeatureIndex], list[TokenIndex]]:
+        """Get the feature indices and token positiosn of important nodes at a given layer
+
+        Returns:
+            imp_feature_ids : list of feature indices of important nodes.
+            imp_pos : list of token positions of important nodes.
+
+        These can be zipped together to get the (feature_id, pos) pairs of important nodes.
+
+        module : name of upstream module."""
+        imp_feature_ids: list[FeatureIndex] = []
+        imp_pos: list[TokenIndex] = []
+
+        # Get all nodes that are currently in the graph
+        up_nodes_set: set[Node] = set()
+        for edge, _ in self.get_important_edges():
+            _, upstream = edge
+            up_nodes_set.add(upstream)
+        up_nodes_deduped: list[Node] = list(up_nodes_set)
+
+        # up_nodes_deduped: list[Node] = list(set([edge[1] for (edge, _) in self.graph]))
         for up_node in up_nodes_deduped:
-            down_module_, down_layer_, pos, feature_id = up_node.split(".")
+            down_module_, down_layer_, pos, feature_id = parse_node_name(up_node)
+            # Filter by module and layer
+            # TODO: It seems like we could do this previously but ig it doesn't matter.
             if down_module_ == down_module and down_layer_ == str(down_layer):
                 imp_feature_ids += [int(feature_id)]
                 imp_pos += [int(pos)]
         return imp_feature_ids, imp_pos
 
-    def get_active_mlp_W_dec(self, down_layer):
+    def get_active_mlp_W_dec(
+        self, down_layer: LayerIndex
+    ) -> tuple[Tensor, Tensor, Tensor]:
         """so we don't have to dot with *every* upstream feature"""
         mlp_up_active_layers = self.mlp_active_feature_ids[0][
             self.mlp_active_feature_ids[0] < down_layer
@@ -401,7 +445,9 @@ class LEAP:
         )[mlp_up_active_layers, mlp_up_active_feature_ids, :]
         return mlp_active_W_dec, mlp_up_active_layers, mlp_up_active_feature_ids
 
-    def get_active_attn_W_dec(self, down_layer, down_module):
+    def get_active_attn_W_dec(
+        self, down_layer: LayerIndex, down_module: ModuleName
+    ) -> tuple[Tensor, Tensor, Tensor]:
         """so we don't have to dot with *every* upstream feature"""
         max_layer = down_layer
         if down_module == "mlp":  # mlp sees attn from same layer!
@@ -518,9 +564,9 @@ class LEAP:
         attribs,
         imp_down_feature_ids,
         imp_down_pos,
-        down_module_name,
-        down_layer,
-        up_module_name,
+        down_module_name: ModuleName,
+        down_layer: LayerIndex,
+        up_module_name: ModuleName,
         up_active_layers,
         up_active_feature_ids,
     ):
