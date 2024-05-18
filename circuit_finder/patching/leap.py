@@ -15,13 +15,10 @@ from torch import Tensor
 from jaxtyping import Int, Float
 from dataclasses import dataclass
 from einops import rearrange, einsum
-from typing import Callable
+from typing import Literal
 
-from circuit_finder.core.types import LayerIndex, MetricFn
-from circuit_finder.pretrained import (
-    load_attn_saes,
-    load_mlp_transcoders,
-)
+from circuit_finder.core.types import LayerIndex, MetricFn, HookNameFilterFn
+from circuit_finder.constants import device
 
 
 def clear_mem():
@@ -34,6 +31,12 @@ def last_token_logit(model, tokens):
     logits = model(tokens, return_type="logits")[:, -2, :]
     correct_logits = logits[torch.arange(logits.size(0)), tokens[:, -1]]
     return correct_logits.mean()
+
+
+Node = str
+Edge = tuple[Node, Node]  # (downstream, upstream)
+Attrib = float
+ModuleName = Literal["mlp", "attn", "metric"]
 
 
 def preprocess_attn_saes(
@@ -85,13 +88,33 @@ class LEAP:
     Similar to edge attribution patching, but fully linearises the network to compute attributions exactly
     """
 
+    # Models
+    model: tl.HookedTransformer
+    attn_saes: dict[LayerIndex, tl.HookedSAE]
+    transcoders: dict[LayerIndex, Transcoder]
+
+    # Data
+    tokens: Int[Tensor, "batch seq"]
+    corrupt_tokens: Int[Tensor, "batch seq"]
+
+    # Intermediate computations
+    mlp_feature_acts: Float[Tensor, "seq layer d_trans"]
+    mlp_is_active: Float[Tensor, "seq layer d_trans"]
+    attn_feature_acts: Float[Tensor, "seq layer d_sae"]
+    attn_is_active: Float[Tensor, "seq layer d_sae"]
+    mlp_errors: Float[Tensor, "seq layer d_model"]
+    attn_errors: Float[Tensor, "seq layer d_model"]
+
+    # Graph
+    graph: list[tuple[Edge, Attrib]]
+
     def __init__(
         self,
         cfg: LEAPConfig,
         tokens: Int[torch.Tensor, "batch seq"],
         model: tl.HookedTransformer,
-        attn_saes: dict[int, tl.HookedSAE],  # layer index: attn-out SAE
-        transcoders: dict[int, Transcoder],  # layer index: mlp transcoder
+        attn_saes: dict[LayerIndex, tl.HookedSAE],  # layer index: attn-out SAE
+        transcoders: dict[LayerIndex, Transcoder],  # layer index: mlp transcoder
         metric: MetricFn = last_token_logit,
         corrupt_tokens: Int[
             torch.Tensor, "batch seq"
@@ -135,10 +158,13 @@ class LEAP:
             "layer d_sae n_heads d_head , layer n_heads d_head d_model -> layer d_sae d_model",
         )
 
-        # We'll store (edge, attrib) pairs here. Initialise by making the metric an important node, by hand.
+        # NOTE: We'll store (edge, attrib) pairs here.
+        # Initialise by making the metric an important node, by hand.
         # edge = (downstream_node, upstream_node)
         # node = "{module_name}.{layer}.{pos}.{feature_id}"
-        self.graph = [(("null", f"metric.{self.n_layers}.{self.n_seq-2}.0"), 0)]
+        self.graph: list[tuple[Edge, Attrib]] = [
+            (("null", f"metric.{self.n_layers}.{self.n_seq-2}.0"), 0)
+        ]
 
     def get_initial_cache(self):
         """Run model on tokens. Grab acts at mlp_in, and run them through
@@ -148,7 +174,7 @@ class LEAP:
         # This code is verbose but totally trivial!
 
         # Run model and cache the acts we need
-        names_filter = lambda x: (
+        names_filter: HookNameFilterFn = lambda x: (
             x.endswith("ln2.hook_normalized")
             or x.endswith("mlp_out")
             or x.endswith("hook_z")
@@ -170,16 +196,16 @@ class LEAP:
             )
 
         # Save attention patterns (avg over batch and head) and layernorm scales (avg over batch)
-        self.pattern = torch.stack(
+        self.pattern: Float[Tensor, "layer head q_pos k_pos"] = torch.stack(
             [cache["pattern", layer].mean(0) for layer in self.layers]
-        )  # [layer head qpos kpos]
-        self.attn_layernorm_scales = torch.stack(
+        )
+        self.attn_layernorm_scales: Float[Tensor, "layer pos"] = torch.stack(
             [
                 cache[f"blocks.{layer}.ln1.hook_scale"].mean(dim=0)
                 for layer in self.layers
             ]
         )  # [layer pos]
-        self.mlp_layernorm_scales = torch.stack(
+        self.mlp_layernorm_scales: Float[Tensor, "layer pos"] = torch.stack(
             [
                 cache[f"blocks.{layer}.ln2.hook_scale"].mean(dim=0)
                 for layer in self.layers
@@ -189,23 +215,23 @@ class LEAP:
         # Save feature acts
         # Initialise empty tensors to store feature acts and is_active (both batchmeaned)
         self.mlp_feature_acts: Float[Tensor, "seq layer d_trans"] = torch.empty(
-            self.n_seq, self.n_layers, self.d_trans
-        ).cuda()
+            self.n_seq, self.n_layers, self.d_trans, device=device
+        )
         self.mlp_is_active: Float[Tensor, "seq layer d_trans"] = torch.empty(
-            self.n_seq, self.n_layers, self.d_trans
-        ).cuda()
+            self.n_seq, self.n_layers, self.d_trans, device=device
+        )
         self.attn_feature_acts: Float[Tensor, "seq layer d_sae"] = torch.empty(
-            self.n_seq, self.n_layers, self.d_sae
-        ).cuda()
+            self.n_seq, self.n_layers, self.d_sae, device=device
+        )
         self.attn_is_active: Float[Tensor, "seq layer d_sae"] = torch.empty(
-            self.n_seq, self.n_layers, self.d_sae
-        ).cuda()
+            self.n_seq, self.n_layers, self.d_sae, device=device
+        )
         self.mlp_errors: Float[Tensor, "seq layer d_model"] = torch.empty(
-            self.n_seq, self.n_layers, self.d_model
-        ).cuda()
+            self.n_seq, self.n_layers, self.d_model, device=device
+        )
         self.attn_errors: Float[Tensor, "seq layer d_model"] = torch.empty(
-            self.n_seq, self.n_layers, self.d_model
-        ).cuda()
+            self.n_seq, self.n_layers, self.d_model, device=device
+        )
 
         # Add feature acts to the empty tensors, layer by layer
         for layer in range(self.n_layers):
@@ -336,7 +362,6 @@ class LEAP:
             1
         )  # [kpos, 1, 1]
 
-        # ..
         grad = einsum(
             imp_active,
             imp_enc_rows_z,
