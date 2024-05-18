@@ -6,7 +6,6 @@ import transformer_lens as tl
 
 from transcoders_slim.transcoder import Transcoder
 
-from transcoders_slim.load_pretrained import load_pretrained
 from torch import Tensor
 from jaxtyping import Int, Float
 from dataclasses import dataclass
@@ -59,21 +58,12 @@ def preprocess_attn_saes(
     return attn_saes
 
 
-def load_transcoders() -> dict[LayerIndex, Transcoder]:
-    transcoders_dict = load_pretrained()
-    transcoders = {}
-    for module_name, transcoder in transcoders_dict.items():
-        layer = int(module_name.split(".")[1])
-        transcoders[layer] = transcoder
-    return transcoders
-
-
 # model = load_model()
 model = tl.HookedTransformer.from_pretrained("gpt2").cuda()
 attn_saes = load_attn_saes()
 attn_saes = preprocess_attn_saes(attn_saes)
-transcoders = load_transcoders()
-# transcoders = load_mlp_transcoders()
+# transcoders = load_transcoders()
+transcoders = load_mlp_transcoders()
 
 print(len(attn_saes))
 print(len(transcoders))
