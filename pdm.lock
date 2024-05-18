@@ -5,7 +5,7 @@
 groups = ["default", "test"]
 strategy = ["cross_platform", "inherit_metadata"]
 lock_version = "4.4.1"
-content_hash = "sha256:2470117f1b54f267424dcfcf0d333ba3686149b95e8597550f14b8f07c6b7bda"
+content_hash = "sha256:1c32a27ca1aabec879eca9979f4abcf1ff1ae6627c24ae577758391e0bfbda35"
 
 [[package]]
 name = "accelerate"
@@ -3942,6 +3942,20 @@ dependencies = [
 files = [
     {file = "sympy-1.12-py3-none-any.whl", hash = "sha256:c3588cd4295d0c0f603d0f2ae780587e64e2efeedb3521e46b9bb1d08d184fa5"},
     {file = "sympy-1.12.tar.gz", hash = "sha256:ebf595c8dac3e0fdc4152c51878b498396ec7f30e7a914d6071e674d49420fb8"},
+]
+
+[[package]]
+name = "syrupy"
+version = "4.6.1"
+requires_python = ">=3.8.1,<4"
+summary = "Pytest Snapshot Test Utility"
+groups = ["default"]
+dependencies = [
+    "pytest<9.0.0,>=7.0.0",
+]
+files = [
+    {file = "syrupy-4.6.1-py3-none-any.whl", hash = "sha256:203e52f9cb9fa749cf683f29bd68f02c16c3bc7e7e5fe8f2fc59bdfe488ce133"},
+    {file = "syrupy-4.6.1.tar.gz", hash = "sha256:37a835c9ce7857eeef86d62145885e10b3cb9615bc6abeb4ce404b3f18e1bb36"},
 ]
 
 [[package]]

@@ -1,4 +1,3 @@
-# type: ignore
 """Linear Edge Attribution Patching.
 
 Similar to Edge Attribution Patching, calculates the effect of edges on some downstream metric.
@@ -7,7 +6,6 @@ However, takes advantage of linearity afforded by transcoders and MLPs to parall
 
 # %%
 import gc
-from msilib import Feature
 import torch
 import transformer_lens as tl
 
@@ -414,17 +412,25 @@ class LEAP:
         imp_pos: list[TokenIndex] = []
 
         # Get all nodes that are currently in the graph
-        up_nodes_set: set[Node] = set()
-        for edge, _ in self.get_important_edges():
-            _, upstream = edge
-            up_nodes_set.add(upstream)
-        up_nodes_deduped: list[Node] = list(up_nodes_set)
+        # up_nodes_set: set[Node] = set()
+        # for edge in self.get_important_edges():
+        #     _, upstream = edge
+        #     up_nodes_set.add(upstream)
+        # up_nodes_deduped: list[Node] = list(up_nodes_set)
 
         # up_nodes_deduped: list[Node] = list(set([edge[1] for (edge, _) in self.graph]))
+        # for up_node in up_nodes_deduped:
+        #     down_module_, down_layer_, pos, feature_id = parse_node_name(up_node)
+        #     # Filter by module and layer
+        #     # TODO: It seems like we could do this previously but ig it doesn't matter.
+        #     if down_module_ == down_module and down_layer_ == down_layer:
+        #         imp_feature_ids += [int(feature_id)]
+        #         imp_pos += [int(pos)]
+        imp_feature_ids = []
+        imp_pos = []
+        up_nodes_deduped = list(set([edge[1] for (edge, attrib) in self.graph]))
         for up_node in up_nodes_deduped:
-            down_module_, down_layer_, pos, feature_id = parse_node_name(up_node)
-            # Filter by module and layer
-            # TODO: It seems like we could do this previously but ig it doesn't matter.
+            down_module_, down_layer_, pos, feature_id = up_node.split(".")
             if down_module_ == down_module and down_layer_ == str(down_layer):
                 imp_feature_ids += [int(feature_id)]
                 imp_pos += [int(pos)]

@@ -7,6 +7,7 @@ dependencies = [
     "sae-lens==2.1.3",
     "einops>=0.7.0",
     "huggingface-hub>=0.23.0",
+    "syrupy>=4.6.1",
 ]
 name = "circuit-finder"
 version = "0.0.1"
