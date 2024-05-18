@@ -13,13 +13,15 @@ from circuit_finder.patching.leap import (
     LEAPConfig,
 )
 
+from circuit_finder.constants import device
+
 
 @pytest.mark.slow
 def test_leap_e2e(snapshot):
     # Load models
     model = tl.HookedTransformer.from_pretrained(
         "gpt2",
-        device="cuda",
+        device=device,
         fold_ln=True,
         center_writing_weights=True,
         center_unembed=True,
