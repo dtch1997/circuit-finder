@@ -89,3 +89,14 @@ print(len(attn_attn), len(attn_mlp), len(mlp_attn), len(mlp_mlp))
 print(len(leap.graph))
 for edge in leap.graph:
     print(edge)
+
+
+#%% 
+leap.graph
+#%%
+from circuit_finder.neuronpedia import get_neuronpedia_url_for_quick_list
+get_neuronpedia_url_for_quick_list(layer=5,
+                                   features=[6255],
+                                   sae_family = "tres-dc")
+
+# %%

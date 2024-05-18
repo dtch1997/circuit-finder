@@ -187,6 +187,8 @@ class LEAP:
             (("null", f"metric.{self.n_layers}.{self.n_seq-2}.0"), 0)
         ]
 
+        self.error_graph = []
+
     def get_important_edges(self) -> list[Edge]:
         return [edge for edge, _ in self.graph]
 
@@ -476,30 +478,44 @@ class LEAP:
         mlp_active_W_dec, mlp_up_active_layers, mlp_up_active_feature_ids = (
             self.get_active_mlp_W_dec(down_layer)
         )
-        imp_mlp_feature_acts = self.mlp_feature_acts[
+        active_mlp_feature_acts = self.mlp_feature_acts[
             :, mlp_up_active_layers, mlp_up_active_feature_ids
         ]  # [pos, up_active_id]
 
         if down_module in ["mlp", "metric"]:  # down mlp doesn't mix positions
-            imp_mlp_feature_acts = imp_mlp_feature_acts[
+            active_mlp_feature_acts : Float[Tensor, "imp_id, up_active_id"] = active_mlp_feature_acts[
                 imp_down_pos
-            ]  # [imp_id, up_active_id]
+            ] 
+
+            imp_mlp_errors : Float[Tensor, "imp_id, layer, d_model"] = self.mlp_errors[imp_down_pos]
 
             # Compute attribs of imp nodes wrt all upstream MLP nodes
             mlp_attribs = einsum(
-                imp_mlp_feature_acts,  # TODO RENAME TO ACTIVE_MLP_FEATURE_ACTS
+                active_mlp_feature_acts,
                 mlp_active_W_dec,
                 grad,
                 "imp_id up_active_id, up_active_id d_model, imp_id d_model -> imp_id up_active_id",
             )
+
+            mlp_error_attribs = einsum(
+                imp_mlp_errors[:, :down_layer],
+                grad,
+                "imp_id layer d_model, imp_id d_model -> imp_id layer")
+
+
         elif down_module in ["attn"]:
             # Compute attribs of imp nodes wrt all upstream MLP nodes
             mlp_attribs = einsum(
-                imp_mlp_feature_acts,  # TODO RENAME TO ACTIVE_MLP_FEATURE_ACTS
+                active_mlp_feature_acts,
                 mlp_active_W_dec,
                 grad,
                 "seq up_active_id, up_active_id d_model, seq imp_id d_model -> seq imp_id up_active_id",
             )
+            
+            mlp_error_attribs = einsum(
+                self.mlp_errors[:, :down_layer],
+                grad,
+                "seq layer d_model, seq imp_id d_model -> seq imp_id layer")
         else:
             print(down_module)
             raise ValueError("down_module must be one of ['mlp', 'attn', 'metric']")
@@ -508,6 +524,7 @@ class LEAP:
         # mlp_attribs = torch.min(mlp_attribs, imp_mlp_feature_acts)
         self.add_to_graph(
             mlp_attribs,
+            mlp_error_attribs,
             imp_down_feature_ids,
             imp_down_pos,
             down_module_name=down_module,
@@ -524,32 +541,45 @@ class LEAP:
         attn_active_W_dec, attn_up_active_layers, attn_up_active_feature_ids = (
             self.get_active_attn_W_dec(down_layer, down_module)
         )
-        imp_attn_feature_acts = self.attn_feature_acts[
+        active_attn_feature_acts : Float[Tensor, "imp_id, up_active_id"] = self.attn_feature_acts[
             :, attn_up_active_layers, attn_up_active_feature_ids
-        ]  # [imp_id, up_active_id]
+        ] 
 
         if down_module in ["mlp", "metric"]:  # down mlp doesn't mix positions
-            imp_attn_feature_acts = imp_attn_feature_acts[
+            active_attn_feature_acts = active_attn_feature_acts[
                 imp_down_pos
             ]  # [imp_id, up_active_id]
+            imp_attn_errors : Float[Tensor, "imp_id, layer, d_model"] = self.attn_errors[imp_down_pos]
             attn_attribs = einsum(
-                imp_attn_feature_acts,
+                active_attn_feature_acts,
                 attn_active_W_dec,
                 grad,
                 "imp_id up_active_id, up_active_id d_model, imp_id d_model -> imp_id up_active_id",
             )
+
+            attn_error_attribs = einsum(
+                imp_attn_errors[:,:down_layer+1], # MLP sees attention from same layer
+                grad,
+                "imp_id layer d_model, imp_id d_model -> imp_id layer")
+
         elif down_module in ["attn"]:
             attn_attribs = einsum(
-                imp_attn_feature_acts,
+                active_attn_feature_acts,
                 attn_active_W_dec,
                 grad,
                 "seq up_active_id, up_active_id d_model, seq imp_id d_model -> seq imp_id up_active_id",
             )
+            
+            attn_error_attribs = einsum(
+                self.attn_errors[:, :down_layer],
+                grad,
+                "seq layer d_model, seq imp_id d_model -> seq imp_id layer")
         else:
             raise ValueError("down_module must be one of ['mlp', 'attn', 'metric']")
 
         self.add_to_graph(
             attn_attribs,
+            attn_error_attribs,
             imp_down_feature_ids,
             imp_down_pos,
             down_module_name=down_module,
@@ -564,7 +594,8 @@ class LEAP:
 
     def add_to_graph(
         self,
-        attribs,
+        attribs,   # [seq, imp_id, up_active_id] if down_module==attn.  otherwise [imp_id, up_active_id]
+        error_attribs, # [seq, imp_id, layer] if down_module==attn.  otherwise [imp_id, layer]
         imp_down_feature_ids,
         imp_down_pos,
         down_module_name: ModuleName,
@@ -572,7 +603,9 @@ class LEAP:
         up_module_name: ModuleName,
         up_active_layers,
         up_active_feature_ids,
-    ):
+    ):  
+        if len(imp_down_pos) == 0:
+            return
         # Convert lists to PyTorch tensors
         imp_down_feature_ids = torch.tensor(
             imp_down_feature_ids, dtype=torch.long, device=attribs.device
@@ -621,3 +654,29 @@ class LEAP:
             # don't bother adding nodes at pos=0, since this is BOS token
             if not edge[1].split(".")[2] == "0":
                 self.graph.append((edge, value.item()))  # type: ignore
+        
+        print("down seqs", down_seqs.shape)
+        print("up seqs", up_seqs.shape)
+        print("imp down pos: ", imp_down_pos.shape)
+        print("error attribs: ", error_attribs.shape)
+        # Add errors
+        if down_module_name in ["mlp", "metric"]:
+            # error_attribs : [imp_id, layer]
+            for imp_id in range(error_attribs.size(0)):
+                for up_layer in range(error_attribs.size(1)):
+                    edge = (f"{down_module_name}.{down_layer}.{imp_down_pos[imp_id]}.{imp_down_feature_ids[imp_id]}",
+                            f"{up_module_name}_error.{up_layer}.{imp_down_pos[imp_id]}.{0}")
+                    attrib = error_attribs[imp_id, up_layer]
+                    self.error_graph.append((edge, attrib.item()))
+
+        if down_module_name in ["attn"]:
+            # error_attribs : [seq, imp_id, layer]
+            for imp_id in range(error_attribs.size(1)):
+                for up_layer in range(error_attribs.size(2)):
+                    for up_seq in range(error_attribs.size(0)):
+                        edge = (f"{down_module_name}.{down_layer}.{imp_down_pos[imp_id]}.{imp_down_feature_ids[imp_id]}",
+                                f"{up_module_name}_error.{up_layer}.{up_seq}.{0}")
+                        attrib = error_attribs[up_seq, imp_id, up_layer]
+                        self.error_graph.append((edge, attrib.item()))
+
+ 
