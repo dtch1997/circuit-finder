@@ -17,7 +17,7 @@ from dataclasses import dataclass
 from einops import rearrange, einsum
 from typing import Callable
 
-from circuit_finder.core.types import LayerIndex
+from circuit_finder.core.types import LayerIndex, MetricFn
 from circuit_finder.pretrained import (
     load_attn_saes,
     load_mlp_transcoders,
@@ -38,6 +38,7 @@ def last_token_logit(model, tokens):
 
 def preprocess_attn_saes(
     attn_saes_in: dict[LayerIndex, tl.HookedSAE],
+    model: tl.HookedTransformer,
 ) -> dict[LayerIndex, tl.HookedSAE]:
     """Preprocess the SAEs to have the same feature dimension."""
     # NOTE: currently do this by chopping off features, but this loses information
@@ -70,29 +71,9 @@ def preprocess_attn_saes(
     return attn_saes
 
 
-model = tl.HookedTransformer.from_pretrained(
-    "gpt2",
-    device="cuda",
-    fold_ln=True,
-    center_writing_weights=True,
-    center_unembed=True,
-)
-
-attn_saes = load_attn_saes()
-attn_saes = preprocess_attn_saes(attn_saes)
-transcoders = load_mlp_transcoders()
-
-print(len(attn_saes))
-print(len(transcoders))
-print(transcoders.keys())
-print(attn_saes.keys())
-
-MetricFn = Callable[[tl.HookedTransformer, Int[Tensor, "batch seq"]], Tensor]
-
-
 # %%
 @dataclass
-class CircuitFinderConfig:
+class LEAPConfig:
     threshold: float = 0.01
     contrast_pairs: bool = False
 
@@ -106,7 +87,7 @@ class LEAP:
 
     def __init__(
         self,
-        cfg: CircuitFinderConfig,
+        cfg: LEAPConfig,
         tokens: Int[torch.Tensor, "batch seq"],
         model: tl.HookedTransformer,
         attn_saes: dict[int, tl.HookedSAE],  # layer index: attn-out SAE
@@ -157,7 +138,7 @@ class LEAP:
         # We'll store (edge, attrib) pairs here. Initialise by making the metric an important node, by hand.
         # edge = (downstream_node, upstream_node)
         # node = "{module_name}.{layer}.{pos}.{feature_id}"
-        self.graph = [((None, f"metric.{self.n_layers}.{self.n_seq-2}.0"), None)]
+        self.graph = [(("null", f"metric.{self.n_layers}.{self.n_seq-2}.0"), 0)]
 
     def get_initial_cache(self):
         """Run model on tokens. Grab acts at mlp_in, and run them through
@@ -566,58 +547,3 @@ class LEAP:
             # don't bother adding nodes at pos=0, since this is BOS token
             if not edge[1].split(".")[2] == "0":
                 self.graph.append((edge, value.item()))  # type: ignore
-
-
-# %%
-
-tokens = model.to_tokens(
-    ["When John and Mary were at the store, John gave a bottle to Mary"]
-)
-corrupt_tokens = model.to_tokens(
-    ["When Alice and Bob were at the store, Alice gave a bottle to Bob"]
-)
-cfg = CircuitFinderConfig(threshold=0.2, contrast_pairs=True)
-leap = LEAP(cfg, tokens, model, attn_saes, transcoders, corrupt_tokens=corrupt_tokens)
-# %%
-leap.metric_step()
-print("num edges = ", len(leap.graph))
-
-for layer in reversed(range(1, model.cfg.n_layers)):
-    print("layer : ", layer)
-    leap.mlp_step(layer)
-    print("num edges = ", len(leap.graph))
-    leap.ov_step(layer)
-    print("num edges = ", len(leap.graph))
-    print()
-
-# %%
-attn_attn = [
-    (edge, attrib)
-    for (edge, attrib) in leap.graph[1:]
-    if edge[0].startswith("attn") and edge[1].startswith("attn")
-]
-attn_mlp = [
-    (edge, attrib)
-    for (edge, attrib) in leap.graph[1:]
-    if edge[0].startswith("attn") and edge[1].startswith("mlp")
-]
-mlp_attn = [
-    (edge, attrib)
-    for (edge, attrib) in leap.graph[1:]
-    if edge[0].startswith("mlp") and edge[1].startswith("attn")
-]
-mlp_mlp = [
-    (edge, attrib)
-    for (edge, attrib) in leap.graph[1:]
-    if edge[0].startswith("mlp") and edge[1].startswith("mlp")
-]
-
-print(len(attn_attn), len(attn_mlp), len(mlp_attn), len(mlp_mlp))
-# %%
-mlp_attn
-# %%
-print(len(leap.graph))
-for edge in leap.graph:
-    print(edge)
-
-# %%
