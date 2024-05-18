@@ -1,3 +1,4 @@
+# flake8: noqa
 # %%
 """Demonstrate how to do linear edge attribution patching using LEAP"""
 
@@ -89,3 +90,12 @@ print(len(attn_attn), len(attn_mlp), len(mlp_attn), len(mlp_mlp))
 print(len(leap.graph))
 for edge in leap.graph:
     print(edge)
+
+# %%
+from circuit_finder.patching.eap_graph import EAPGraph
+
+import pickle
+
+graph = leap.graph
+graph = EAPGraph(graph)
+pickle.dump(graph, open("graph.pkl", "wb"))

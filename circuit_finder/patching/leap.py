@@ -564,7 +564,8 @@ class LEAP:
 
     def add_to_graph(
         self,
-        attribs,
+        attribs: Float[Tensor, "imp_id up_active_id"]
+        | Float[Tensor, "seq imp_id up_active_id"],
         imp_down_feature_ids,
         imp_down_pos,
         down_module_name: ModuleName,
@@ -585,10 +586,12 @@ class LEAP:
         mask = attribs > self.cfg.threshold
         # Use the mask to find the relevant indices
         if down_module_name in ["mlp", "metric"]:
+            assert len(attribs.size()) == 2, "attribs must be 2D for mlp and metric"
             imp_ids, up_active_ids = torch.where(mask)
             attrib_values = attribs[imp_ids, up_active_ids].flatten()
 
         elif down_module_name == "attn":
+            assert len(attribs.size()) == 3, "attribs must be 2D for mlp and metric"
             up_seqs, imp_ids, up_active_ids = torch.where(mask)
             attrib_values = attribs[up_seqs, imp_ids, up_active_ids].flatten()
         else:
