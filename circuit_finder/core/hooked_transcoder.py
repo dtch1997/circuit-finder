@@ -169,6 +169,22 @@ class HookedTranscoderWrapper(HookedRootModule):
     def cfg(self):
         return self.transcoder.cfg
 
+    @property
+    def W_dec(self):
+        return self.transcoder.W_dec
+
+    @property
+    def b_dec(self):
+        return self.transcoder.b_dec
+
+    @property
+    def W_enc(self):
+        return self.transcoder.W_enc
+
+    @property
+    def b_enc(self):
+        return self.transcoder.b_enc
+
     def forward(self, x):
         sae_output = self.transcoder(x)
         if self.cfg.use_error_term:

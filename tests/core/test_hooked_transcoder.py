@@ -6,7 +6,6 @@ from circuit_finder.core.hooked_transcoder import (
 from circuit_finder.core.hooked_transcoder_config import HookedTranscoderConfig
 
 
-import einops
 import pytest
 import torch
 
