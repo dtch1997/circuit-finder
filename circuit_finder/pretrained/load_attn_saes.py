@@ -38,6 +38,7 @@ def parse_layer_for_autoencoder_run(auto_encoder_run: str) -> int:
 
 def load_attn_saes(
     layers: list[int] = ALL_GPT_2_SMALL_LAYERS,
+    device: str = device,
 ) -> dict[LayerIndex, HookedSAE]:
     """Load the attention-out SAEs trained by Connor Kissane and Rob Kryzgowski
 

@@ -14,6 +14,7 @@ def get_hook_point_from_layer(layer: LayerIndex) -> str:
 
 def load_resid_saes(
     layers: list[int] = ALL_GPT_2_SMALL_LAYERS + [12],
+    device: str = device,
 ) -> dict[LayerIndex, HookedSAE]:
     layer_to_sae = {}
     for layer in layers:

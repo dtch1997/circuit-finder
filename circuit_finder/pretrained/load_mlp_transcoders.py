@@ -17,6 +17,7 @@ def parse_layer_of_module_name(module_name: str) -> LayerIndex:
 
 def load_mlp_transcoders(
     layers: list[int] = ALL_GPT_2_SMALL_LAYERS,
+    device: str = device,
 ) -> dict[LayerIndex, Transcoder]:
     transcoders_dict = load_pretrained(get_filenames(layers))
     transcoders = {}
