@@ -187,16 +187,16 @@ class HookedTranscoderWrapper(HookedRootModule):
 
     def forward(self, x):
         sae_output = self.transcoder(x)
-        if self.cfg.use_error_term:
-            with torch.no_grad():
-                clean_sae_out = self.transcoder(x)
-                clean_mlp_out = self.mlp(x)
-                sae_error = clean_mlp_out - clean_sae_out
-            sae_error.requires_grad = True
-            sae_error.retain_grad()
-            sae_error = self.hook_sae_error(sae_error)
-            sae_output += sae_error
-        return self.hook_sae_output(sae_output)
+        if not self.cfg.use_error_term:
+            return self.hook_sae_output(sae_output)
+        with torch.no_grad():
+            clean_sae_out = self.transcoder(x)
+            clean_mlp_out = self.mlp(x)
+            sae_error = clean_mlp_out - clean_sae_out
+        sae_error.requires_grad = True
+        sae_error.retain_grad()
+        sae_error = self.hook_sae_error(sae_error)
+        return self.hook_sae_output(sae_output + sae_error)
 
 
 def get_layer_of_hook_name(hook_point):
@@ -217,15 +217,19 @@ class HookedTranscoderReplacementContext:
         self.layers = [get_layer_of_hook_name(t.cfg.hook_name) for t in transcoders]
         self.original_mlps = {layer: model.blocks[layer].mlp for layer in self.layers}
         self.transcoders = transcoders
+        self.wrapped_transcoders = []
         self.model = model
 
     def __enter__(self):
         # Replace all MLPs with transcoder
         for layer, transcoder in zip(self.layers, self.transcoders):
             mlp = self.model.blocks[layer].mlp
-            self.model.blocks[layer].mlp = HookedTranscoderWrapper(transcoder, mlp)
+            wrapped_transcoder = HookedTranscoderWrapper(transcoder, mlp)
+            self.wrapped_transcoders.append(wrapped_transcoder)
+            self.model.blocks[layer].mlp = wrapped_transcoder
 
         self.model.setup()
+        return self
 
         # # Replace original run_with_cache to include the transcoders' cache
         # self.orig_run_with_cache = self.model.run_with_cache

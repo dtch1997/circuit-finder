@@ -42,9 +42,9 @@ if __name__ == "__main__":
     mlp_transcoders = load_hooked_mlp_transcoders([8])
     mlp_transcoder = mlp_transcoders[8]
     # TODO: For some reason, this doesn't work?
-    # mlp_transcoder.cfg.use_error_term = True
+    mlp_transcoder.cfg.use_error_term = True
 
-    # NOTE: this will be found under the name 'blocks.8.transcoder.hook_sae_acts_post'
+    # NOTE: these will have name 'blocks.8.mlp.transcoder.hook_sae_XXX'
     mlp_transcoder.add_hook("hook_sae_input", backward_cache_hook, "bwd")
     mlp_transcoder.add_hook("hook_sae_acts_pre", backward_cache_hook, "bwd")
     mlp_transcoder.add_hook("hook_sae_acts_post", backward_cache_hook, "bwd")
@@ -55,12 +55,21 @@ if __name__ == "__main__":
     answer_tokens = get_answer_tokens(answers, model)  # type: ignore
 
     # Run model
-    with HookedTranscoderReplacementContext(model, transcoders=[mlp_transcoder]):  # type: ignore
+    with HookedTranscoderReplacementContext(
+        model,  # type: ignore
+        transcoders=[mlp_transcoder],
+    ) as context:
+        for wrapped_transcoder in context.wrapped_transcoders:
+            # NOTE: these will have name 'blocks.8.mlp.hook_sae_XXX'
+            wrapped_transcoder.add_hook("hook_sae_error", backward_cache_hook, "bwd")
+            wrapped_transcoder.add_hook("hook_sae_output", backward_cache_hook, "bwd")
         with model.saes(saes=[attn_sae, resid_sae]):
             logits, cache = model.run_with_cache(prompts)
             mean_logit_diff = logits_to_ave_logit_diff(logits, answer_tokens)
             mean_logit_diff.backward()
 
     # Print the gradients
+    print()
+    print("Cached gradients: ")
     for key, value in grad_cache.items():
         rprint(f"{key}: {value.shape}")
