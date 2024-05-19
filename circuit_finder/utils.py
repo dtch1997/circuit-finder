@@ -36,7 +36,8 @@ def get_answer_tokens(
 
 def logits_to_ave_logit_diff(
     logits: Float[Tensor, "batch seq d_vocab"],
-    answer_tokens: Float[Tensor, "batch 2"],
+    correct_answer_tokens: Float[Tensor, " batch"],
+    wrong_answer_tokens: Float[Tensor, " batch"],
     per_prompt=False,
 ):
     """
@@ -46,10 +47,10 @@ def logits_to_ave_logit_diff(
     """
     last_token_logits: Float[Tensor, "batch d_vocab"] = logits[:, -1, :]
     correct_logits = eindex.eindex(
-        last_token_logits, answer_tokens[:, 0], "batch [batch]"
+        last_token_logits, correct_answer_tokens, "batch [batch]"
     )
     incorrect_logits = eindex.eindex(
-        last_token_logits, answer_tokens[:, 1], "batch [batch]"
+        last_token_logits, wrong_answer_tokens, "batch [batch]"
     )
 
     logit_diff: Float[Tensor, " batch"] = correct_logits - incorrect_logits
