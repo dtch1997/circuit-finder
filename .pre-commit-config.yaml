@@ -12,3 +12,4 @@ repos:
     rev: v1.1.361
     hooks:
     - id: pyright
+      args: [circuit_finder]

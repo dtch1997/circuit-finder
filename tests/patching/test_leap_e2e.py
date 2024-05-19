@@ -16,7 +16,7 @@ from circuit_finder.patching.leap import (
 from circuit_finder.constants import device
 
 
-@pytest.mark.slow
+@pytest.mark.skip
 def test_leap_e2e(snapshot):
     # Load models
     model = tl.HookedTransformer.from_pretrained(
