@@ -12,6 +12,7 @@ dependencies = [
     "pytest>=8.2.0",
     "pyright>=1.1.361",
     "pre-commit>=3.7.1",
+    "seaborn>=0.13.2",
 ]
 name = "circuit-finder"
 version = "0.0.1"
