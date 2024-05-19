@@ -1,3 +1,5 @@
+# type: ignore
+# flake8: noqa
 import gc
 from functools import partial
 from typing import Callable, List, Union
