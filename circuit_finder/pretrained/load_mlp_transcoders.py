@@ -50,11 +50,6 @@ def ts_tc_to_hooked_tc(
     sl_sae: Transcoder,
 ) -> HookedTranscoder:
     state_dict = sl_sae.state_dict()
-    # NOTE: b_dec is unused
-    del state_dict["b_dec"]
-    state_dict["b_dec"] = state_dict["b_dec_out"]
-    del state_dict["b_dec_out"]
-
     cfg = ts_tc_cfg_to_hooked_tc_cfg(sl_sae.cfg)
     tl_sae = HookedTranscoder(cfg)
     tl_sae.load_state_dict(state_dict)
