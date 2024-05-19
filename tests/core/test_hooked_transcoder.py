@@ -4,6 +4,10 @@ from circuit_finder.core.hooked_transcoder import (
     HookedTranscoderReplacementContext,
 )
 from circuit_finder.core.hooked_transcoder_config import HookedTranscoderConfig
+from circuit_finder.pretrained.load_mlp_transcoders import (
+    load_mlp_transcoders,
+    ts_tc_to_hooked_tc,
+)
 
 
 import pytest
@@ -224,3 +228,13 @@ def test_feature_grads_with_error_term(model):
     assert torch.allclose(
         grad_cache["transcoder.hook_sae_acts_post"], analytic_grad, atol=1e-6
     )
+
+
+def test_hooked_transcoder_forward_equals_transcoder_forward():
+    tc = load_mlp_transcoders([0])[0]
+    hooked_tc = ts_tc_to_hooked_tc(tc)
+
+    x = torch.randn(1, 4, 768)
+    tc_out = tc(x)
+    hooked_tc_out = hooked_tc(x)
+    assert torch.allclose(tc_out, hooked_tc_out, atol=1e-6)

@@ -36,7 +36,11 @@ class HookedTranscoder(HookedRootModule):
             )
         )
         self.b_enc = nn.Parameter(torch.zeros(self.cfg.d_sae, dtype=self.cfg.dtype))
+        # NOTE: There are two bias terms here with different roles.
+        # The b_dec term is subtracted from x at the start of the forward pass.
+        # The b_dec_out term is added in the decoding step.
         self.b_dec = nn.Parameter(torch.zeros(self.cfg.d_in, dtype=self.cfg.dtype))
+        self.b_dec_out = nn.Parameter(torch.zeros(self.cfg.d_in, dtype=self.cfg.dtype))
 
         self.hook_sae_input = HookPoint()
         self.hook_sae_acts_pre = HookPoint()
@@ -86,6 +90,8 @@ class HookedTranscoder(HookedRootModule):
             output: The encoded output tensor from the SAE. Shape [..., d_sae].
         """
         # Subtract bias term
+        # NOTE: here we use b_dec!
+        # Reference: https://github.com/jacobdunefsky/transcoder_circuits/blob/7b44d870a5a301ef29eddfd77cb1f4dca854760a/sae_training/sparse_autoencoder.py#L110C1-L112C50
         x_cent = x - self.b_dec
 
         # SAE hidden layer pre-RELU  activation
@@ -112,7 +118,9 @@ class HookedTranscoder(HookedRootModule):
             einops.einsum(
                 sae_acts_post, self.W_dec, "... d_sae, d_sae d_in -> ... d_in"
             )
-            + self.b_dec
+            # NOTE: Here we use b_dec_out!
+            # Reference: https://github.com/jacobdunefsky/transcoder_circuits/blob/7b44d870a5a301ef29eddfd77cb1f4dca854760a/sae_training/sparse_autoencoder.py#L124C1-L133C33
+            + self.b_dec_out
         )
         if apply_hooks:
             x_reconstruct = self.hook_sae_recons(x_reconstruct)
@@ -176,6 +184,10 @@ class HookedTranscoderWrapper(HookedRootModule):
     @property
     def b_dec(self):
         return self.transcoder.b_dec
+
+    @property
+    def b_dec_out(self):
+        return self.transcoder.b_dec_out
 
     @property
     def W_enc(self):
