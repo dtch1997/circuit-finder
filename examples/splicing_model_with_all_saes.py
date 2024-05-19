@@ -31,16 +31,24 @@ if __name__ == "__main__":
     # Initialize SAEs
     attn_saes = load_attn_saes([8])
     attn_sae = attn_saes[8]
+    attn_sae.cfg.use_error_term = True
     attn_sae.add_hook("hook_sae_acts_post", backward_cache_hook, "bwd")
 
     resid_saes = load_resid_saes([8])
     resid_sae = resid_saes[8]
+    resid_sae.cfg.use_error_term = True
     resid_sae.add_hook("hook_sae_acts_post", backward_cache_hook, "bwd")
 
     mlp_transcoders = load_hooked_mlp_transcoders([8])
     mlp_transcoder = mlp_transcoders[8]
+    # TODO: For some reason, this doesn't work?
+    # mlp_transcoder.cfg.use_error_term = True
+
     # NOTE: this will be found under the name 'blocks.8.transcoder.hook_sae_acts_post'
+    mlp_transcoder.add_hook("hook_sae_input", backward_cache_hook, "bwd")
+    mlp_transcoder.add_hook("hook_sae_acts_pre", backward_cache_hook, "bwd")
     mlp_transcoder.add_hook("hook_sae_acts_post", backward_cache_hook, "bwd")
+    mlp_transcoder.add_hook("hook_sae_recons", backward_cache_hook, "bwd")
 
     # Load model
     model = tl.HookedSAETransformer.from_pretrained("gpt2").cuda()
