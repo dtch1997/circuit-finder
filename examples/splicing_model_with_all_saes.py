@@ -68,6 +68,12 @@ if __name__ == "__main__":
             mean_logit_diff = logits_to_ave_logit_diff(logits, answer_tokens)
             mean_logit_diff.backward()
 
+    # Print the activtions
+    print()
+    print("Cached activations: ")
+    for key, value in cache.items():
+        if "hook_sae" in key:
+            rprint(f"{key}: {value.shape}")
     # Print the gradients
     print()
     print("Cached gradients: ")
