@@ -1,0 +1,10004 @@
+{
+  "prompts": [
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The cats ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The rabbits ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " carrots"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The sharks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The ducks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bread"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The pigs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The cats ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The lions ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The horses ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " hay"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The bears ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The chickens ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The cats ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The whales ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The pigs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The horses ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " hay"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The bears ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The whales ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The chickens ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The monkeys ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bananas"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The rabbits ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " carrots"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The cats ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The rabbits ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " carrots"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The monkeys ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bananas"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The pigs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The rabbits ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " carrots"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The cats ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The frogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " flies"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The turtles ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " lettuce"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The monkeys ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bananas"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The horses ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " hay"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The lions ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The whales ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The sharks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The chickens ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The ducks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bread"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The lions ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The frogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " flies"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The ducks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bread"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The ducks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bread"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The monkeys ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bananas"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The pigs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The whales ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The frogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " flies"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The horses ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " hay"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The fish ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " worms"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The frogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " flies"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The frogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " flies"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The fish ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " worms"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The rabbits ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " carrots"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The frogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " flies"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The frogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " flies"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The pigs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The bears ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The cats ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The rabbits ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " carrots"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The bears ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The horses ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " hay"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The fish ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " worms"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The horses ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " hay"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The whales ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The cats ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The sharks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The whales ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The monkeys ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bananas"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The horses ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " hay"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The sharks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The whales ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The turtles ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " lettuce"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The turtles ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " lettuce"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The frogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " flies"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The whales ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The monkeys ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bananas"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The bears ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The whales ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The fish ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " worms"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The rabbits ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " carrots"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The chickens ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The lions ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The whales ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The horses ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " hay"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The frogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " flies"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The rabbits ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " carrots"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The frogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " flies"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The turtles ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " lettuce"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The cats ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The sharks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The horses ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " hay"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The chickens ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The chickens ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The pigs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The frogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " flies"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The whales ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The pigs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The bears ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The cats ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The turtles ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " lettuce"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The turtles ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " lettuce"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The frogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " flies"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The monkeys ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bananas"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The fish ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " worms"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The pigs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The cats ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The sharks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The frogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " flies"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The fish ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " worms"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The lions ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The ducks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bread"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The whales ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The chickens ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The chickens ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The turtles ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " lettuce"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The monkeys ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bananas"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The cats ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The turtles ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " lettuce"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The cats ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The turtles ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " lettuce"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The fish ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " worms"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The pigs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The horses ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " hay"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The cats ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The rabbits ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " carrots"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The chickens ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The fish ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " worms"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The cats ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The whales ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The frogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " flies"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The cats ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The turtles ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " lettuce"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The cats ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The horses ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " hay"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The turtles ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " lettuce"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The monkeys ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bananas"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The horses ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " hay"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The cats ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The rabbits ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " carrots"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The lions ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The sharks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The ducks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bread"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The turtles ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " lettuce"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The chickens ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The sharks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The sharks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The pigs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The rabbits ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " carrots"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The bears ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The rabbits ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " carrots"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The chickens ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The chickens ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The pigs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The rabbits ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " carrots"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The bears ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The ducks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bread"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The fish ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " worms"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The cats ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The ducks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bread"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The frogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " flies"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The rabbits ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " carrots"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The frogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " flies"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The whales ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The rabbits ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " carrots"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The ducks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bread"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The fish ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " worms"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The lions ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The cats ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The pigs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The ducks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bread"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The chickens ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The pigs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The bears ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The turtles ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " lettuce"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The chickens ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The monkeys ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bananas"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The rabbits ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " carrots"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The whales ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The frogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " flies"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The chickens ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The sharks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The monkeys ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bananas"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The sharks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The ducks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bread"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The fish ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " worms"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The pigs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The pigs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The whales ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The lions ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The lions ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The turtles ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " lettuce"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The lions ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The sharks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The ducks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bread"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The chickens ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The ducks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bread"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The monkeys ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bananas"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The bears ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The frogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " flies"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The lions ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The whales ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The ducks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bread"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The horses ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " hay"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The fish ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " worms"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The cats ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The chickens ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The monkeys ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bananas"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The ducks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bread"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The lions ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The ducks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bread"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The monkeys ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bananas"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The horses ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " hay"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The cats ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The turtles ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " lettuce"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The bears ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The whales ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The bears ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The chickens ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The chickens ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The pigs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The monkeys ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bananas"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The pigs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The pigs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The whales ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The chickens ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The turtles ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " lettuce"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The whales ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The pigs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The ducks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bread"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The whales ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The turtles ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " lettuce"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The turtles ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " lettuce"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The horses ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " hay"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The horses ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " hay"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The pigs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The whales ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The cats ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The horses ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " hay"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The turtles ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " lettuce"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The sharks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The lions ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The frogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " flies"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The ducks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bread"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The ducks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bread"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The rabbits ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " carrots"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The monkeys ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bananas"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The monkeys ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bananas"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The whales ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The fish ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " worms"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The bears ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The lions ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The pigs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The lions ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The frogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " flies"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The horses ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " hay"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The horses ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " hay"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The cats ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The lions ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The lions ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The rabbits ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " carrots"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The fish ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " worms"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The chickens ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The sharks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The rabbits ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " carrots"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The pigs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The rabbits ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " carrots"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The cats ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The bears ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The frogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " flies"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The whales ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The fish ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " worms"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The frogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " flies"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The frogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " flies"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The ducks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bread"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The cats ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The whales ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The pigs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The chickens ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The chickens ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The chickens ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The fish ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " worms"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The fish ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " worms"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The cats ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The chickens ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The lions ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The rabbits ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " carrots"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The turtles ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " lettuce"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The cats ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The horses ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " hay"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The rabbits ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " carrots"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The ducks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bread"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The turtles ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " lettuce"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The ducks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bread"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The bears ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The frogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " flies"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The horses ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " hay"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The bears ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The horses ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " hay"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The frogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " flies"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The chickens ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The whales ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The whales ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The bears ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The whales ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The cats ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The chickens ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The pigs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The monkeys ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bananas"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The chickens ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The horses ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " hay"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The frogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " flies"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The pigs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The whales ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The fish ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " worms"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The frogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " flies"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The frogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " flies"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The lions ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The cats ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The sharks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The fish ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " worms"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The turtles ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " lettuce"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The rabbits ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " carrots"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The pigs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The turtles ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " lettuce"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The bears ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The monkeys ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bananas"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The bears ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The frogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " flies"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The chickens ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The lions ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The bears ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The bears ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The bears ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The chickens ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The lions ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The bears ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The turtles ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " lettuce"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The monkeys ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bananas"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The horses ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " hay"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The lions ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The horses ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " hay"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The rabbits ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " carrots"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The chickens ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The ducks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bread"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The pigs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The horses ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " hay"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The fish ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " worms"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The bears ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The pigs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The frogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " flies"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The turtles ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " lettuce"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The frogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " flies"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The sharks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The fish ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " worms"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The cats ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The horses ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " hay"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The fish ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " worms"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The fish ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " worms"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The pigs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The fish ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " worms"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The sharks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The sharks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The bears ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The frogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " flies"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The frogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " flies"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The sharks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The turtles ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " lettuce"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The horses ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " hay"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The ducks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bread"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The turtles ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " lettuce"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The bears ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The horses ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " hay"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The horses ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " hay"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The pigs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The ducks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bread"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The bears ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The pigs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The lions ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The sharks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The lions ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The turtles ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " lettuce"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The horses ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " hay"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The monkeys ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bananas"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The fish ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " worms"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The whales ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The turtles ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " lettuce"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The pigs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The pigs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The pigs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The pigs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The ducks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bread"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The pigs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The lions ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The rabbits ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " carrots"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The bears ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The rabbits ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " carrots"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The sharks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The rabbits ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " carrots"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The ducks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bread"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The sharks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The cats ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The turtles ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " lettuce"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The cats ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The fish ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " worms"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The monkeys ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bananas"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The horses ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " hay"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The fish ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " worms"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The bears ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The turtles ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " lettuce"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The monkeys ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bananas"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The sharks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The lions ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The rabbits ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " carrots"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The fish ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " worms"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The turtles ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " lettuce"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The cats ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The cats ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The turtles ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " lettuce"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The sharks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The whales ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The frogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " flies"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The monkeys ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bananas"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The cats ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The chickens ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The ducks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bread"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The fish ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " worms"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The frogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " flies"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The turtles ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " lettuce"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The rabbits ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " carrots"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The chickens ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The chickens ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The monkeys ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bananas"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The monkeys ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bananas"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The whales ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The bears ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The ducks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bread"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The pigs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The frogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " flies"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The monkeys ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bananas"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The pigs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The sharks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The monkeys ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bananas"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The monkeys ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bananas"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The fish ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " worms"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The lions ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The ducks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bread"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The frogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " flies"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The frogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " flies"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The fish ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " worms"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The rabbits ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " carrots"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The monkeys ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bananas"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The bears ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The monkeys ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bananas"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The cats ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The chickens ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The cats ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The fish ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " worms"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The fish ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " worms"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The chickens ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The lions ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The pigs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The lions ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The sharks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The chickens ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The frogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " flies"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The monkeys ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bananas"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The ducks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bread"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The cats ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The turtles ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " lettuce"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The horses ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " hay"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The sharks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The lions ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The monkeys ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bananas"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The monkeys ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bananas"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The lions ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The rabbits ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " carrots"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The whales ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The fish ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " worms"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The ducks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bread"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The turtles ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " lettuce"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The whales ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The fish ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " worms"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The ducks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bread"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The horses ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " hay"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The chickens ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The pigs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The lions ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The fish ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " worms"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The cats ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The bears ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The frogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " flies"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The turtles ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " lettuce"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The monkeys ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bananas"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The monkeys ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bananas"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The cats ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The sharks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The rabbits ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " carrots"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The turtles ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " lettuce"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The rabbits ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " carrots"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The monkeys ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bananas"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The lions ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The bears ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The rabbits ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " carrots"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The lions ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The frogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " flies"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The frogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " flies"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The rabbits ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " carrots"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The sharks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The turtles ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " lettuce"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The fish ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " worms"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The cats ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The horses ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " hay"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The chickens ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The pigs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The chickens ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The chickens ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The horses ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " hay"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The rabbits ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " carrots"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The cats ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The fish ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " worms"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The horses ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " hay"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The ducks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bread"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The horses ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " hay"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The monkeys ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bananas"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The sharks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The ducks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bread"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The cats ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The lions ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The horses ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " hay"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The ducks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bread"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The ducks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bread"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The turtles ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " lettuce"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The monkeys ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bananas"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The horses ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " hay"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The lions ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The sharks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The whales ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The sharks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The frogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " flies"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The sharks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The monkeys ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bananas"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The cats ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The pigs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The rabbits ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " carrots"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The ducks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bread"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The turtles ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " lettuce"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The lions ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The rabbits ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " carrots"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The horses ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " hay"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The bears ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The fish ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " worms"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The frogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " flies"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The turtles ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " lettuce"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The whales ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The bears ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The whales ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The ducks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bread"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The monkeys ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bananas"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The cats ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The cats ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The bears ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The horses ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " hay"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The turtles ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " lettuce"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The pigs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The monkeys ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bananas"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The chickens ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The whales ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The monkeys ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bananas"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The frogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " flies"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The cats ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The sharks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The whales ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The monkeys ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bananas"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The bears ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The rabbits ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " carrots"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The whales ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The turtles ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " lettuce"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The sharks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The cats ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The rabbits ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " carrots"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The fish ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " worms"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The frogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " flies"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The whales ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The cats ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The pigs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The turtles ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " lettuce"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The rabbits ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " carrots"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The fish ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " worms"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The cats ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The fish ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " worms"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The fish ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " worms"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The cats ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The pigs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The monkeys ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bananas"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The bears ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The whales ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The pigs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The turtles ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " lettuce"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The bears ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The fish ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " worms"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The lions ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The sharks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The ducks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bread"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The turtles ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " lettuce"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The chickens ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The horses ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " hay"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The rabbits ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " carrots"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The whales ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The pigs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The whales ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The turtles ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " lettuce"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The fish ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " worms"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The sharks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The monkeys ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bananas"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The rabbits ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " carrots"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The rabbits ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " carrots"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The monkeys ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bananas"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The turtles ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " lettuce"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The bears ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The sharks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The chickens ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The pigs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The chickens ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The cats ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The ducks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bread"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The sharks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The horses ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " hay"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The horses ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " hay"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The ducks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bread"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The sharks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The fish ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " worms"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The turtles ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " lettuce"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The bears ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The ducks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bread"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The turtles ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " lettuce"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The pigs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The horses ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " hay"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The cats ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The fish ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " worms"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The chickens ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The pigs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The monkeys ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bananas"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The sharks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The rabbits ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " carrots"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The frogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " flies"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The monkeys ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bananas"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The lions ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The sharks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The frogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " flies"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The monkeys ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bananas"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The ducks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bread"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The sharks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The pigs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The fish ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " worms"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The whales ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The chickens ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The fish ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " worms"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The horses ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " hay"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The ducks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bread"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The fish ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " worms"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The turtles ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " lettuce"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The monkeys ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bananas"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The cats ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The frogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " flies"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The pigs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The ducks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bread"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The bears ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The whales ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The ducks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bread"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The ducks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bread"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The frogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " flies"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The chickens ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The bears ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The cats ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The bears ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The ducks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bread"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The cats ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The turtles ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " lettuce"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The whales ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The whales ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The whales ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The fish ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " worms"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The ducks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bread"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The cats ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The ducks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bread"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The frogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " flies"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The horses ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " hay"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The whales ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The pigs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The cats ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The horses ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " hay"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The monkeys ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bananas"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The sharks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The whales ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The lions ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The turtles ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " lettuce"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The monkeys ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bananas"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The bears ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The turtles ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " lettuce"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The chickens ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The frogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " flies"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The cats ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The horses ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " hay"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The frogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " flies"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The rabbits ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " carrots"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The whales ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The fish ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " worms"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The rabbits ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " carrots"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The fish ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " worms"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The sharks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The pigs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The pigs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The pigs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The pigs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The turtles ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " lettuce"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The dogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " bones"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The frogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " flies"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The chickens ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The frogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " flies"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The whales ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The pigs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The fish ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " worms"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The pigs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The rabbits ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " carrots"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The rabbits ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " carrots"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The bears ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The rabbits ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " carrots"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The lions ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The frogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " flies"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The fish ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " worms"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The whales ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The whales ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The horses ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " hay"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The rabbits ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " carrots"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The chickens ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The frogs ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " flies"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The lions ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The sharks ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " fish"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The chickens ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " corn"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The fish ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " worms"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The snakes ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " mice"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The turtles ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " lettuce"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The elephants ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " peanuts"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The tigers ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " prey"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The horses ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " hay"
+      ]
+    },
+    {
+      "clean": "The cows ate some",
+      "corrupt": "The horses ate some",
+      "answers": [
+        " grass"
+      ],
+      "wrong_answers": [
+        " hay"
+      ]
+    }
+  ]
+}
