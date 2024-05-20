@@ -4,33 +4,20 @@ from circuit_finder.pretrained import load_attn_saes
 from circuit_finder.constants import device
 from transformer_lens import utils
 from circuit_finder.utils import clear_memory
+from circuit_finder.patching.forward_backward_cache import ForwardBackwardCache
 
 filter_sae_acts = lambda name: ("hook_sae_acts_post" in name)
 
 
 def get_cache_fwd_and_bwd(model, tokens, metric):
-    model.reset_hooks()
-    cache = {}
+    with ForwardBackwardCache(model, filter_sae_acts) as cache:
+        value = metric(model(tokens))
+        value.backward()
 
-    def forward_cache_hook(act, hook):
-        cache[hook.name] = act.detach()
-
-    model.add_hook(filter_sae_acts, forward_cache_hook, "fwd")
-
-    grad_cache = {}
-
-    def backward_cache_hook(act, hook):
-        grad_cache[hook.name] = act.detach()
-
-    model.add_hook(filter_sae_acts, backward_cache_hook, "bwd")
-
-    value = metric(model(tokens))
-    value.backward()
-    model.reset_hooks()
     return (
         value.item(),
-        ActivationCache(cache, model),
-        ActivationCache(grad_cache, model),
+        cache.act_cache,
+        cache.grad_cache,
     )
 
 
@@ -118,12 +105,22 @@ if __name__ == "__main__":
             logits_to_ave_logit_diff(logits, answer_tokens, per_prompt=True) - BASELINE
         ).sum()
 
-    # Attach SAE
-    model.add_sae(l5_sae)
     clean_tokens = tokens.clone()
-    clean_value, clean_cache, clean_grad_cache = get_cache_fwd_and_bwd(
-        model, clean_tokens, ioi_metric
-    )
-    print("Clean Value:", clean_value)
+
+    # Attribution patching by splicing the SAE into the model.
+    with model.saes([l5_sae]):
+        with ForwardBackwardCache(model, filter_sae_acts) as cache:
+            clean_value = ioi_metric(model(tokens))
+            clean_value.backward()
+
+    clean_cache = cache.act_cache
+    clean_grad_cache = cache.grad_cache
+
+    print("Clean Value:", clean_value.item())
     print("Clean Activations Cached:", len(clean_cache))
     print("Clean Gradients Cached:", len(clean_grad_cache))
+
+    site = "z"
+    layer = 5
+    sae_act_attr = attr_patch_sae_acts(clean_cache, clean_grad_cache, site, layer)
+    print("SAE Act Attr:", sae_act_attr.shape)
