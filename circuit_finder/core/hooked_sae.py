@@ -15,6 +15,11 @@ class HookedSAE(tl.HookedSAE):
     Note that HookedSAETransformer is fairly modular, and doesn't make strong assumptions about the architecture of the SAEs that get attached. We provide HookedSAE as a useful default class, but if you want to eg experiment with other SAE architectures, you can just copy the HookedSAE code into a notebook, edit it, and add instances of the new SAE class to a HookedSAETransformer (e.g. with HookedSAETransformer.add_sae(sae))
     """
 
+    W_enc: Float[torch.Tensor, "d_model d_sae"]
+    W_dec: Float[torch.Tensor, "d_sae d_model"]
+    b_enc: Float[torch.Tensor, " d_sae"]
+    b_dec: Float[torch.Tensor, " d_model"]
+
     def maybe_reshape_input(
         self,
         input: Float[torch.Tensor, "... d_input"],
