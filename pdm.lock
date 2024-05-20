@@ -5,7 +5,7 @@
 groups = ["default"]
 strategy = ["cross_platform", "inherit_metadata"]
 lock_version = "4.4.1"
-content_hash = "sha256:8a74da7c1d43e2ffeb19cc5958530c74ff26d05229187bdc931b49323ca9dedb"
+content_hash = "sha256:ab3af510566597e56c2cff2cb4e61c4d8c65259080244963ac8253f4e78d2111"
 
 [[package]]
 name = "accelerate"
@@ -2562,8 +2562,6 @@ summary = "Powerful data structures for data analysis, time series, and statisti
 groups = ["default"]
 dependencies = [
     "numpy>=1.22.4; python_version < \"3.11\"",
-    "numpy>=1.23.2; python_version == \"3.11\"",
-    "numpy>=1.26.0; python_version >= \"3.12\"",
     "python-dateutil>=2.8.2",
     "pytz>=2020.1",
     "tzdata>=2022.7",
@@ -4298,7 +4296,6 @@ dependencies = [
     "fancy-einsum>=0.0.3",
     "jaxtyping>=0.2.11",
     "numpy>=1.24; python_version >= \"3.9\" and python_version < \"3.12\"",
-    "numpy>=1.26; python_version >= \"3.12\" and python_version < \"3.13\"",
     "pandas>=1.1.5",
     "rich>=12.6.0",
     "sentencepiece",
