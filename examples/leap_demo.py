@@ -85,3 +85,5 @@ mlp_mlp = [
 ]
 
 print(len(attn_attn), len(attn_mlp), len(mlp_attn), len(mlp_mlp))
+
+# %%
