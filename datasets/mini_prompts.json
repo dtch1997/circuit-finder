@@ -1,0 +1,24 @@
+{
+  "prompts": [
+    {
+      "clean": "I like",
+      "corrupt": "I hate",
+      "answers": [
+        " cheese"
+      ],
+      "wrong_answers": [
+        " bees"
+      ]
+    },
+    {
+      "clean": "I like",
+      "corrupt": "I hate",
+      "answers": [
+        " cheese"
+      ],
+      "wrong_answers": [
+        " bees"
+      ]
+    }
+  ]
+}

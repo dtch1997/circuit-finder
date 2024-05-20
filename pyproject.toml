@@ -1,6 +1,5 @@
 [project]
 dependencies = [
-    "pre-commit>=3.7.1",
     "transcoders-slim>=0.2.0",
     "ipykernel>=6.29.4",
     "transformer-lens>=1.14.0",
@@ -9,6 +8,11 @@ dependencies = [
     "huggingface-hub>=0.23.0",
     "syrupy>=4.6.1",
     "networkx>=3.3",
+    "ruff>=0.4.3",
+    "pytest>=8.2.0",
+    "pyright>=1.1.361",
+    "pre-commit>=3.7.1",
+    "seaborn>=0.13.2",
 ]
 name = "circuit-finder"
 version = "0.1.0"
@@ -22,8 +26,9 @@ requires-python = "==3.10.*"
 readme = "README.md"
 license = { text = "MIT" }
 
-[project.optional-dependencies]
-test = ["ruff>=0.4.3", "pytest>=8.2.0", "pyright>=1.1.361"]
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
 
 [tool.pdm]
 distribution = false

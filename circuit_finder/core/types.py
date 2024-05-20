@@ -1,5 +1,5 @@
 import torch
-from jaxtyping import Float
+from jaxtyping import Float, Int
 from typing import Protocol, Callable, Literal, TypeGuard
 from transformer_lens.hook_points import HookPoint
 
@@ -14,6 +14,8 @@ HookNameFilterFn = Callable[[HookName], bool]
 Node = str
 Edge = tuple[Node, Node]  # (dest, src)
 Attrib = float
+
+Tokens = Int[torch.Tensor, "batch seq"]
 
 Logits = Float[torch.Tensor, "batch seq d_vocab"]
 Metric = Float[torch.Tensor, "batch"]
