@@ -2,10 +2,14 @@ import einops
 import torch
 import torch.nn.functional as F
 from jaxtyping import Float
+from torch import nn
+from typing import Dict, Union
 import transformer_lens as tl
+from transformer_lens.hook_points import HookedRootModule, HookPoint
 
+from circuit_finder.core.hooked_sae_config import HookedSAEConfig
 
-class HookedSAE(tl.HookedSAE):
+class HookedSAE(HookedRootModule):
     """Hooked SAE.
 
     Implements a standard SAE with a TransformerLens hooks for SAE activations
@@ -14,6 +18,37 @@ class HookedSAE(tl.HookedSAE):
 
     Note that HookedSAETransformer is fairly modular, and doesn't make strong assumptions about the architecture of the SAEs that get attached. We provide HookedSAE as a useful default class, but if you want to eg experiment with other SAE architectures, you can just copy the HookedSAE code into a notebook, edit it, and add instances of the new SAE class to a HookedSAETransformer (e.g. with HookedSAETransformer.add_sae(sae))
     """
+
+    def __init__(self, cfg: Union[HookedSAEConfig, Dict]):
+        super().__init__()
+        if isinstance(cfg, Dict):
+            cfg = HookedSAEConfig(**cfg)
+        elif isinstance(cfg, str):
+            raise ValueError("Please pass in a config dictionary or HookedSAEConfig object.")
+        self.cfg = cfg
+
+        self.W_enc = nn.Parameter(
+            torch.nn.init.kaiming_uniform_(
+                torch.empty(self.cfg.d_in, self.cfg.d_sae, dtype=self.cfg.dtype)
+            )
+        )
+        self.W_dec = nn.Parameter(
+            torch.nn.init.kaiming_uniform_(
+                torch.empty(self.cfg.d_sae, self.cfg.d_in, dtype=self.cfg.dtype)
+            )
+        )
+        self.b_enc = nn.Parameter(torch.zeros(self.cfg.d_sae, dtype=self.cfg.dtype))
+        self.b_dec = nn.Parameter(torch.zeros(self.cfg.d_in, dtype=self.cfg.dtype))
+
+        self.hook_sae_input = HookPoint()
+        self.hook_sae_acts_pre = HookPoint()
+        self.hook_sae_acts_post = HookPoint()
+        self.hook_sae_recons = HookPoint()
+        self.hook_sae_error = HookPoint()
+        self.hook_sae_output = HookPoint()
+
+        self.to(self.cfg.device)
+        self.setup()
 
     def maybe_reshape_input(
         self,
@@ -93,10 +128,11 @@ class HookedSAE(tl.HookedSAE):
             # Do not hook these as they are only used to compute the error term via a separate path
             sae_acts_post_clean = self.encode(x, apply_hooks=False)
             x_reconstruct_clean = self.decode(sae_acts_post_clean, apply_hooks=False)
-            sae_error = x - x_reconstruct_clean
-
-        sae_error.requires_grad = True
-        sae_error.retain_grad()
+        sae_error = x - x_reconstruct_clean.detach()
+        if not self.cfg.allow_error_grad_to_input:
+            sae_error = sae_error.detach()
+            sae_error.requires_grad = True
+            sae_error.retain_grad()
         if apply_hooks:
             sae_error = self.hook_sae_error(sae_error)
         return sae_error

@@ -235,3 +235,47 @@ def test_feature_grads_with_error_term(model, act_name):
 
     # Compare analytic gradient with pytorch computed gradient
     assert torch.allclose(grad_cache["hook_sae_acts_post"], analytic_grad, atol=1e-6)
+
+@pytest.mark.parametrize(
+    "act_name",
+    [
+        "blocks.0.attn.hook_z",
+        "blocks.0.hook_mlp_out",
+        "blocks.0.mlp.hook_post",
+        "blocks.0.hook_resid_pre",
+    ],
+)
+
+@pytest.mark.xfail
+def test_allow_error_grads_to_input_preserves_upstream_grad(model, act_name):
+    """Verifies that if we allow error gradients to flow back to the input, the input gradient is preserved."""
+    # NOTE: this test currently does not pass and I don't know how to fix it
+    sae_cfg = get_sae_config(model, act_name)
+    sae_cfg.use_error_term = True
+    sae_cfg.allow_error_grad_to_input = True
+    hooked_sae = HookedSAE(sae_cfg)
+    hooked_sae.reset_hooks()
+
+    prompt = "Hello, my name is Inigo Montoya. You killed my father. Prepare to die."
+
+    grad_cache = {}
+    def backward_cache_hook(act, hook):
+        grad_cache[hook.name] = act.detach()
+
+    # Get the original gradient
+    model.reset_hooks()
+    model.add_hook("blocks.0.hook_resid_pre", backward_cache_hook, "bwd") 
+    loss, cache = model.run_with_cache(prompt, return_type ="loss")
+    loss.backward()
+    orig_grad = grad_cache["blocks.0.hook_resid_pre"].clone()
+
+    # Get the gradient with the SAE
+    model.reset_hooks()
+    model.add_hook("blocks.0.hook_resid_pre", backward_cache_hook, "bwd")
+    with model.saes([hooked_sae]):
+        loss, cache = model.run_with_cache(prompt, return_type ="loss")
+        loss.backward()
+    spliced_grad = grad_cache["blocks.0.hook_resid_pre"].clone()
+
+    assert torch.allclose(orig_grad, spliced_grad, atol=1e-6)
+    

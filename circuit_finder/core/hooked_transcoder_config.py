@@ -35,6 +35,7 @@ class HookedTranscoderConfig:
     hook_name: str
     hook_name_out: str
     use_error_term: bool = False
+    allow_error_grad_to_input: bool = False
     dtype: torch.dtype = torch.float32
     seed: Optional[int] = None
     device: Optional[str] = None

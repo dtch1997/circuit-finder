@@ -204,7 +204,9 @@ class HookedTranscoderWrapper(HookedRootModule):
         with torch.no_grad():
             clean_sae_out = self.transcoder(x)
             clean_mlp_out = self.mlp(x)
-            sae_error = clean_mlp_out - clean_sae_out
+        sae_error = clean_mlp_out - clean_sae_out
+        if not self.cfg.allow_error_grad_to_input:
+            sae_error = sae_error.detach()
         sae_error.requires_grad = True
         sae_error.retain_grad()
         sae_error = self.hook_sae_error(sae_error)
