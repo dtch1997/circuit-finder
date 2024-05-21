@@ -110,7 +110,6 @@ def show_avg_logit_diffs(x_axis: List[str], per_prompt_logit_diffs: List[torch.t
     fig.show()
 
 
-
 def show_attrib_graph(graph):
     G = nx.DiGraph()
     for dest, src in graph.get_edges():
@@ -126,7 +125,6 @@ def show_attrib_graph(graph):
             x += 0.5
             y += 0.5
         return (x, y)
-
 
     def get_node_color(
         node_name: str,
