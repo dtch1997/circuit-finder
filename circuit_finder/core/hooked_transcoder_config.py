@@ -35,6 +35,9 @@ class HookedTranscoderConfig:
     hook_name: str
     hook_name_out: str
     use_error_term: bool = False
+    return_acts_in_forward: bool = False
+    # NOTE: Convenience function to mock the Transcoder forward_pass
+    # Cannot be used with HookedTranscoderWrapper!
     dtype: torch.dtype = torch.float32
     seed: Optional[int] = None
     device: Optional[str] = None

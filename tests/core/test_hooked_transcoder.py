@@ -14,6 +14,7 @@ import pytest
 import torch
 
 from transformer_lens import HookedSAETransformer
+from circuit_finder.constants import device
 
 MODEL = "solu-1l"
 prompt = "Hello World!"
@@ -234,7 +235,7 @@ def test_hooked_transcoder_forward_equals_transcoder_forward():
     tc = load_mlp_transcoders([0])[0]
     hooked_tc = ts_tc_to_hooked_tc(tc)
 
-    x = torch.randn(1, 4, 768)
+    x = torch.randn(1, 4, 768, device=device)
     tc_out = tc(x)[0]
     hooked_tc_out = hooked_tc(x)
     assert torch.allclose(tc_out, hooked_tc_out, atol=1e-6)

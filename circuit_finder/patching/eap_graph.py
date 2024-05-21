@@ -69,7 +69,9 @@ class EAPGraph:
     @staticmethod
     def from_json(json: dict) -> "EAPGraph":
         """Load the graph from a JSON object"""
-        graph = [(Node(dest), Node(src), attrib) for dest, src, attrib in json["graph"]]
+        graph = [
+            ((Node(dest), Node(src)), attrib) for dest, src, attrib in json["graph"]
+        ]
         return EAPGraph(graph)
 
 
