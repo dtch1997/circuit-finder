@@ -88,85 +88,90 @@ def run_leap_experiment(config: LeapExperimentConfig):
     save_dir = ProjectDir / config.save_dir
     save_dir.mkdir(parents=True, exist_ok=True)
 
-    for batch in train_loader:
-        clean_tokens = batch.clean
-        corrupt_tokens = batch.corrupt
+    batch = next(iter(train_loader))
+    clean_tokens = batch.clean
+    corrupt_tokens = batch.corrupt
 
-        # NOTE: First, get the ceiling of the patching metric.
+    # Save the dataset.
+    with open(save_dir / "dataset.json", "w") as jsonfile:
+        json.dump(
+            {
+                "clean": model.to_string(clean_tokens),
+                "corrupt": model.to_string(corrupt_tokens),
+            },
+            jsonfile,
+        )
+
+    # NOTE: First, get the ceiling of the patching metric.
+    model.reset_hooks()
+    # TODO: Replace 'last_token_logit' with logit difference
+    ceiling = last_token_logit(model, clean_tokens).item()
+
+    # NOTE: Second, get floor of patching metric using empty graph, i.e. ablate everything
+    empty_graph = EAPGraph([])
+    floor = patched_fp(
+        model,
+        empty_graph,
+        clean_tokens,
+        last_token_logit,
+        transcoders,
+        attn_saes,
+        ablate_errors=config.ablate_errors,  # if bm, error nodes are mean-ablated
+        first_ablated_layer=config.first_ablate_layer,  # Marks et al don't ablate first 2 layers
+    ).item()
+    clear_memory()
+
+    # now sweep over thresholds to get graphs with variety of numbers of nodes
+    # for each graph we calculate faithfulness
+    num_nodes_list = []
+    metrics_list = []
+
+    # TODO: make configurable
+    for threshold in tqdm(
+        [0.001, 0.002, 0.003, 0.004, 0.005, 0.007, 0.01, 0.03, 0.06, 0.1]
+    ):
         model.reset_hooks()
-        # TODO: Replace 'last_token_logit' with logit difference
-        ceiling = last_token_logit(model, clean_tokens).item()
-
-        # NOTE: Second, get floor of patching metric using empty graph, i.e. ablate everything
-        empty_graph = EAPGraph([])
-        floor = patched_fp(
+        cfg = LEAPConfig(
+            threshold=threshold, contrast_pairs=False, chained_attribs=True
+        )
+        leap = LEAP(
+            cfg,
+            clean_tokens,
             model,
-            empty_graph,
+            attn_saes,
+            transcoders,
+            corrupt_tokens=corrupt_tokens,
+        )
+        leap.get_graph(verbose=False)
+        graph = EAPGraph(leap.graph)
+
+        # Save the graph
+        with open(save_dir / f"leap-graph_threshold={threshold}.json", "w") as jsonfile:
+            json.dump(graph.to_json(), jsonfile)
+
+        num_nodes = len(graph.get_src_nodes())
+
+        del leap
+        clear_memory()
+
+        metric = patched_fp(
+            model,
+            graph,
             clean_tokens,
             last_token_logit,
             transcoders,
             attn_saes,
             ablate_errors=config.ablate_errors,  # if bm, error nodes are mean-ablated
             first_ablated_layer=config.first_ablate_layer,  # Marks et al don't ablate first 2 layers
-        ).item()
+        )
+
         clear_memory()
 
-        # now sweep over thresholds to get graphs with variety of numbers of nodes
-        # for each graph we calculate faithfulness
-        num_nodes_list = []
-        metrics_list = []
+        # Log the data
+        num_nodes_list.append(num_nodes)
+        metrics_list.append(metric.item())
 
-        # TODO: make configurable
-        for threshold in tqdm(
-            [0.001, 0.002, 0.003, 0.004, 0.005, 0.007, 0.01, 0.03, 0.06, 0.1]
-        ):
-            model.reset_hooks()
-            cfg = LEAPConfig(
-                threshold=threshold, contrast_pairs=False, chained_attribs=True
-            )
-            leap = LEAP(
-                cfg,
-                clean_tokens,
-                model,
-                attn_saes,
-                transcoders,
-                corrupt_tokens=corrupt_tokens,
-            )
-            leap.get_graph(verbose=False)
-            graph = EAPGraph(leap.graph)
-
-            # Save the graph
-            with open(
-                save_dir / f"leap-graph_threshold={threshold}.json", "w"
-            ) as jsonfile:
-                json.dump(graph.to_json(), jsonfile)
-
-            num_nodes = len(graph.get_src_nodes())
-
-            del leap
-            clear_memory()
-
-            metric = patched_fp(
-                model,
-                graph,
-                clean_tokens,
-                last_token_logit,
-                transcoders,
-                attn_saes,
-                ablate_errors=config.ablate_errors,  # if bm, error nodes are mean-ablated
-                first_ablated_layer=config.first_ablate_layer,  # Marks et al don't ablate first 2 layers
-            )
-
-            clear_memory()
-
-            # Log the data
-            num_nodes_list.append(num_nodes)
-            metrics_list.append(metric.item())
-
-        faith = [(metric - floor) / (ceiling - floor) for metric in metrics_list]
-        # NOTE: Break after first batch for now
-        print("Stopping after first batch.")
-        break
+    faith = [(metric - floor) / (ceiling - floor) for metric in metrics_list]
 
     # Save the result as a dataframe
     data = pd.DataFrame({"num_nodes": num_nodes_list, "faithfulness": faith})
