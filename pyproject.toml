@@ -13,6 +13,7 @@ dependencies = [
     "pyright>=1.1.361",
     "pre-commit>=3.7.1",
     "seaborn>=0.13.2",
+    "simple-parsing>=0.1.5",
 ]
 name = "circuit-finder"
 version = "0.1.0"
