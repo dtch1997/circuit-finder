@@ -630,7 +630,7 @@ class LEAP:
             mask = node_node_attribs > self.cfg.threshold
         # Use the mask to find the relevant indices
         if down_module_name in ["mlp", "metric"]:
-            assert len(attribs.size()) == 2, "attribs must be 2D for mlp and metric"
+            assert len(node_node_attribs.size()) == 2, "attribs must be 2D for mlp and metric"
             imp_ids, up_active_ids = torch.where(mask)
             node_node_grads_values     = node_node_grads[imp_ids, up_active_ids].flatten()
             node_node_attribs_values   = node_node_attribs[imp_ids, up_active_ids].flatten()
@@ -638,7 +638,7 @@ class LEAP:
             edge_metric_attribs_values = edge_metric_attribs[imp_ids, up_active_ids].flatten()
 
         elif down_module_name == "attn":
-            assert len(attribs.size()) == 3, "attribs must be 2D for mlp and metric"
+            assert len(node_node_attribs.size()) == 3, "attribs must be 2D for mlp and metric"
             up_seqs, imp_ids, up_active_ids = torch.where(mask)
             node_node_grads_values     = node_node_grads[up_seqs, imp_ids, up_active_ids].flatten()
             node_node_attribs_values   = node_node_attribs[up_seqs, imp_ids, up_active_ids].flatten()
@@ -703,6 +703,13 @@ class LEAP:
 
 
 
+    def get_graph(self, verbose=False):
+        self.metric_step()
+        for layer in reversed(range(1, self.n_layers)):
+            self.mlp_step(layer)
+            self.ov_step(layer)
 
-
+        if verbose:
+            print("num nodes = ", len(set([edge[1] for (edge, vals) in self.graph])))
+            print("num edges = " ,len(self.graph))
 

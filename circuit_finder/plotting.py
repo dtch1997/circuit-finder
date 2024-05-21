@@ -9,6 +9,10 @@ import plotly.graph_objects as go
 
 from typing import List
 
+import networkx as nx
+import matplotlib.pyplot as plt
+from circuit_finder.core.types import parse_node_name
+
 update_layout_set = {
     "xaxis_range",
     "yaxis_range",
@@ -104,3 +108,40 @@ def show_avg_logit_diffs(x_axis: List[str], per_prompt_logit_diffs: List[torch.t
 
     # Show the figure
     fig.show()
+
+
+
+def show_attrib_graph(graph):
+    G = nx.DiGraph()
+    for dest, src in graph.get_edges():
+        if dest != "null":
+            G.add_edge(src, dest)
+
+    def get_node_position(
+        node_name: str,
+    ) -> tuple[float, float]:
+        module, layer, token, feature = parse_node_name(node_name)
+        x, y = token, layer
+        if module == "mlp":
+            x += 0.5
+            y += 0.5
+        return (x, y)
+
+
+    def get_node_color(
+        node_name: str,
+    ) -> str:
+        module, layer, token, feature = parse_node_name(node_name)
+        if module == "mlp":
+            return "red"
+        elif module == "attn":
+            return "blue"
+        else:
+            return "black"
+
+    pos = {node: get_node_position(node) for node in G.nodes}
+    color = [get_node_color(node) for node in G.nodes]
+
+    plt.figure(3, figsize=(12, 12))
+    nx.draw(G, pos, with_labels=True, node_color=color)
+    plt.show()
