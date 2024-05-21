@@ -58,6 +58,20 @@ class EAPGraph:
                 node_set.add(dest)
         return sorted(list(node_set))
 
+    def to_json(self) -> dict:
+        """Convert the graph to a JSON object"""
+        return {
+            "graph": [
+                (str(dest), str(src), attrib) for (dest, src), attrib in self.graph
+            ]
+        }
+
+    @staticmethod
+    def from_json(json: dict) -> "EAPGraph":
+        """Load the graph from a JSON object"""
+        graph = [(Node(dest), Node(src), attrib) for dest, src, attrib in json["graph"]]
+        return EAPGraph(graph)
+
 
 def get_feature_and_token_idx_of_nodes(
     graph: EAPGraph, module_name: ModuleName, layer_idx: LayerIndex
