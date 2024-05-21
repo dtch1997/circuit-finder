@@ -235,6 +235,6 @@ def test_hooked_transcoder_forward_equals_transcoder_forward():
     hooked_tc = ts_tc_to_hooked_tc(tc)
 
     x = torch.randn(1, 4, 768)
-    tc_out = tc(x)
+    tc_out = tc(x)[0]
     hooked_tc_out = hooked_tc(x)
     assert torch.allclose(tc_out, hooked_tc_out, atol=1e-6)
