@@ -4,7 +4,7 @@ from typing import Protocol, Callable, Literal, TypeGuard
 from transformer_lens.hook_points import HookPoint
 
 HookName = str
-ModuleName = Literal["mlp", "attn", "metric"]
+ModuleName = Literal["mlp", "attn", "metric", "mlp_error", "attn_error"]
 
 LayerIndex = int
 FeatureIndex = int
@@ -34,7 +34,7 @@ class TransformerLensBackwardHook(Protocol):
 
 
 def is_valid_module_name(str) -> TypeGuard[ModuleName]:
-    return str in ["mlp", "attn", "metric"]
+    return str in ["mlp", "attn", "metric", "mlp_error", "attn_error"]
 
 
 def parse_node_name(
