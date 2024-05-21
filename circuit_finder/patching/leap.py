@@ -722,7 +722,17 @@ class LEAP:
         ):
             # don't bother adding nodes at pos=0, since this is BOS token
             if not edge[1].split(".")[2] == "0":
-                self.graph.append((edge, (nn_grad, nn_attrib, em_grad, em_attrib)))  # type: ignore
+                self.graph.append(
+                    (
+                        edge,
+                        (
+                            nn_grad.item(),
+                            nn_attrib.item(),
+                            em_grad.item(),
+                            em_attrib.item(),
+                        ),
+                    )
+                )  # type: ignore
 
         # # Add errors
         # if down_module_name in ["mlp", "metric"]:
