@@ -20,6 +20,7 @@ from circuit_finder.core.types import HookNameFilterFn, MetricFn
 
 
 def clear_memory():
+    """Clears system memory and GPU memory cache."""
     gc.collect()
     torch.cuda.empty_cache()
 
