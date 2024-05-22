@@ -179,7 +179,8 @@ class LEAP:
         # node = "{module_name}.{layer}.{pos}.{feature_id}"
         # vals = (node_node_grad, node_node_attrib, edge_metric_grad, edge_metric_attrib)
         self.graph: list[tuple[Edge, Attrib]] = [
-            (("null", f"metric.{self.n_layers}.{self.n_seq-2}.0"), (0.0, 0.0, 1.0, 0.0))
+            (("null", f"metric.{self.n_layers}.{seq}.0"), (0.0, 0.0, 1.0, 0.0))
+            for seq in range(self.n_seq)
         ]
 
         self.error_graph = []
