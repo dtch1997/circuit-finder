@@ -56,6 +56,13 @@ class LeapExperimentConfig:
 
 
 def run_leap_experiment(config: LeapExperimentConfig):
+    # Define save dir
+    save_dir = ProjectDir / config.save_dir
+    save_dir.mkdir(parents=True, exist_ok=True)
+    # Save the config
+    with open(save_dir / "config.json", "w") as jsonfile:
+        json.dump(config.__dict__, jsonfile)
+
     # Load models
     model = tl.HookedTransformer.from_pretrained(
         "gpt2",
@@ -85,10 +92,6 @@ def run_leap_experiment(config: LeapExperimentConfig):
         random_seed=config.seed,
     )
 
-    # Define save dir
-    save_dir = ProjectDir / config.save_dir
-    save_dir.mkdir(parents=True, exist_ok=True)
-
     batch: PromptPairBatch = next(iter(train_loader))
     clean_tokens = batch.clean
     answer_tokens = batch.answers
@@ -96,8 +99,10 @@ def run_leap_experiment(config: LeapExperimentConfig):
     corrupt_tokens = batch.corrupt
 
     # NOTE: LEAP uses full prompt, so concatenate here.
+    # This token is used to calculate the logit
     clean_tokens = torch.cat([clean_tokens, answer_tokens], dim=1)
-    corrupt_tokens = torch.cat([clean_tokens, wrong_answer_tokens], dim=1)
+    # NOTE: It actually doesn't matter what answer we use for corrupt prompts.
+    corrupt_tokens = torch.cat([corrupt_tokens, wrong_answer_tokens], dim=1)
 
     # Save the dataset.
     with open(save_dir / "dataset.json", "w") as jsonfile:
