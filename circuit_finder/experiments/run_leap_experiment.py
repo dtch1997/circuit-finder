@@ -70,6 +70,29 @@ def logit_diff(
     return (correct_logits - wrong_logits).mean()
 
 
+def ave_logit_diff_metric(
+    model,
+    clean_prompt: torch.Tensor,
+    answer_tokens: list[torch.Tensor] | torch.Tensor,
+    wrong_answer_tokens: list[torch.Tensor] | torch.Tensor,
+):
+    # TODO: handle case where answer_token is list
+    # This is applicable e.g. for 'GreaterThan' which has many correct and wrong answers
+    # and we are expected to sum over them.
+    # NOTE: for now, we only support single answer and wrong answer
+    assert isinstance(answer_tokens, torch.Tensor), "Only single answer supported"
+    assert isinstance(
+        wrong_answer_tokens, torch.Tensor
+    ), "Only single wrong answer supported"
+
+    logits = model(clean_prompt, return_type="logits")
+    return logit_diff(
+        logits,
+        answer_tokens.squeeze(dim=-1),
+        wrong_answer_tokens.squeeze(dim=-1),
+    )
+
+
 def run_leap_experiment(config: LeapExperimentConfig):
     # Define save dir
     save_dir = ProjectDir / config.save_dir
@@ -101,7 +124,7 @@ def run_leap_experiment(config: LeapExperimentConfig):
     train_loader, _ = load_datasets_from_json(
         model=model,
         path=dataset_path,
-        device=device,
+        device=device,  # type: ignore
         batch_size=config.batch_size,
         train_test_size=(config.total_dataset_size, config.total_dataset_size),
         random_seed=config.seed,
@@ -112,20 +135,14 @@ def run_leap_experiment(config: LeapExperimentConfig):
     answer_tokens = batch.answers
     wrong_answer_tokens = batch.wrong_answers
     corrupt_tokens = batch.corrupt
-
-    def ave_logit_diff_metric(
-        model,
-        clean_prompt: torch.Tensor,
-        answer_tokens: list[torch.Tensor] | torch.Tensor,
-        wrong_answer_tokens: list[torch.Tensor] | torch.Tensor,
-    ):
-        logits = model(clean_prompt, return_type="logits")
-        # TODO: handle case where answer_token is list
-        return logit_diff(
-            logits,
-            answer_tokens.squeeze(dim=-1),
-            wrong_answer_tokens.squeeze(dim=-1),
-        )
+    # TODO: handle case where answer_token is list
+    # This is applicable e.g. for 'GreaterThan' which has many correct and wrong answers
+    # and we are expected to sum over them.
+    # NOTE: for now, we only support single answer and wrong answer
+    assert isinstance(answer_tokens, torch.Tensor), "Only single answer supported"
+    assert isinstance(
+        wrong_answer_tokens, torch.Tensor
+    ), "Only single wrong answer supported"
 
     # NOTE: LEAP uses full prompt, so concatenate here.
     # This token is used to calculate the logit
@@ -158,7 +175,7 @@ def run_leap_experiment(config: LeapExperimentConfig):
         clean_tokens,
         transcoders,
         attn_saes,
-        ablate_errors=config.ablate_errors,  # if bm, error nodes are mean-ablated
+        ablate_errors=config.ablate_errors,  # if bm, error nodes are mean-ablated  # type: ignore
         first_ablated_layer=config.first_ablate_layer,  # Marks et al don't ablate first 2 layers
     ):
         floor = ave_logit_diff_metric(
@@ -195,25 +212,24 @@ def run_leap_experiment(config: LeapExperimentConfig):
         )
         metric.backward()  # TODO don't actually need backward through whole model. If m is linear, we can disable autograd!
 
+        # Save the graph
         leap.get_graph(verbose=config.verbose)
         graph = EAPGraph(leap.graph)
-
-        # Save the graph
+        num_nodes = len(graph.get_src_nodes())
         with open(save_dir / f"leap-graph_threshold={threshold}.json", "w") as jsonfile:
             json.dump(graph.to_json(), jsonfile)
-
-        num_nodes = len(graph.get_src_nodes())
 
         del leap
         clear_memory()
 
+        # Calculate the metric under ablation
         with get_patched_model(
             model,
             graph,
             clean_tokens,
             transcoders,
             attn_saes,
-            ablate_errors=config.ablate_errors,  # if bm, error nodes are mean-ablated
+            ablate_errors=config.ablate_errors,  # if bm, error nodes are mean-ablated # type: ignore
             first_ablated_layer=config.first_ablate_layer,  # Marks et al don't ablate first 2 layers
         ):
             metric = ave_logit_diff_metric(
