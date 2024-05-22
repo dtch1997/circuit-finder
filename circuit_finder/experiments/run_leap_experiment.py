@@ -139,9 +139,8 @@ def run_leap_experiment(config: LeapExperimentConfig):
     metrics_list = []
 
     # TODO: make configurable
-    for threshold in tqdm(
-        [0.001, 0.002, 0.003, 0.004, 0.005, 0.007, 0.01, 0.03, 0.06, 0.1]
-    ):
+    thresholds = [0.001, 0.002, 0.003, 0.004, 0.005, 0.007, 0.01, 0.03, 0.06, 0.1]
+    for threshold in tqdm(thresholds):
         model.reset_hooks()
         cfg = LEAPConfig(
             threshold=threshold, contrast_pairs=False, chained_attribs=True
