@@ -72,19 +72,10 @@ def logit_diff(
 
 def ave_logit_diff_metric(
     model,
-    clean_prompt: torch.Tensor,
-    answer_tokens: list[torch.Tensor] | torch.Tensor,
-    wrong_answer_tokens: list[torch.Tensor] | torch.Tensor,
+    clean_prompt: Int[Tensor, "batch seq"],
+    answer_tokens: Int[Tensor, " batch"],
+    wrong_answer_tokens: Int[Tensor, " batch"],
 ):
-    # TODO: handle case where answer_token is list
-    # This is applicable e.g. for 'GreaterThan' which has many correct and wrong answers
-    # and we are expected to sum over them.
-    # NOTE: for now, we only support single answer and wrong answer
-    assert isinstance(answer_tokens, torch.Tensor), "Only single answer supported"
-    assert isinstance(
-        wrong_answer_tokens, torch.Tensor
-    ), "Only single wrong answer supported"
-
     logits = model(clean_prompt, return_type="logits")
     return logit_diff(
         logits,
@@ -130,6 +121,7 @@ def run_leap_experiment(config: LeapExperimentConfig):
         random_seed=config.seed,
     )
 
+    # Get a batch on which we run the experiment
     batch: PromptPairBatch = next(iter(train_loader))
     clean_tokens = batch.clean
     answer_tokens = batch.answers
@@ -161,7 +153,6 @@ def run_leap_experiment(config: LeapExperimentConfig):
         )
 
     # NOTE: First, get the ceiling of the patching metric.
-    model.reset_hooks()
     # TODO: Replace 'last_token_logit' with logit difference
     ceiling = ave_logit_diff_metric(
         model, clean_tokens, answer_tokens, wrong_answer_tokens
