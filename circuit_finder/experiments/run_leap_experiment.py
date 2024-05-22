@@ -6,13 +6,14 @@ pdm run python -m circuit_finder.experiments.run_leap_experiment [ARGS]
 Run with flag '-h', '--help' to see the arguments.
 """
 
+import torch
 import transformer_lens as tl
 import pandas as pd
 import json
 
 from simple_parsing import ArgumentParser
 from dataclasses import dataclass
-from circuit_finder.data_loader import load_datasets_from_json
+from circuit_finder.data_loader import load_datasets_from_json, PromptPairBatch
 from circuit_finder.patching.eap_graph import EAPGraph
 from circuit_finder.utils import clear_memory
 from circuit_finder.patching.leap import last_token_logit
@@ -88,9 +89,15 @@ def run_leap_experiment(config: LeapExperimentConfig):
     save_dir = ProjectDir / config.save_dir
     save_dir.mkdir(parents=True, exist_ok=True)
 
-    batch = next(iter(train_loader))
+    batch: PromptPairBatch = next(iter(train_loader))
     clean_tokens = batch.clean
+    answer_tokens = batch.answers
+    wrong_answer_tokens = batch.wrong_answers
     corrupt_tokens = batch.corrupt
+
+    # NOTE: LEAP uses full prompt, so concatenate here.
+    clean_tokens = torch.cat([clean_tokens, answer_tokens], dim=1)
+    corrupt_tokens = torch.cat([clean_tokens, wrong_answer_tokens], dim=1)
 
     # Save the dataset.
     with open(save_dir / "dataset.json", "w") as jsonfile:

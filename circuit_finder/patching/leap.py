@@ -15,6 +15,7 @@ from torch import Tensor
 from jaxtyping import Int, Float
 from dataclasses import dataclass
 from einops import rearrange, einsum
+from eindex import eindex
 from typing import Literal, TypeGuard
 
 from circuit_finder.core.types import LayerIndex, MetricFn, HookNameFilterFn
@@ -33,11 +34,12 @@ def clear_mem():
     torch.cuda.empty_cache()
 
 
-def last_token_logit(model, tokens):
+def last_token_logit(model, tokens: Int[Tensor, "batch seq"]):
     """just a simple metric for testing"""
+    last_tokens = tokens[:, -1]
     logits = model(tokens, return_type="logits")[:, -2, :]
     logits -= logits.mean(dim=-1, keepdim=True)  # subtract mean logit
-    correct_logits = logits[torch.arange(logits.size(0)), tokens[:, -1]]
+    correct_logits = eindex(logits, last_tokens, "batch [batch]")
     return correct_logits.mean()
 
 
