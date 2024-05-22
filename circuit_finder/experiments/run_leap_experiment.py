@@ -11,12 +11,15 @@ import transformer_lens as tl
 import pandas as pd
 import json
 
+from jaxtyping import Int, Float
+from torch import Tensor
+from eindex import eindex
 from simple_parsing import ArgumentParser
 from dataclasses import dataclass
 from circuit_finder.data_loader import load_datasets_from_json, PromptPairBatch
 from circuit_finder.patching.eap_graph import EAPGraph
 from circuit_finder.utils import clear_memory
-from circuit_finder.patching.leap import last_token_logit
+from circuit_finder.patching.patched_fp import get_patched_model
 from tqdm import tqdm
 
 from pathlib import Path
@@ -31,8 +34,6 @@ from circuit_finder.patching.leap import (
 )
 
 from circuit_finder.constants import ProjectDir, device
-
-from circuit_finder.patching.patched_fp import patched_fp
 
 
 @dataclass
@@ -53,6 +54,20 @@ class LeapExperimentConfig:
     # NOTE:This specifies which layer to start ablating at.
     # Marks et al don't ablate the first 2 layers
     # TODO: Find reference for the above
+
+    verbose: bool = False
+
+
+def logit_diff(
+    logits: Float[Tensor, "batch seq d_vocab"],
+    correct_answer: Int[Tensor, " batch"],
+    wrong_answer: Int[Tensor, " batch"],
+):
+    # Get last-token logits
+    logits = logits[:, -1, :]
+    correct_logits = eindex(logits, correct_answer, "batch [batch]")
+    wrong_logits = eindex(logits, wrong_answer, "batch [batch]")
+    return (correct_logits - wrong_logits).mean()
 
 
 def run_leap_experiment(config: LeapExperimentConfig):
@@ -98,6 +113,20 @@ def run_leap_experiment(config: LeapExperimentConfig):
     wrong_answer_tokens = batch.wrong_answers
     corrupt_tokens = batch.corrupt
 
+    def ave_logit_diff_metric(
+        model,
+        clean_prompt: torch.Tensor,
+        answer_tokens: list[torch.Tensor] | torch.Tensor,
+        wrong_answer_tokens: list[torch.Tensor] | torch.Tensor,
+    ):
+        logits = model(clean_prompt, return_type="logits")
+        # TODO: handle case where answer_token is list
+        return logit_diff(
+            logits,
+            answer_tokens.squeeze(dim=-1),
+            wrong_answer_tokens.squeeze(dim=-1),
+        )
+
     # NOTE: LEAP uses full prompt, so concatenate here.
     # This token is used to calculate the logit
     clean_tokens = torch.cat([clean_tokens, answer_tokens], dim=1)
@@ -117,20 +146,24 @@ def run_leap_experiment(config: LeapExperimentConfig):
     # NOTE: First, get the ceiling of the patching metric.
     model.reset_hooks()
     # TODO: Replace 'last_token_logit' with logit difference
-    ceiling = last_token_logit(model, clean_tokens).item()
+    ceiling = ave_logit_diff_metric(
+        model, clean_tokens, answer_tokens, wrong_answer_tokens
+    ).item()
 
     # NOTE: Second, get floor of patching metric using empty graph, i.e. ablate everything
     empty_graph = EAPGraph([])
-    floor = patched_fp(
+    with get_patched_model(
         model,
         empty_graph,
         clean_tokens,
-        last_token_logit,
         transcoders,
         attn_saes,
         ablate_errors=config.ablate_errors,  # if bm, error nodes are mean-ablated
         first_ablated_layer=config.first_ablate_layer,  # Marks et al don't ablate first 2 layers
-    ).item()
+    ):
+        floor = ave_logit_diff_metric(
+            model, clean_tokens, answer_tokens, wrong_answer_tokens
+        ).item()
     clear_memory()
 
     # now sweep over thresholds to get graphs with variety of numbers of nodes
@@ -139,7 +172,8 @@ def run_leap_experiment(config: LeapExperimentConfig):
     metrics_list = []
 
     # TODO: make configurable
-    thresholds = [0.001, 0.002, 0.003, 0.004, 0.005, 0.007, 0.01, 0.03, 0.06, 0.1]
+    # thresholds = [0.001, 0.002, 0.003, 0.004, 0.005, 0.007, 0.01, 0.03, 0.06, 0.1]
+    thresholds = [0.01, 0.03, 0.1, 0.3, 1.0, 3.0, 10]
     for threshold in tqdm(thresholds):
         model.reset_hooks()
         cfg = LEAPConfig(
@@ -153,7 +187,15 @@ def run_leap_experiment(config: LeapExperimentConfig):
             transcoders,
             corrupt_tokens=corrupt_tokens,
         )
-        leap.get_graph(verbose=False)
+
+        # Do the backward pass
+        model.zero_grad()
+        metric = ave_logit_diff_metric(
+            model, clean_tokens, answer_tokens, wrong_answer_tokens
+        )
+        metric.backward()  # TODO don't actually need backward through whole model. If m is linear, we can disable autograd!
+
+        leap.get_graph(verbose=config.verbose)
         graph = EAPGraph(leap.graph)
 
         # Save the graph
@@ -165,22 +207,24 @@ def run_leap_experiment(config: LeapExperimentConfig):
         del leap
         clear_memory()
 
-        metric = patched_fp(
+        with get_patched_model(
             model,
             graph,
             clean_tokens,
-            last_token_logit,
             transcoders,
             attn_saes,
             ablate_errors=config.ablate_errors,  # if bm, error nodes are mean-ablated
             first_ablated_layer=config.first_ablate_layer,  # Marks et al don't ablate first 2 layers
-        )
+        ):
+            metric = ave_logit_diff_metric(
+                model, clean_tokens, answer_tokens, wrong_answer_tokens
+            ).item()
 
         clear_memory()
 
         # Log the data
         num_nodes_list.append(num_nodes)
-        metrics_list.append(metric.item())
+        metrics_list.append(metric)
 
     faith = [(metric - floor) / (ceiling - floor) for metric in metrics_list]
 
