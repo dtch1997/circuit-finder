@@ -6,6 +6,9 @@ However, takes advantage of linearity afforded by transcoders and MLPs to parall
 """
 
 # %%
+import sys
+sys.path.append("/root/circuit-finder")
+print(sys.path)
 import gc
 import torch
 import transformer_lens as tl
@@ -194,9 +197,6 @@ class LEAP:
 
         self.error_graph = []
 
-    def get_important_edges(self) -> list[Edge]:
-        return [edge for edge, _ in self.graph]
-
     def get_initial_cache(self):
         """Run model on tokens. Grab acts at mlp_in, and run them through
         transcoders to get all transcoder feature acts. Grab acts at hook_z,
@@ -322,44 +322,35 @@ class LEAP:
         TODO currently, if metric depends on multiple token positions, this will
         sum the gradient over those positions. Do we want to be more general, i.e.
         store separate gradients at each position? Or maybe we don't care..."""
-        imp_down_feature_ids, imp_down_pos, imp_node_metric_grads = self.get_imp_feature_ids_and_pos(
-            "metric", self.n_layers
-        )
+        (imp_down_feature_ids, 
+         imp_down_pos, 
+         imp_node_metric_grads) = self.get_imp_properties("metric", self.n_layers)
 
         self.model.blocks[self.model.cfg.n_layers - 1].mlp.b_out.grad = None
         m = self.metric(self.model, self.tokens)
         m.backward()  # TODO don't actually need backward through whole model. If m is linear, we can disable autograd!
 
         # Sneaky way to get d(metric)/d(resid_post_final)
-        grad = self.model.blocks[self.model.cfg.n_layers - 1].mlp.b_out.grad.unsqueeze(
-            0
-        )
+        grad = self.model.blocks[self.model.cfg.n_layers - 1].mlp.b_out.grad.unsqueeze(0)
         self.compute_and_save_attribs(
-            grad, "metric", self.n_layers, imp_down_feature_ids, imp_down_pos, imp_node_metric_grads
-        )
+            grad, "metric", self.n_layers, imp_down_feature_ids, imp_down_pos, imp_node_metric_grads)
 
     def mlp_step(self, down_layer):
         """For each imp node at this MLP, compute attrib wrt all previous nodes"""
 
         # Get the imp features coming out of the MLP, and the positions at which they're imp
-        imp_down_feature_ids, imp_down_pos, imp_node_metric_grads = self.get_imp_feature_ids_and_pos(
-            "mlp", down_layer
-        )
+        (imp_down_feature_ids, 
+         imp_down_pos, 
+         imp_node_metric_grads) = self.get_imp_properties("mlp", down_layer)
         # For each imp downstream (feature_id, pos) pair, get batchmeaned is_active, and the corresponding encoder row
-        imp_active = self.mlp_is_active[
-            imp_down_pos, down_layer, imp_down_feature_ids
-        ]  # [imp_id]
-        imp_enc_cols = self.transcoders[down_layer].W_enc[
-            :, imp_down_feature_ids
-        ]  # [d_model, imp_id]
-        imp_layernorm_scales = self.mlp_layernorm_scales[
-            down_layer, imp_down_pos
-        ]  # [imp_id, 1]
+        imp_active = self.mlp_is_active[imp_down_pos, down_layer, imp_down_feature_ids]  # [imp_id]
+        imp_enc_cols = self.transcoders[down_layer].W_enc[:, imp_down_feature_ids]  # [d_model, imp_id]
+        imp_layernorm_scales = self.mlp_layernorm_scales[down_layer, imp_down_pos]  # [imp_id, 1]
 
         # The grad of these imp feature acts is just the corresponding row of W_enc (scaled by layernorm)
-        grad = einsum(
-            imp_active, imp_enc_cols, "imp_id, d_model imp_id -> imp_id d_model"
-        )
+        grad = einsum(imp_active, 
+                      imp_enc_cols, 
+                      "imp_id, d_model imp_id -> imp_id d_model")
         grad /= imp_layernorm_scales
 
         self.compute_and_save_attribs(
@@ -370,28 +361,18 @@ class LEAP:
         """For each imp node at this attention layer, compute attrib wrt all previous nodes *via the OV circuit*"""
 
         # Get the imp features coming out of the attention layer, and the positions at which they're imp
-        imp_down_feature_ids, imp_down_pos, imp_node_metric_grads = self.get_imp_feature_ids_and_pos(
-            "attn", down_layer
-        )
+        (imp_down_feature_ids, 
+         imp_down_pos, 
+         imp_node_metric_grads) = self.get_imp_properties("attn", down_layer)
 
         # For each imp downstream (feature_id, pos) pair, get batchmeaned is_active, encoder row, and pattern
-        imp_active = self.attn_is_active[
-            imp_down_pos, down_layer, imp_down_feature_ids
-        ]  # [imp_id]
-        imp_enc_rows = self.attn_saes[down_layer].W_enc[
-            :, imp_down_feature_ids
-        ]  # [d_model, imp_id]
-        imp_enc_rows_z = rearrange(
-            imp_enc_rows,
-            "(head_id d_head) imp_id -> head_id d_head imp_id",
-            head_id=self.model.cfg.n_heads,
-        )
-        imp_patterns = self.pattern[
-            down_layer, :, imp_down_pos, :
-        ]  # [head imp_id, kpos]
-        imp_layernorm_scales = self.attn_layernorm_scales[down_layer].unsqueeze(
-            1
-        )  # [kpos, 1, 1]
+        imp_active = self.attn_is_active[imp_down_pos, down_layer, imp_down_feature_ids]  # [imp_id]
+        imp_enc_rows = self.attn_saes[down_layer].W_enc[:, imp_down_feature_ids]  # [d_model, imp_id]
+        imp_enc_rows_z = rearrange(imp_enc_rows,
+                                "(head_id d_head) imp_id -> head_id d_head imp_id",
+                                head_id=self.model.cfg.n_heads)
+        imp_patterns = self.pattern[down_layer, :, imp_down_pos, :]  # [head imp_id, kpos]
+        imp_layernorm_scales = self.attn_layernorm_scales[down_layer].unsqueeze(1)  # [kpos, 1, 1]
 
         grad = einsum(
             imp_active,
@@ -407,14 +388,43 @@ class LEAP:
         )
 
 
+    def qk_step(self, down_layer):
+        # Get the imp features coming out of the attention layer, and the positions at which they're imp
+        # reused from ov_step. could refactor but who cares lol
+        (imp_down_feature_ids, 
+         imp_down_pos, 
+         imp_node_metric_grads) = self.get_imp_properties("attn", down_layer)
+
+        # For each imp downstream (feature_id, pos) pair, get batchmeaned is_active, encoder row, and pattern
+        imp_active = self.attn_is_active[imp_down_pos, down_layer, imp_down_feature_ids]  # [imp_id]
+        imp_enc_rows = self.attn_saes[down_layer].W_enc[:, imp_down_feature_ids]  # [d_model, imp_id]
+        imp_enc_rows_z = rearrange(imp_enc_rows,
+                                  "(head_id d_head) imp_id -> head_id d_head imp_id",
+                                  head_id=self.model.cfg.n_heads)
+        imp_patterns = self.pattern[down_layer, :, imp_down_pos, :]  # [head imp_id, kpos]
+        imp_layernorm_scales = self.attn_layernorm_scales[down_layer].unsqueeze(1)  # [kpos, 1, 1]
+
+        for up_module in ["mlp", "attn"]:
+            (up_active_W_dec, 
+            up_active_layers, 
+            up_active_feature_ids, 
+            up_active_feature_acts) = self.get_up_active_stuff(down_module, down_layer, up_module)
+
+        # Recompute pattern when ablating each upstream feature
+
+
+
+
+
+
 
 
     """ Helper functions """
 
     # TODO: This should be made an attribute of the graph instead
-    def get_imp_feature_ids_and_pos(
+    def get_imp_properties(
         self, down_module: ModuleName, down_layer: LayerIndex
-    ) -> tuple[list[FeatureIndex], list[TokenIndex]]:
+        ) -> tuple[list[FeatureIndex], list[TokenIndex]]:
         """Get the feature indices and token positiosn of important nodes at a given layer
 
         Returns:
@@ -430,14 +440,13 @@ class LEAP:
 
         # Get all nodes that are currently in the graph
         up_nodes_set: set[Node] = set()
-        for edge in self.get_important_edges():
+        for edge in [e for e, _ in self.graph]:
             _, upstream = edge
             up_nodes_set.add(upstream)
         up_nodes_deduped: list[Node] = list(up_nodes_set)
 
         # Filter by module and layer
         # TODO: It seems like we could do this previously but ig it doesn't matter.
-
         for node in up_nodes_deduped:
             module_, layer_, pos, feature_id = parse_node_name(node)
             if module_ == down_module and layer_ == down_layer:
@@ -448,7 +457,7 @@ class LEAP:
 
     def get_active_mlp_W_dec(
         self, down_layer: LayerIndex
-    ) -> tuple[Tensor, Tensor, Tensor]:
+        ) -> tuple[Tensor, Tensor, Tensor]:
         """so we don't have to dot with *every* upstream feature"""
         mlp_up_active_layers = self.mlp_active_feature_ids[0][
             self.mlp_active_feature_ids[0] < down_layer
@@ -463,7 +472,7 @@ class LEAP:
 
     def get_active_attn_W_dec(
         self, down_layer: LayerIndex, down_module: ModuleName
-    ) -> tuple[Tensor, Tensor, Tensor]:
+        ) -> tuple[Tensor, Tensor, Tensor]:
         """so we don't have to dot with *every* upstream feature"""
         max_layer = down_layer
         if down_module == "mlp":  # mlp sees attn from same layer!
@@ -479,29 +488,41 @@ class LEAP:
         ]
         return attn_active_W_dec, attn_up_active_layers, attn_up_active_feature_ids
 
+    def get_up_active_stuff(self, down_module, down_layer, up_module):
+        # Returns
+        up_active_W_dec           : Float[Tensor, "up_active_id n_features d_model"]
+        up_active_layers          : Float[Tensor, "up_active_id "]
+        up_active_feature_ids     : Float[Tensor, "up_active_id"]
+        up_active_feature_acts    : Float[Tensor, "imp_id, up_active_id"]
+
+        assert up_module in ["attn", "mlp"]
+        if up_module == "mlp":
+            up_active_W_dec, up_active_layers, up_active_feature_ids = (
+                self.get_active_mlp_W_dec(down_layer)
+            )
+            up_active_feature_acts = self.mlp_feature_acts[
+                :, up_active_layers, up_active_feature_ids
+            ]  # [pos, up_active_id]
+
+        elif up_module == "attn":
+            up_active_W_dec, up_active_layers, up_active_feature_ids = (
+                self.get_active_attn_W_dec(down_layer, down_module)
+            )
+            up_active_feature_acts  = self.attn_feature_acts[
+                :, up_active_layers, up_active_feature_ids
+            ] 
+        return up_active_W_dec, up_active_layers, up_active_feature_ids, up_active_feature_acts
+    
     def compute_and_save_attribs(
         self, grad, down_module, down_layer, imp_down_feature_ids, imp_down_pos, imp_node_metric_grads
     ):
         """grad : [... imp_id, d_model]"""
 
-        for up_module_name in ["mlp", "attn"]:
-            
-            # depending on the type of upstream module, get relevant upstream shit
-            if up_module_name == "mlp":
-                up_active_W_dec, up_active_layers, up_active_feature_ids = (
-                    self.get_active_mlp_W_dec(down_layer)
-                )
-                up_active_feature_acts = self.mlp_feature_acts[
-                    :, up_active_layers, up_active_feature_ids
-                ]  # [pos, up_active_id]
-
-            elif up_module_name == "attn":
-                up_active_W_dec, up_active_layers, up_active_feature_ids = (
-                    self.get_active_attn_W_dec(down_layer, down_module)
-                )
-                up_active_feature_acts : Float[Tensor, "imp_id, up_active_id"] = self.attn_feature_acts[
-                    :, up_active_layers, up_active_feature_ids
-                ] 
+        for up_module in ["mlp", "attn"]:
+            (up_active_W_dec, 
+            up_active_layers, 
+            up_active_feature_ids, 
+            up_active_feature_acts) = self.get_up_active_stuff(down_module, down_layer, up_module)
 
             # split attrib calc into two cases depending on downstream module type
             # this is because sequence index requires different treatment in the attn case
@@ -530,9 +551,9 @@ class LEAP:
                                                 up_active_feature_acts,
                                                 "imp_id up_active_id, imp_id up_active_id -> imp_id up_active_id")
 
-                if up_module_name == "mlp":
+                if up_module == "mlp":
                     imp_errors : Float[Tensor, "imp_id, layer, d_model"] = self.mlp_errors[imp_down_pos]
-                elif up_module_name == "attn":
+                elif up_module == "attn":
                     imp_errors = self.attn_errors[imp_down_pos]
                 error_attribs = einsum(
                     imp_errors[:, :down_layer],
@@ -545,14 +566,12 @@ class LEAP:
                 node_node_grads = einsum(
                     up_active_W_dec,
                     grad,
-                    "up_active_id d_model, seq imp_id d_model -> seq imp_id up_active_id",
-                )
+                    "up_active_id d_model, seq imp_id d_model -> seq imp_id up_active_id")
 
                 node_node_attribs = einsum(
                     node_node_grads,
                     up_active_feature_acts,
-                    "seq imp_id up_active_id, seq up_active_id -> seq imp_id up_active_id"
-                )
+                    "seq imp_id up_active_id, seq up_active_id -> seq imp_id up_active_id")
                 
                 edge_metric_grads = einsum(imp_node_metric_grads, 
                                             node_node_grads,
@@ -563,10 +582,9 @@ class LEAP:
                                             up_active_feature_acts,
                                             "seq imp_id up_active_id, seq up_active_id -> seq imp_id up_active_id")
                 
-
-                if up_module_name == "mlp":
+                if up_module == "mlp":
                     imp_errors  = self.mlp_errors[:, :down_layer]
-                elif up_module_name == "attn":
+                elif up_module == "attn":
                     imp_errors = self.attn_errors[:, :down_layer]
 
                 error_attribs = einsum(
@@ -589,11 +607,11 @@ class LEAP:
                 error_attribs,
                 imp_down_feature_ids,
                 imp_down_pos,
-                down_module_name=down_module,
-                down_layer=down_layer,
-                up_module_name=up_module_name,
-                up_active_layers=up_active_layers,
-                up_active_feature_ids=up_active_feature_ids,
+                down_module,
+                down_layer,
+                up_module,
+                up_active_layers,
+                up_active_feature_ids,
             )
 
 
@@ -616,12 +634,8 @@ class LEAP:
         if len(imp_down_pos) == 0:
             return
         # Convert lists to PyTorch tensors
-        imp_down_feature_ids = torch.tensor(
-            imp_down_feature_ids, dtype=torch.long, device="cuda"
-        )
-        imp_down_pos = torch.tensor(
-            imp_down_pos, dtype=torch.long, device="cuda"
-        )
+        imp_down_feature_ids = torch.tensor(imp_down_feature_ids, dtype=torch.long, device="cuda")
+        imp_down_pos = torch.tensor(imp_down_pos, dtype=torch.long, device="cuda")
 
         # Create a mask where attribs are greater than the threshold TODO add option for chained
         if self.cfg.chained_attribs:
@@ -645,9 +659,7 @@ class LEAP:
             edge_metric_grads_values   = edge_metric_grads[up_seqs, imp_ids, up_active_ids].flatten()
             edge_metric_attribs_values = edge_metric_attribs[up_seqs, imp_ids, up_active_ids].flatten()
         else:
-            raise ValueError(
-                "down_module_name must be one of ['mlp', 'attn', 'metric']"
-            )
+            raise ValueError("down_module_name must be one of ['mlp', 'attn', 'metric']")
 
         # Get corresponding down_feature_ids and seqs using tensor indexing
         down_feature_ids = imp_down_feature_ids[imp_ids]
@@ -681,27 +693,26 @@ class LEAP:
             if not edge[1].split(".")[2] == "0":
                 self.graph.append((edge, (nn_grad, nn_attrib, em_grad, em_attrib)))  # type: ignore
 
-        # # Add errors
-        # if down_module_name in ["mlp", "metric"]:
-        #     # error_attribs : [imp_id, layer]
-        #     for imp_id in range(error_attribs.size(0)):
-        #         for up_layer in range(error_attribs.size(1)):
-        #             edge = (f"{down_module_name}.{down_layer}.{imp_down_pos[imp_id]}.{imp_down_feature_ids[imp_id]}",
-        #                     f"{up_module_name}_error.{up_layer}.{imp_down_pos[imp_id]}.{0}")
-        #             attrib = error_attribs[imp_id, up_layer]
-        #             self.error_graph.append((edge, attrib.item()))
+        # Add errors to separate graph 
+        # TODO do we care about chained attribs for these too?
+        if down_module_name in ["mlp", "metric"]:
+            # error_attribs : [imp_id, layer]
+            for imp_id in range(error_attribs.size(0)):
+                for up_layer in range(error_attribs.size(1)):
+                    edge = (f"{down_module_name}.{down_layer}.{imp_down_pos[imp_id]}.{imp_down_feature_ids[imp_id]}",
+                            f"{up_module_name}_error.{up_layer}.{imp_down_pos[imp_id]}.{0}")
+                    attrib = error_attribs[imp_id, up_layer]
+                    self.error_graph.append((edge, attrib.item()))
 
-        # if down_module_name in ["attn"]:
-        #     # error_attribs : [seq, imp_id, layer]
-        #     for imp_id in range(error_attribs.size(1)):
-        #         for up_layer in range(error_attribs.size(2)):
-        #             for up_seq in range(error_attribs.size(0)):
-        #                 edge = (f"{down_module_name}.{down_layer}.{imp_down_pos[imp_id]}.{imp_down_feature_ids[imp_id]}",
-        #                         f"{up_module_name}_error.{up_layer}.{up_seq}.{0}")
-        #                 attrib = error_attribs[up_seq, imp_id, up_layer]
-        #                 self.error_graph.append((edge, attrib.item()))
-
-
+        if down_module_name in ["attn"]:
+            # error_attribs : [seq, imp_id, layer]
+            for imp_id in range(error_attribs.size(1)):
+                for up_layer in range(error_attribs.size(2)):
+                    for up_seq in range(error_attribs.size(0)):
+                        edge = (f"{down_module_name}.{down_layer}.{imp_down_pos[imp_id]}.{imp_down_feature_ids[imp_id]}",
+                                f"{up_module_name}_error.{up_layer}.{up_seq}.{0}")
+                        attrib = error_attribs[up_seq, imp_id, up_layer]
+                        self.error_graph.append((edge, attrib.item()))
 
     def get_graph(self, verbose=False):
         self.metric_step()
@@ -712,4 +723,3 @@ class LEAP:
         if verbose:
             print("num nodes = ", len(set([edge[1] for (edge, vals) in self.graph])))
             print("num edges = " ,len(self.graph))
-
