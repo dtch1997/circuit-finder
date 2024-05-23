@@ -305,7 +305,6 @@ class LEAP:
         m = self.metric(self.model, self.tokens)
         m.backward()  # TODO don't actually need backward through whole model. If m is linear, we can disable autograd!
         grad = grad_cache[hook_pt][imp_down_pos]
-        print("grad", grad.norm())
         self.compute_and_save_attribs(
             grad,
             "metric",
@@ -742,7 +741,17 @@ class LEAP:
         ):
             # don't bother adding nodes at pos=0, since this is BOS token
             if not edge[1].split(".")[2] == "0":
-                self.graph.append((edge, (nn_grad, nn_attrib, em_grad, em_attrib)))  # type: ignore
+                self.graph.append(
+                    (
+                        edge,
+                        (
+                            nn_grad.item(),
+                            nn_attrib.item(),
+                            em_grad.item(),
+                            em_attrib.item(),
+                        ),
+                    )
+                )  # type: ignore
 
         # Add errors to separate graph
         # TODO do we care about chained attribs for these too?

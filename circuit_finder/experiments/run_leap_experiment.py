@@ -16,7 +16,6 @@ from torch import Tensor
 from eindex import eindex
 from simple_parsing import ArgumentParser
 from dataclasses import dataclass
-from circuit_finder.data_loader import load_datasets_from_json, PromptPairBatch
 from circuit_finder.patching.eap_graph import EAPGraph
 from circuit_finder.utils import clear_memory
 from circuit_finder.patching.ablate import get_metric_with_ablation
@@ -33,14 +32,14 @@ from circuit_finder.patching.leap import (
     LEAPConfig,
 )
 
-from circuit_finder.constants import ProjectDir, device
+from circuit_finder.constants import ProjectDir
 
 
 @dataclass
 class LeapExperimentConfig:
     dataset_path: str = "datasets/ioi/ioi_vanilla_template_prompts.json"
     save_dir: str = "results/leap_experiment"
-    seed: int = 0
+    seed: int = 1
     batch_size: int = 4
     total_dataset_size: int = 1024
     ablate_errors: bool | str = False
@@ -98,34 +97,39 @@ def run_leap_experiment(config: LeapExperimentConfig):
         dataset_path = ProjectDir / dataset_path
     else:
         dataset_path = Path(dataset_path)
-    train_loader, _ = load_datasets_from_json(
-        model=model,
-        path=dataset_path,
-        device=device,  # type: ignore
-        batch_size=config.batch_size,
-        train_test_size=(config.total_dataset_size, config.total_dataset_size),
-        random_seed=config.seed,
+    # train_loader, _ = load_datasets_from_json(
+    #     model=model,
+    #     path=dataset_path,
+    #     device=device,  # type: ignore
+    #     batch_size=config.batch_size,
+    #     train_test_size=(config.total_dataset_size, config.total_dataset_size),
+    #     random_seed=config.seed,
+    # )
+
+    # # Get a batch on which we run the experiment
+    # batch: PromptPairBatch = next(iter(train_loader))
+    # clean_tokens = batch.clean
+    # answer_tokens = batch.answers
+    # wrong_answer_tokens = batch.wrong_answers
+    # corrupt_tokens = batch.corrupt
+    # # TODO: handle case where answer_token is list
+    # # This is applicable e.g. for 'GreaterThan' which has many correct and wrong answers
+    # # and we are expected to sum over them.
+    # # NOTE: for now, we only support single answer and wrong answer
+
+    clean_tokens = model.to_tokens(
+        ["When John and Mary were at the store, John gave a bottle to"]
+    )
+    answer_tokens = model.to_tokens(["Mary"], prepend_bos=False)
+    wrong_answer_tokens = model.to_tokens(["John"], prepend_bos=False)
+    corrupt_tokens = model.to_tokens(
+        ["When Alice and Bob were at the store, Charlie gave a bottle to"]
     )
 
-    # Get a batch on which we run the experiment
-    batch: PromptPairBatch = next(iter(train_loader))
-    clean_tokens = batch.clean
-    answer_tokens = batch.answers
-    wrong_answer_tokens = batch.wrong_answers
-    corrupt_tokens = batch.corrupt
-    # TODO: handle case where answer_token is list
-    # This is applicable e.g. for 'GreaterThan' which has many correct and wrong answers
-    # and we are expected to sum over them.
-    # NOTE: for now, we only support single answer and wrong answer
     assert isinstance(answer_tokens, torch.Tensor), "Only single answer supported"
     assert isinstance(
         wrong_answer_tokens, torch.Tensor
     ), "Only single wrong answer supported"
-
-    # NOTE: LEAP uses full prompt, so concatenate here.
-    clean_tokens = torch.cat([clean_tokens, answer_tokens], dim=1)
-    # NOTE: It actually doesn't matter what answer we use for corrupt prompts.
-    corrupt_tokens = torch.cat([corrupt_tokens, wrong_answer_tokens], dim=1)
 
     # Define metric
     def metric_fn(model, tokens):
@@ -141,6 +145,8 @@ def run_leap_experiment(config: LeapExperimentConfig):
         json.dump(
             {
                 "clean": model.to_string(clean_tokens),
+                "answer": model.to_string(answer_tokens),
+                "wrong_answer": model.to_string(wrong_answer_tokens),
                 "corrupt": model.to_string(corrupt_tokens),
             },
             jsonfile,
@@ -149,6 +155,7 @@ def run_leap_experiment(config: LeapExperimentConfig):
     # NOTE: First, get the ceiling of the patching metric.
     # TODO: Replace 'last_token_logit' with logit difference
     ceiling = metric_fn(model, clean_tokens).item()
+    print(f"Ceiling: {ceiling}")
 
     # NOTE: Second, get floor of patching metric using empty graph, i.e. ablate everything
     empty_graph = EAPGraph([])
@@ -159,9 +166,10 @@ def run_leap_experiment(config: LeapExperimentConfig):
         metric_fn,
         transcoders,
         attn_saes,
-        ablate_errors=config.ablate_errors,  # type: ignore
+        ablate_errors=False,  # Do not ablate errors when running forward pass
         first_ablated_layer=config.first_ablate_layer,
     ).item()
+    print(f"Floor: {floor}")
     clear_memory()
 
     # now sweep over thresholds to get graphs with variety of numbers of nodes
@@ -171,7 +179,7 @@ def run_leap_experiment(config: LeapExperimentConfig):
 
     # Sweep over thresholds
     # TODO: make configurable
-    thresholds = [0.0001, 0.0003, 0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1.0]
+    thresholds = [0.001, 0.003, 0.006, 0.01, 0.03, 0.06, 0.1, 0.3, 0.6, 1.0]
     for threshold in tqdm(thresholds):
         # Setup LEAP algorithm
         model.reset_hooks()
@@ -183,7 +191,7 @@ def run_leap_experiment(config: LeapExperimentConfig):
             tokens=clean_tokens,
             model=model,
             metric=metric_fn,
-            attn_saes=attn_saes,
+            attn_saes=attn_saes,  # type: ignore
             transcoders=transcoders,
             corrupt_tokens=corrupt_tokens,
         )
