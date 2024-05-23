@@ -18,6 +18,7 @@ from simple_parsing import ArgumentParser
 from dataclasses import dataclass
 from circuit_finder.data_loader import load_datasets_from_json, PromptPairBatch
 from circuit_finder.patching.eap_graph import EAPGraph
+from circuit_finder.patching.utils import get_backward_cache
 from circuit_finder.utils import clear_memory
 from circuit_finder.patching.patched_fp import get_patched_model
 from tqdm import tqdm
@@ -181,7 +182,7 @@ def run_leap_experiment(config: LeapExperimentConfig):
 
     # TODO: make configurable
     # thresholds = [0.001, 0.002, 0.003, 0.004, 0.005, 0.007, 0.01, 0.03, 0.06, 0.1]
-    thresholds = [0.01, 0.03, 0.1, 0.3, 1.0, 3.0, 10]
+    thresholds = [0.0001, 0.0003, 0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1.0]
     for threshold in tqdm(thresholds):
         model.reset_hooks()
         cfg = LEAPConfig(
@@ -198,13 +199,25 @@ def run_leap_experiment(config: LeapExperimentConfig):
 
         # Do the backward pass
         model.zero_grad()
-        metric = ave_logit_diff_metric(
-            model, clean_tokens, answer_tokens, wrong_answer_tokens
-        )
-        metric.backward()  # TODO don't actually need backward through whole model. If m is linear, we can disable autograd!
+        with get_backward_cache(
+            model, leap.last_layer_hook_resid_post
+        ) as backward_cache:
+            metric = ave_logit_diff_metric(
+                model, clean_tokens, answer_tokens, wrong_answer_tokens
+            )
+            metric.backward()
+        grad = backward_cache[leap.last_layer_hook_resid_post]
+        # Batchmean the grad
+        assert len(grad.shape) == 3
+        grad = grad.mean(dim=0)
+
+        # Populate the graph
+        leap.metric_step(grad)
+        for layer in reversed(range(1, leap.n_layers)):
+            leap.mlp_step(layer)
+            leap.ov_step(layer)
 
         # Save the graph
-        leap.get_graph(verbose=config.verbose)
         graph = EAPGraph(leap.graph)
         num_nodes = len(graph.get_src_nodes())
         with open(save_dir / f"leap-graph_threshold={threshold}.json", "w") as jsonfile:

@@ -307,7 +307,11 @@ class LEAP:
         self.mlp_active_feature_ids = torch.where(self.mlp_is_active.sum(0) > 0)
         self.attn_active_feature_ids = torch.where(self.attn_is_active.sum(0) > 0)
 
-    def metric_step(self):
+    @property
+    def last_layer_hook_resid_post(self) -> str:
+        return f"blocks.{self.n_layers-1}.hook_resid_post"
+
+    def metric_step(self, grad: Float[Tensor, "seq d_model"]):
         """Step 0 of circuit discovery: get attributions from each node to the metric.
 
         TODO currently, if metric depends on multiple token positions, this will
@@ -318,10 +322,6 @@ class LEAP:
             self.get_imp_feature_ids_and_pos("metric", self.n_layers)
         )
 
-        # Sneaky way to get d(metric)/d(resid_post_final)
-        grad = self.model.blocks[self.model.cfg.n_layers - 1].mlp.b_out.grad.unsqueeze(
-            0
-        )
         self.compute_and_save_attribs(
             grad,
             "metric",
@@ -506,14 +506,14 @@ class LEAP:
                 up_active_W_dec, up_active_layers, up_active_feature_ids = (
                     self.get_active_attn_W_dec(down_layer, down_module)
                 )
-                up_active_feature_acts: Float[Tensor, "imp_id, up_active_id"] = (
+                up_active_feature_acts: Float[Tensor, " imp_id up_active_id"] = (
                     self.attn_feature_acts[:, up_active_layers, up_active_feature_ids]
                 )
 
             # split attrib calc into two cases depending on downstream module type
             # this is because sequence index requires different treatment in the attn case
             if down_module in ["mlp", "metric"]:
-                up_active_feature_acts: Float[Tensor, "imp_id, up_active_id"] = (
+                up_active_feature_acts: Float[Tensor, " imp_id up_active_id"] = (
                     up_active_feature_acts[imp_down_pos]
                 )
 
@@ -542,7 +542,7 @@ class LEAP:
                 )
 
                 if up_module_name == "mlp":
-                    imp_errors: Float[Tensor, "imp_id, layer, d_model"] = (
+                    imp_errors: Float[Tensor, " imp_id layer d_model"] = (
                         self.mlp_errors[imp_down_pos]
                     )
                 elif up_module_name == "attn":
@@ -742,12 +742,12 @@ class LEAP:
         #                 attrib = error_attribs[up_seq, imp_id, up_layer]
         #                 self.error_graph.append((edge, attrib.item()))
 
-    def get_graph(self, verbose=False):
-        self.metric_step()
-        for layer in reversed(range(1, self.n_layers)):
-            self.mlp_step(layer)
-            self.ov_step(layer)
+    # def get_graph(self, verbose=False):
+    #     self.metric_step()
+    #     for layer in reversed(range(1, self.n_layers)):
+    #         self.mlp_step(layer)
+    #         self.ov_step(layer)
 
-        if verbose:
-            print("num nodes = ", len(set([edge[1] for (edge, vals) in self.graph])))
-            print("num edges = ", len(self.graph))
+    #     if verbose:
+    #         print("num nodes = ", len(set([edge[1] for (edge, vals) in self.graph])))
+    #         print("num edges = ", len(self.graph))
