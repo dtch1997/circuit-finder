@@ -15,7 +15,7 @@ HookNameFilterFn = Callable[[HookName], bool]
 
 Node = str
 Edge = tuple[Node, Node]  # (dest, src)
-Attrib = float
+Attrib = tuple[float, float, float, float]
 
 Tokens = Int[torch.Tensor, "batch seq"]
 

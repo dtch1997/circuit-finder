@@ -1,3 +1,4 @@
+import pandas as pd
 from typing import Callable
 from circuit_finder.core.types import (
     LayerIndex,
@@ -9,6 +10,35 @@ from circuit_finder.core.types import (
     ModuleName,
     parse_node_name,
 )
+
+
+def convert_graph_to_dataframe(graph: "EAPGraph") -> pd.DataFrame:
+    rows = []
+    for edge, edge_info in graph.graph:
+        dest, src = edge
+        if "metric" in src:
+            continue
+        nn_grad, nn_attrib, em_grad, em_attrib = edge_info
+        src_module_type, src_layer, src_token, src_feature = parse_node_name(src)
+        dest_module_type, dest_layer, dest_token, dest_feature = parse_node_name(dest)
+        rows.append(
+            {
+                "src_module_type": src_module_type,
+                "dest_module_type": dest_module_type,
+                "src_layer": src_layer,
+                "dest_layer": dest_layer,
+                "src_token": src_token,
+                "dest_token": dest_token,
+                "src_feature": src_feature,
+                "dest_feature": dest_feature,
+                "nn_grad": nn_grad,
+                "nn_attrib": nn_attrib,
+                "em_grad": em_grad,
+                "em_attrib": em_attrib,
+            }
+        )
+    df = pd.DataFrame(rows)
+    return df
 
 
 class EAPGraph:

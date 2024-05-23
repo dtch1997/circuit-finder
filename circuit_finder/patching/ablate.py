@@ -39,12 +39,13 @@ def get_metric_with_ablation(
     metric: MetricFn,
     transcoders,  # list
     attn_saes,  # list
-    ablate_errors: bool = False,  # options [False, "bm", "zero"]
+    ablate_nodes: str | bool = "zero",  # options [False, "bm", "zero"]
+    ablate_errors: str | bool = False,  # options [False, "bm", "zero"]
     first_ablated_layer: int = 2,  # Marks et al don't ablate first 2 layers
 ):
     """Cache the activations of the model on a circuit, then return the metric when ablated"""
     assert ablate_errors in [False, "bm", "zero"]
-
+    assert ablate_nodes in [False, "bm", "zero"]
     # Do clean FP to get batchmean (bm) feature acts, and reconstructions
     # No patching is done during this FP, so the hook fns return nothing
     # Note: MLP transcoders are a bit more fiddly than attn-SAEs, requiring us to cache at both mlp_in and mlp_out

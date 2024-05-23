@@ -1,3 +1,5 @@
+"""A simple dataset for IOI"""
+
 # type: ignore
 from typing import Sequence
 
@@ -23,6 +25,9 @@ corrupt_prompt_for_prompt_format = [
     # "After Reshel and Lawrence went to the park, Kevin gave a drink to"
 ]
 
+ABBA_DATASETS = [f"datasets/ioi/ioi_ABBA_template_{i}_prompts.json" for i in range(15)]
+BABA_DATASETS = [f"datasets/ioi/ioi_BABA_template_{i}_prompts.json" for i in range(15)]
+
 
 def get_ioi_data() -> tuple[Sequence[str], Sequence[str], Sequence[tuple[str, str]]]:
     # Define 8 prompts, in 4 groups of 2 (with adjacent prompts having answers swapped)
@@ -38,4 +43,4 @@ def get_ioi_data() -> tuple[Sequence[str], Sequence[str], Sequence[tuple[str, st
 
     # Define the answers for each prompt, in the form (correct, incorrect)
     answers = [names[::i] for names in name_pairs for i in (1, -1)]
-    return clean_prompts, corrupt_prompts, answers
+    return clean_prompts, corrupt_prompts, answers  # type: ignore
