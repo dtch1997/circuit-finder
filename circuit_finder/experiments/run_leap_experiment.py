@@ -18,9 +18,8 @@ from simple_parsing import ArgumentParser
 from dataclasses import dataclass
 from circuit_finder.data_loader import load_datasets_from_json, PromptPairBatch
 from circuit_finder.patching.eap_graph import EAPGraph
-from circuit_finder.patching.utils import get_backward_cache
 from circuit_finder.utils import clear_memory
-from circuit_finder.patching.patched_fp import get_patched_model
+from circuit_finder.patching.ablate import get_metric_with_ablation
 from tqdm import tqdm
 
 from pathlib import Path
@@ -39,7 +38,7 @@ from circuit_finder.constants import ProjectDir, device
 
 @dataclass
 class LeapExperimentConfig:
-    dataset_path: str = "datasets/ioi/ioi_prompts.json"
+    dataset_path: str = "datasets/ioi/ioi_vanilla_template_prompts.json"
     save_dir: str = "results/leap_experiment"
     seed: int = 0
     batch_size: int = 4
@@ -69,20 +68,6 @@ def logit_diff(
     correct_logits = eindex(logits, correct_answer, "batch [batch]")
     wrong_logits = eindex(logits, wrong_answer, "batch [batch]")
     return (correct_logits - wrong_logits).mean()
-
-
-def ave_logit_diff_metric(
-    model,
-    clean_prompt: Int[Tensor, "batch seq"],
-    answer_tokens: Int[Tensor, " batch"],
-    wrong_answer_tokens: Int[Tensor, " batch"],
-):
-    logits = model(clean_prompt, return_type="logits")
-    return logit_diff(
-        logits,
-        answer_tokens.squeeze(dim=-1),
-        wrong_answer_tokens.squeeze(dim=-1),
-    )
 
 
 def run_leap_experiment(config: LeapExperimentConfig):
@@ -138,10 +123,18 @@ def run_leap_experiment(config: LeapExperimentConfig):
     ), "Only single wrong answer supported"
 
     # NOTE: LEAP uses full prompt, so concatenate here.
-    # This token is used to calculate the logit
     clean_tokens = torch.cat([clean_tokens, answer_tokens], dim=1)
     # NOTE: It actually doesn't matter what answer we use for corrupt prompts.
     corrupt_tokens = torch.cat([corrupt_tokens, wrong_answer_tokens], dim=1)
+
+    # Define metric
+    def metric_fn(model, tokens):
+        logits = model(tokens, return_type="logits")
+        return logit_diff(
+            logits,
+            answer_tokens.squeeze(dim=-1),
+            wrong_answer_tokens.squeeze(dim=-1),
+        )
 
     # Save the dataset.
     with open(save_dir / "dataset.json", "w") as jsonfile:
@@ -155,24 +148,20 @@ def run_leap_experiment(config: LeapExperimentConfig):
 
     # NOTE: First, get the ceiling of the patching metric.
     # TODO: Replace 'last_token_logit' with logit difference
-    ceiling = ave_logit_diff_metric(
-        model, clean_tokens, answer_tokens, wrong_answer_tokens
-    ).item()
+    ceiling = metric_fn(model, clean_tokens).item()
 
     # NOTE: Second, get floor of patching metric using empty graph, i.e. ablate everything
     empty_graph = EAPGraph([])
-    with get_patched_model(
+    floor = get_metric_with_ablation(
         model,
         empty_graph,
         clean_tokens,
+        metric_fn,
         transcoders,
         attn_saes,
-        ablate_errors=config.ablate_errors,  # if bm, error nodes are mean-ablated  # type: ignore
-        first_ablated_layer=config.first_ablate_layer,  # Marks et al don't ablate first 2 layers
-    ):
-        floor = ave_logit_diff_metric(
-            model, clean_tokens, answer_tokens, wrong_answer_tokens
-        ).item()
+        ablate_errors=config.ablate_errors,  # type: ignore
+        first_ablated_layer=config.first_ablate_layer,
+    ).item()
     clear_memory()
 
     # now sweep over thresholds to get graphs with variety of numbers of nodes
@@ -180,39 +169,27 @@ def run_leap_experiment(config: LeapExperimentConfig):
     num_nodes_list = []
     metrics_list = []
 
+    # Sweep over thresholds
     # TODO: make configurable
-    # thresholds = [0.001, 0.002, 0.003, 0.004, 0.005, 0.007, 0.01, 0.03, 0.06, 0.1]
     thresholds = [0.0001, 0.0003, 0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1.0]
     for threshold in tqdm(thresholds):
+        # Setup LEAP algorithm
         model.reset_hooks()
         cfg = LEAPConfig(
             threshold=threshold, contrast_pairs=False, chained_attribs=True
         )
         leap = LEAP(
-            cfg,
-            clean_tokens,
-            model,
-            attn_saes,
-            transcoders,
+            cfg=cfg,
+            tokens=clean_tokens,
+            model=model,
+            metric=metric_fn,
+            attn_saes=attn_saes,
+            transcoders=transcoders,
             corrupt_tokens=corrupt_tokens,
         )
 
-        # Do the backward pass
-        model.zero_grad()
-        with get_backward_cache(
-            model, leap.last_layer_hook_resid_post
-        ) as backward_cache:
-            metric = ave_logit_diff_metric(
-                model, clean_tokens, answer_tokens, wrong_answer_tokens
-            )
-            metric.backward()
-        grad = backward_cache[leap.last_layer_hook_resid_post]
-        # Batchmean the grad
-        assert len(grad.shape) == 3
-        grad = grad.mean(dim=0)
-
         # Populate the graph
-        leap.metric_step(grad)
+        leap.metric_step()
         for layer in reversed(range(1, leap.n_layers)):
             leap.mlp_step(layer)
             leap.ov_step(layer)
@@ -223,24 +200,21 @@ def run_leap_experiment(config: LeapExperimentConfig):
         with open(save_dir / f"leap-graph_threshold={threshold}.json", "w") as jsonfile:
             json.dump(graph.to_json(), jsonfile)
 
+        # Delete tensors to save memory
         del leap
         clear_memory()
 
         # Calculate the metric under ablation
-        with get_patched_model(
+        metric = get_metric_with_ablation(
             model,
-            graph,
+            empty_graph,
             clean_tokens,
+            metric_fn,
             transcoders,
             attn_saes,
-            ablate_errors=config.ablate_errors,  # if bm, error nodes are mean-ablated # type: ignore
-            first_ablated_layer=config.first_ablate_layer,  # Marks et al don't ablate first 2 layers
-        ):
-            metric = ave_logit_diff_metric(
-                model, clean_tokens, answer_tokens, wrong_answer_tokens
-            ).item()
-
-        clear_memory()
+            ablate_errors=config.ablate_errors,  # type: ignore
+            first_ablated_layer=config.first_ablate_layer,
+        ).item()
 
         # Log the data
         num_nodes_list.append(num_nodes)
