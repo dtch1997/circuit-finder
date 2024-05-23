@@ -74,6 +74,14 @@ class EAPGraph:
         ]
         return EAPGraph(graph)
 
+    def has_node(self, module_name, layer, feature) -> bool:
+        """Check if a node is in the graph"""
+        for node in self.get_nodes():
+            _, layer_idx, _, feature_idx = parse_node_name(node)
+            if layer_idx == layer and feature_idx == feature:
+                return True
+        return False
+
 
 def get_feature_and_token_idx_of_nodes(
     graph: EAPGraph, module_name: ModuleName, layer_idx: LayerIndex
