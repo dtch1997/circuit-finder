@@ -110,7 +110,7 @@ def show_avg_logit_diffs(x_axis: List[str], per_prompt_logit_diffs: List[torch.t
     fig.show()
 
 
-def show_attrib_graph(graph):
+def show_attrib_graph(graph, **kwargs):
     G = nx.DiGraph()
     for dest, src in graph.get_edges():
         if dest != "null":
@@ -140,6 +140,4 @@ def show_attrib_graph(graph):
     pos = {node: get_node_position(node) for node in G.nodes}
     color = [get_node_color(node) for node in G.nodes]
 
-    plt.figure(3, figsize=(12, 12))
-    nx.draw(G, pos, with_labels=True, node_color=color)
-    plt.show()
+    nx.draw(G, pos, with_labels=True, node_color=color, **kwargs)

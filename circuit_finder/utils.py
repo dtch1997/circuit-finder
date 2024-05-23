@@ -3,6 +3,7 @@
 https://colab.research.google.com/drive/1HvD24vl-WFnydnUYaFkGfT2jKnN7Y6me#scrollTo=EPD6V1OIl6mJ
 """
 
+import gc
 import torch
 from transformer_lens import HookedTransformer
 
@@ -16,6 +17,12 @@ from transformer_lens import ActivationCache
 from torch import Tensor
 from jaxtyping import Int, Float
 from circuit_finder.core.types import HookNameFilterFn, MetricFn
+
+
+def clear_memory():
+    """Clears system memory and GPU memory cache."""
+    gc.collect()
+    torch.cuda.empty_cache()
 
 
 def last_token_prediction_loss(model: HookedTransformer, text: str) -> torch.Tensor:

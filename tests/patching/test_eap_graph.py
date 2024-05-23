@@ -1,3 +1,4 @@
+import pytest
 from circuit_finder.patching.eap_graph import EAPGraph
 
 edge_attribs = [
@@ -42,3 +43,26 @@ def test_get_dest_nodes():
         "metric.12.14.0",
         "attn.10.14.3849",
     }
+
+
+# TODO: Fix saving, loading
+@pytest.mark.xfail
+def test_to_from_json():
+    eap_graph = EAPGraph(edge_attribs)
+    eap_graph_json = eap_graph.to_json()
+    assert eap_graph_json == {
+        "graph": [
+            {"edge": ("null", "metric.12.14.0"), "attrib": 0},
+            {
+                "edge": ("metric.12.14.0", "attn.9.14.11368"),
+                "attrib": 5.972317218780518,
+            },
+            {
+                "edge": ("metric.12.14.0", "attn.10.14.3849"),
+                "attrib": 1.9210439920425415,
+            },
+            {"edge": ("attn.10.14.3849", "mlp.0.4.5545"), "attrib": 11.198338508605957},
+        ]
+    }
+    eap_graph_from_json = EAPGraph.from_json(eap_graph_json)
+    assert eap_graph == eap_graph_from_json

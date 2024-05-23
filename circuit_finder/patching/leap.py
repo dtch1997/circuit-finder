@@ -17,7 +17,7 @@ from dataclasses import dataclass
 from einops import rearrange, einsum
 from typing import Literal, TypeGuard
 
-from circuit_finder.core.types import LayerIndex, MetricFn, HookNameFilterFn
+from circuit_finder.core.types import LayerIndex, HookNameFilterFn
 from circuit_finder.constants import device
 
 FeatureIndex = int
@@ -31,14 +31,6 @@ ModuleName = Literal["mlp", "attn", "metric"]
 def clear_mem():
     gc.collect()
     torch.cuda.empty_cache()
-
-
-def last_token_logit(model, tokens):
-    """just a simple metric for testing"""
-    logits = model(tokens, return_type="logits")[:, -2, :]
-    logits -= logits.mean(dim=-1, keepdim=True)  # subtract mean logit
-    correct_logits = logits[torch.arange(logits.size(0)), tokens[:, -1]]
-    return correct_logits.mean()
 
 
 def is_valid_module_name(str) -> TypeGuard[ModuleName]:
@@ -140,7 +132,6 @@ class LEAP:
         model: tl.HookedTransformer,
         attn_saes: dict[LayerIndex, tl.HookedSAE],  # layer index: attn-out SAE
         transcoders: dict[LayerIndex, Transcoder],  # layer index: mlp transcoder
-        metric: MetricFn = last_token_logit,
         corrupt_tokens: Int[
             torch.Tensor, "batch seq"
         ] = None,  # only specify if contrast_pairs = True
@@ -150,7 +141,6 @@ class LEAP:
         self.model = model
         self.attn_saes = attn_saes
         self.transcoders = transcoders
-        self.metric = metric
         self.corrupt_tokens = corrupt_tokens
 
         if self.cfg.contrast_pairs:
@@ -189,7 +179,8 @@ class LEAP:
         # node = "{module_name}.{layer}.{pos}.{feature_id}"
         # vals = (node_node_grad, node_node_attrib, edge_metric_grad, edge_metric_attrib)
         self.graph: list[tuple[Edge, Attrib]] = [
-            (("null", f"metric.{self.n_layers}.{self.n_seq-2}.0"), (0.0, 0.0, 1.0, 0.0))
+            (("null", f"metric.{self.n_layers}.{seq}.0"), (0.0, 0.0, 1.0, 0.0))
+            for seq in range(self.n_seq)
         ]
 
         self.error_graph = []
@@ -316,24 +307,21 @@ class LEAP:
         self.mlp_active_feature_ids = torch.where(self.mlp_is_active.sum(0) > 0)
         self.attn_active_feature_ids = torch.where(self.attn_is_active.sum(0) > 0)
 
-    def metric_step(self):
+    @property
+    def last_layer_hook_resid_post(self) -> str:
+        return f"blocks.{self.n_layers-1}.hook_resid_post"
+
+    def metric_step(self, grad: Float[Tensor, "seq d_model"]):
         """Step 0 of circuit discovery: get attributions from each node to the metric.
 
         TODO currently, if metric depends on multiple token positions, this will
         sum the gradient over those positions. Do we want to be more general, i.e.
         store separate gradients at each position? Or maybe we don't care..."""
+
         imp_down_feature_ids, imp_down_pos, imp_node_metric_grads = (
             self.get_imp_feature_ids_and_pos("metric", self.n_layers)
         )
 
-        self.model.blocks[self.model.cfg.n_layers - 1].mlp.b_out.grad = None
-        m = self.metric(self.model, self.tokens)
-        m.backward()  # TODO don't actually need backward through whole model. If m is linear, we can disable autograd!
-
-        # Sneaky way to get d(metric)/d(resid_post_final)
-        grad = self.model.blocks[self.model.cfg.n_layers - 1].mlp.b_out.grad.unsqueeze(
-            0
-        )
         self.compute_and_save_attribs(
             grad,
             "metric",
@@ -518,14 +506,14 @@ class LEAP:
                 up_active_W_dec, up_active_layers, up_active_feature_ids = (
                     self.get_active_attn_W_dec(down_layer, down_module)
                 )
-                up_active_feature_acts: Float[Tensor, "imp_id, up_active_id"] = (
+                up_active_feature_acts: Float[Tensor, " imp_id up_active_id"] = (
                     self.attn_feature_acts[:, up_active_layers, up_active_feature_ids]
                 )
 
             # split attrib calc into two cases depending on downstream module type
             # this is because sequence index requires different treatment in the attn case
             if down_module in ["mlp", "metric"]:
-                up_active_feature_acts: Float[Tensor, "imp_id, up_active_id"] = (
+                up_active_feature_acts: Float[Tensor, " imp_id up_active_id"] = (
                     up_active_feature_acts[imp_down_pos]
                 )
 
@@ -554,7 +542,7 @@ class LEAP:
                 )
 
                 if up_module_name == "mlp":
-                    imp_errors: Float[Tensor, "imp_id, layer, d_model"] = (
+                    imp_errors: Float[Tensor, " imp_id layer d_model"] = (
                         self.mlp_errors[imp_down_pos]
                     )
                 elif up_module_name == "attn":
@@ -722,7 +710,17 @@ class LEAP:
         ):
             # don't bother adding nodes at pos=0, since this is BOS token
             if not edge[1].split(".")[2] == "0":
-                self.graph.append((edge, (nn_grad, nn_attrib, em_grad, em_attrib)))  # type: ignore
+                self.graph.append(
+                    (
+                        edge,
+                        (
+                            nn_grad.item(),
+                            nn_attrib.item(),
+                            em_grad.item(),
+                            em_attrib.item(),
+                        ),
+                    )
+                )  # type: ignore
 
         # # Add errors
         # if down_module_name in ["mlp", "metric"]:
@@ -744,12 +742,12 @@ class LEAP:
         #                 attrib = error_attribs[up_seq, imp_id, up_layer]
         #                 self.error_graph.append((edge, attrib.item()))
 
-    def get_graph(self, verbose=False):
-        self.metric_step()
-        for layer in reversed(range(1, self.n_layers)):
-            self.mlp_step(layer)
-            self.ov_step(layer)
+    # def get_graph(self, verbose=False):
+    #     self.metric_step()
+    #     for layer in reversed(range(1, self.n_layers)):
+    #         self.mlp_step(layer)
+    #         self.ov_step(layer)
 
-        if verbose:
-            print("num nodes = ", len(set([edge[1] for (edge, vals) in self.graph])))
-            print("num edges = ", len(self.graph))
+    #     if verbose:
+    #         print("num nodes = ", len(set([edge[1] for (edge, vals) in self.graph])))
+    #         print("num edges = ", len(self.graph))
