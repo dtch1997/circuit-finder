@@ -19,6 +19,8 @@ from dataclasses import dataclass
 from circuit_finder.patching.eap_graph import EAPGraph
 from circuit_finder.utils import clear_memory
 from circuit_finder.patching.ablate import get_metric_with_ablation
+from circuit_finder.data_loader import load_datasets_from_json, PromptPairBatch
+from circuit_finder.constants import device
 from tqdm import tqdm
 
 from pathlib import Path
@@ -97,34 +99,34 @@ def run_leap_experiment(config: LeapExperimentConfig):
         dataset_path = ProjectDir / dataset_path
     else:
         dataset_path = Path(dataset_path)
-    # train_loader, _ = load_datasets_from_json(
-    #     model=model,
-    #     path=dataset_path,
-    #     device=device,  # type: ignore
-    #     batch_size=config.batch_size,
-    #     train_test_size=(config.total_dataset_size, config.total_dataset_size),
-    #     random_seed=config.seed,
+    train_loader, _ = load_datasets_from_json(
+        model=model,
+        path=dataset_path,
+        device=device,  # type: ignore
+        batch_size=config.batch_size,
+        train_test_size=(config.total_dataset_size, config.total_dataset_size),
+        random_seed=config.seed,
+    )
+
+    # Get a batch on which we run the experiment
+    batch: PromptPairBatch = next(iter(train_loader))
+    clean_tokens = batch.clean
+    answer_tokens = batch.answers
+    wrong_answer_tokens = batch.wrong_answers
+    corrupt_tokens = batch.corrupt
+    # TODO: handle case where answer_token is list
+    # This is applicable e.g. for 'GreaterThan' which has many correct and wrong answers
+    # and we are expected to sum over them.
+    # NOTE: for now, we only support single answer and wrong answer
+
+    # clean_tokens = model.to_tokens(
+    #     ["When John and Mary were at the store, John gave a bottle to"]
     # )
-
-    # # Get a batch on which we run the experiment
-    # batch: PromptPairBatch = next(iter(train_loader))
-    # clean_tokens = batch.clean
-    # answer_tokens = batch.answers
-    # wrong_answer_tokens = batch.wrong_answers
-    # corrupt_tokens = batch.corrupt
-    # # TODO: handle case where answer_token is list
-    # # This is applicable e.g. for 'GreaterThan' which has many correct and wrong answers
-    # # and we are expected to sum over them.
-    # # NOTE: for now, we only support single answer and wrong answer
-
-    clean_tokens = model.to_tokens(
-        ["When John and Mary were at the store, John gave a bottle to"]
-    )
-    answer_tokens = model.to_tokens(["Mary"], prepend_bos=False)
-    wrong_answer_tokens = model.to_tokens(["John"], prepend_bos=False)
-    corrupt_tokens = model.to_tokens(
-        ["When Alice and Bob were at the store, Charlie gave a bottle to"]
-    )
+    # answer_tokens = model.to_tokens(["Mary"], prepend_bos=False)
+    # wrong_answer_tokens = model.to_tokens(["John"], prepend_bos=False)
+    # corrupt_tokens = model.to_tokens(
+    #     ["When Alice and Bob were at the store, Charlie gave a bottle to"]
+    # )
 
     assert isinstance(answer_tokens, torch.Tensor), "Only single answer supported"
     assert isinstance(
@@ -215,7 +217,7 @@ def run_leap_experiment(config: LeapExperimentConfig):
         # Calculate the metric under ablation
         metric = get_metric_with_ablation(
             model,
-            empty_graph,
+            graph,
             clean_tokens,
             metric_fn,
             transcoders,
