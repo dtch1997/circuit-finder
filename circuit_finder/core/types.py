@@ -1,4 +1,6 @@
 import torch
+import transformer_lens as tl
+
 from jaxtyping import Float, Int
 from typing import Protocol, Callable, Literal, TypeGuard
 from transformer_lens.hook_points import HookPoint
@@ -18,9 +20,10 @@ Attrib = float
 Tokens = Int[torch.Tensor, "batch seq"]
 
 Logits = Float[torch.Tensor, "batch seq d_vocab"]
-Metric = Float[torch.Tensor, "batch"]
-MetricFn = Callable[[Logits], Metric]
-SaeFamily = Literal["res-jb", "att-kk"]
+Model = tl.HookedTransformer
+Metric = Float[torch.Tensor, " ()"]
+MetricFn = Callable[[Model, Tokens], Metric]
+SaeFamily = Literal["res-jb", "att-kk", "tres-dc"]
 
 
 class TransformerLensForwardHook(Protocol):
