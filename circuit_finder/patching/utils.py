@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable, Iterator
 
 from contextlib import contextmanager
 from transformer_lens import ActivationCache, HookedTransformer
@@ -17,7 +17,7 @@ def print_hooks(model: HookedTransformer):
 def get_backward_cache(
     model: HookedTransformer,
     names_filter: str | Callable[[str], bool],
-) -> ActivationCache:
+) -> Iterator[ActivationCache]:
     """Utility to get the backward cache from a model.
 
     Usage:
@@ -40,8 +40,22 @@ def get_backward_cache(
             grad_cache[hook.name] = grad.detach()
 
         bwd_hooks = [(hook_pt, grad_cache_hook) for hook_pt in hook_names]
-        with model.hooks(bwd_hooks=bwd_hooks):
+        with model.hooks(bwd_hooks=bwd_hooks):  # type: ignore
             yield ActivationCache(grad_cache, model)
 
     finally:
         pass
+
+
+# @contextmanager
+# def apply_saes_and_transcoders(
+#     model: HookedTransformer,
+#     saes: dict[int, HookedSAE],
+#     transcoders: dict[int, HookedTranscoder],
+# ) -> Iterator[HookedTransformer]:
+#     with HookedTranscoderReplacementContext(
+#         model,  # type: ignore
+#         transcoders=transcoders,
+#     ) as context:
+#         with model.saes(saes=saes):
+#             yield model
