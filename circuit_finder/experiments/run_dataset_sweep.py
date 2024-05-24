@@ -14,7 +14,7 @@ IOI_DATASETS = ABBA_DATASETS + BABA_DATASETS
 
 ANIMAL_DIET_DATASETS = [
     "datasets/animal_diet_long_prompts.json",
-    "datasets/animal_diet_short_prompts.json",
+    # "datasets/animal_diet_short_prompts.json", # NOTE: has a bug
 ]
 
 DOCSTRING_DATASETS = [
@@ -59,11 +59,15 @@ def get_datasets(sweep_name: str) -> list[str]:
 if __name__ == "__main__":
     parser = simple_parsing.ArgumentParser()
     parser.add_arguments(LeapExperimentConfig, dest="config")
-    parser.add_argument("--sweep-name", type=str, default="ioi")
+    parser.add_argument("--sweep-name", type=str, default="all")
     args = parser.parse_args()
 
     for dataset_path in get_datasets(args.sweep_name):
-        save_dir = str(ProjectDir / "results" / pathlib.Path(dataset_path).stem)
-        config = replace(args.config, dataset_path=dataset_path, save_dir=save_dir)
+        dataset_name = pathlib.Path(dataset_path).stem
+        save_dir = ProjectDir / "results" / dataset_name
+        if save_dir.exists():
+            print(f"Found existing results for {dataset_name}. Skipping...")
+            continue
+        config = replace(args.config, dataset_path=dataset_path, save_dir=str(save_dir))
         print(config)
         run_leap_experiment(config)

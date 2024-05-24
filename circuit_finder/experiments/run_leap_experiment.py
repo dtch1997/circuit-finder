@@ -6,14 +6,10 @@ pdm run python -m circuit_finder.experiments.run_leap_experiment [ARGS]
 Run with flag '-h', '--help' to see the arguments.
 """
 
-import torch
 import transformer_lens as tl
 import pandas as pd
 import json
 
-from jaxtyping import Int, Float
-from torch import Tensor
-from eindex import eindex
 from simple_parsing import ArgumentParser
 from dataclasses import dataclass
 from circuit_finder.patching.eap_graph import EAPGraph
@@ -23,6 +19,7 @@ from circuit_finder.data_loader import load_datasets_from_json
 from circuit_finder.constants import device
 from tqdm import tqdm
 
+from typing import Literal
 from pathlib import Path
 from circuit_finder.pretrained import (
     load_attn_saes,
@@ -33,6 +30,7 @@ from circuit_finder.patching.leap import (
     LEAP,
     LEAPConfig,
 )
+from circuit_finder.metrics import batch_avg_answer_diff
 
 from circuit_finder.constants import ProjectDir
 
@@ -44,7 +42,9 @@ class LeapExperimentConfig:
     seed: int = 1
     batch_size: int = 4
     total_dataset_size: int = 1024
-    ablate_errors: bool | str = False
+    ablate_nodes: bool | str = "bm"
+    ablate_errors: bool | str = "bm"
+    ablate_tokens: Literal["clean", "corrupt"] = "clean"
     # NOTE: This specifies what to do with error nodes when calculating faithfulness curves.
     # Options are:
     # - ablate_errors = False  ->  we don't ablate error nodes
@@ -57,18 +57,6 @@ class LeapExperimentConfig:
     # TODO: Find reference for the above
 
     verbose: bool = False
-
-
-def logit_diff(
-    logits: Float[Tensor, "batch seq d_vocab"],
-    correct_answer: Int[Tensor, " batch"],
-    wrong_answer: Int[Tensor, " batch"],
-):
-    # Get last-token logits
-    logits = logits[:, -1, :]
-    correct_logits = eindex(logits, correct_answer, "batch [batch]")
-    wrong_logits = eindex(logits, wrong_answer, "batch [batch]")
-    return (correct_logits - wrong_logits).mean()
 
 
 def run_leap_experiment(config: LeapExperimentConfig):
@@ -123,33 +111,14 @@ def run_leap_experiment(config: LeapExperimentConfig):
         answer_tokens = batch.answers
         wrong_answer_tokens = batch.wrong_answers
         corrupt_tokens = batch.corrupt
-        # TODO: handle case where answer_token is list
-        # This is applicable e.g. for 'GreaterThan' which has many correct and wrong answers
-        # and we are expected to sum over them.
-        # NOTE: for now, we only support single answer and wrong answer
-
-        # clean_tokens = model.to_tokens(
-        #     ["When John and Mary were at the store, John gave a bottle to"]
-        # )
-        # answer_tokens = model.to_tokens(["Mary"], prepend_bos=False)
-        # wrong_answer_tokens = model.to_tokens(["John"], prepend_bos=False)
-        # corrupt_tokens = model.to_tokens(
-        #     ["When Alice and Bob were at the store, Charlie gave a bottle to"]
-        # )
-
-        assert isinstance(answer_tokens, torch.Tensor), "Only single answer supported"
-        assert isinstance(
-            wrong_answer_tokens, torch.Tensor
-        ), "Only single wrong answer supported"
+        ablate_tokens = (
+            clean_tokens if config.ablate_tokens == "clean" else corrupt_tokens
+        )
 
         # Define metric
         def metric_fn(model, tokens):
-            logits = model(tokens, return_type="logits")
-            return logit_diff(
-                logits,
-                answer_tokens.squeeze(dim=-1),
-                wrong_answer_tokens.squeeze(dim=-1),
-            )
+            logits = model(tokens)
+            return batch_avg_answer_diff(logits, batch)
 
         # Save the dataset.
         with open(batch_dir / "dataset.json", "w") as jsonfile:
@@ -172,7 +141,7 @@ def run_leap_experiment(config: LeapExperimentConfig):
         floor = get_metric_with_ablation(
             model,
             empty_graph,
-            clean_tokens,
+            ablate_tokens,
             metric_fn,
             transcoders,
             attn_saes,
@@ -227,7 +196,7 @@ def run_leap_experiment(config: LeapExperimentConfig):
             metric = get_metric_with_ablation(
                 model,
                 graph,
-                clean_tokens,
+                ablate_tokens,
                 metric_fn,
                 transcoders,
                 attn_saes,
