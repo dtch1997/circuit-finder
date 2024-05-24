@@ -1,3 +1,4 @@
+# %%
 """Script to run an experiment with LEAP
 
 Usage:
@@ -5,6 +6,10 @@ pdm run python -m circuit_finder.experiments.run_leap_experiment [ARGS]
 
 Run with flag '-h', '--help' to see the arguments.
 """
+
+import sys
+
+sys.path.append("/workspace/circuit-finder")
 
 import torch
 import transformer_lens as tl
@@ -245,10 +250,12 @@ def run_leap_experiment(config: LeapExperimentConfig):
         data = pd.DataFrame({"num_nodes": num_nodes_list, "faithfulness": faith})
         data.to_csv(batch_dir / "leap_experiment_results.csv", index=False)
 
+    # if __name__ == "__main__":
+    # parser = ArgumentParser()
+    # parser.add_arguments(LeapExperimentConfig, dest="config")
+    # args = parser.parse_args()
 
-if __name__ == "__main__":
-    parser = ArgumentParser()
-    parser.add_arguments(LeapExperimentConfig, dest="config")
-    args = parser.parse_args()
 
-    run_leap_experiment(args.config)
+# %%
+config = LeapExperimentConfig()
+run_leap_experiment(config)
