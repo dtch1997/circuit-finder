@@ -1,0 +1,106 @@
+from circuit_finder.patching.ablate import get_forward_cache
+from circuit_finder.core import (
+    HookedSAE,
+    HookedSAEConfig,
+    HookedTranscoder,
+    HookedTranscoderConfig,
+)
+
+import einops
+import pytest
+import torch
+
+from transformer_lens import HookedSAETransformer
+
+MODEL = "solu-1l"
+prompt = "Hello World!"
+
+
+@pytest.fixture(scope="module")
+def model():
+    model = HookedSAETransformer.from_pretrained(MODEL)
+    yield model
+    model.reset_saes()
+
+
+def get_site(act_name):
+    site = act_name.split(".")[3:]
+    site = ".".join(site)
+    return site
+
+
+def get_transcoder_config(model, act_name_in, act_name_out):
+    site_to_size = {
+        "ln2.hook_normalized": model.cfg.d_model,
+        "hook_mlp_out": model.cfg.d_model,
+    }
+    site_in = get_site(act_name_in)
+    assert site_in == "ln2.hook_normalized"
+    d_in = site_to_size[site_in]
+
+    site_out = get_site(act_name_out)
+    d_out = site_to_size[site_out]
+
+    return HookedTranscoderConfig(
+        d_in=d_in,
+        d_out=d_out,
+        d_sae=d_in * 2,
+        hook_name=act_name_in,
+        hook_name_out=act_name_out,
+        use_error_term=True,
+    )
+
+
+def get_sae_config(model, act_name):
+    site_to_size = {
+        "hook_z": model.cfg.d_head * model.cfg.n_heads,
+        "hook_mlp_out": model.cfg.d_model,
+        "hook_resid_pre": model.cfg.d_model,
+        "hook_post": model.cfg.d_mlp,
+    }
+    site = act_name.split(".")[-1]
+    d_in = site_to_size[site]
+    return HookedSAEConfig(
+        d_in=d_in, d_sae=d_in * 2, hook_name=act_name, use_error_term=True
+    )
+
+
+# @pytest.mark.xfail
+def test_get_forward_cache(model):
+    sae_config = get_sae_config(model, "blocks.0.attn.hook_z")
+    sae = HookedSAE(sae_config)
+    transcoder_config = get_transcoder_config(
+        model,
+        "blocks.0.mlp.ln2.hook_normalized",
+        "blocks.0.mlp.hook_mlp_out",
+    )
+    transcoder = HookedTranscoder(transcoder_config)
+
+    tokens = model.to_tokens(["Hello world"])
+    forward_cache = get_forward_cache(
+        model,
+        tokens,
+        [transcoder],
+        [sae],
+    )
+
+    expected_hook_names = [
+        # Attention
+        "blocks.0.attn.hook_z.hook_sae_input",
+        "blocks.0.attn.hook_z.hook_sae_acts_pre",
+        "blocks.0.attn.hook_z.hook_sae_acts_post",
+        "blocks.0.attn.hook_z.hook_sae_recons",
+        "blocks.0.attn.hook_z.hook_sae_output",
+        "blocks.0.attn.hook_z.hook_sae_error",
+        # MLP
+        # Due to the weird way we had to hack this together, the first four are different
+        "blocks.0.mlp.transcoder.hook_sae_input",
+        "blocks.0.mlp.transcoder.hook_sae_recons",
+        "blocks.0.mlp.transcoder.hook_sae_acts_pre",
+        "blocks.0.mlp.transcoder.hook_sae_acts_post",
+        "blocks.0.mlp.hook_sae_output",
+        "blocks.0.mlp.hook_sae_error",
+    ]
+
+    for hook_name in expected_hook_names:
+        assert hook_name in forward_cache, "Missing hook: " + hook_name

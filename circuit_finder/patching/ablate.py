@@ -2,10 +2,16 @@ from einops import einsum, rearrange
 import torch
 from jaxtyping import Int, Float
 from functools import partial
-from circuit_finder.core.types import MetricFn
+from circuit_finder.core.types import MetricFn, Tokens
 from circuit_finder.patching.eap_graph import EAPGraph
 from torch import Tensor
 import transformer_lens as tl
+
+from transcoders_slim.transcoder import Transcoder
+from circuit_finder.pretrained.load_mlp_transcoders import ts_tc_to_hooked_tc
+from circuit_finder.core.hooked_sae import HookedSAE
+from circuit_finder.core.hooked_transcoder import HookedTranscoder
+from circuit_finder.core.hooked_transcoder import HookedTranscoderReplacementContext
 
 
 def get_mask(
@@ -56,6 +62,29 @@ def get_metric_with_ablation(
         freeze_attention,
     )
     return metric(model, tokens)
+
+
+def get_forward_cache(
+    model: tl.HookedSAETransformer,
+    tokens: Tokens,
+    transcoders: list[Transcoder] | list[HookedTranscoder],
+    attn_saes: list[HookedSAE],
+) -> tl.ActivationCache:
+    hooked_transcoders = []
+    for tc in transcoders:
+        if isinstance(tc, Transcoder):
+            tc = ts_tc_to_hooked_tc(tc)
+        hooked_transcoders.append(tc)
+
+    # Run model
+    with HookedTranscoderReplacementContext(
+        model,  # type: ignore
+        transcoders=hooked_transcoders,
+    ) as context:
+        with model.saes(saes=attn_saes):  # type: ignore
+            _, cache = model.run_with_cache(tokens)
+
+    return cache
 
 
 def add_ablation_hooks_to_model(
