@@ -521,31 +521,33 @@ class LEAP:
         )
 
     def compute_and_save_attribs(
-            self, 
-            grad, 
-            down_module, 
-            down_layer, 
-            imp_down_feature_ids, 
-            imp_down_pos, 
-            imp_node_metric_grads
-        ):
+        self,
+        grad,
+        down_module,
+        down_layer,
+        imp_down_feature_ids,
+        imp_down_pos,
+        imp_node_metric_grads,
+    ):
         """grad : [... imp_id, d_model]"""
 
         if len(imp_down_pos) == 0:
             return
 
         for up_module in ["mlp", "attn"]:
-            (up_active_W_dec, 
-            up_active_layers, 
-            up_active_feature_ids, 
-            up_active_feature_acts) = self.get_up_active_stuff(down_module, down_layer, up_module)
+            (
+                up_active_W_dec,
+                up_active_layers,
+                up_active_feature_ids,
+                up_active_feature_acts,
+            ) = self.get_up_active_stuff(down_module, down_layer, up_module)
 
             # split attrib calc into two cases depending on downstream module type
             # this is because sequence index requires different treatment in the attn case
             if down_module in ["mlp", "metric"]:
-                up_active_feature_acts : Float[Tensor, "imp_id, up_active_id"] = up_active_feature_acts[
-                    imp_down_pos
-                ] 
+                up_active_feature_acts: Float[Tensor, "imp_id up_active_id"] = (
+                    up_active_feature_acts[imp_down_pos]
+                )
 
                 node_node_grads = einsum(
                     up_active_W_dec,
@@ -556,80 +558,99 @@ class LEAP:
                 unclipped_node_node_attribs = einsum(
                     node_node_grads,
                     up_active_feature_acts,
-                    "imp_id up_active_id, imp_id up_active_id -> imp_id up_active_id"
+                    "imp_id up_active_id, imp_id up_active_id -> imp_id up_active_id",
                 )
-                
+
                 # mlp attribs get clipped by relu
-                if down_module=="mlp":
-                    imp_feature_acts = self.mlp_feature_acts[:, down_layer, :]
-                    imp_feature_acts = imp_feature_acts[imp_down_pos, imp_down_feature_ids] # imp_id
-                    node_node_attribs = torch.minimum(unclipped_node_node_attribs, imp_feature_acts.unsqueeze(1))
-
-                elif down_module=="metric":
-                    node_node_attribs = unclipped_node_node_attribs                  
-
-                edge_metric_grads = einsum(imp_node_metric_grads, 
-                                            node_node_grads,
-                                            "imp_id, imp_id up_active_id -> imp_id up_active_id")
-
-                unclipped_edge_metric_attribs = einsum(edge_metric_grads,
-                                                up_active_feature_acts,
-                                                "imp_id up_active_id, imp_id up_active_id -> imp_id up_active_id")
-                
                 if down_module == "mlp":
-                    imp_node_metric_attribs = einsum(imp_node_metric_grads,
-                                                    imp_feature_acts,
-                                                    "imp_id, imp_id -> imp_id").unsqueeze(1)
-                    edge_metric_attribs = torch.minimum(unclipped_edge_metric_attribs,
-                                                        imp_node_metric_attribs)
+                    imp_feature_acts = self.mlp_feature_acts[:, down_layer, :]
+                    imp_feature_acts = imp_feature_acts[
+                        imp_down_pos, imp_down_feature_ids
+                    ]  # imp_id
+                    node_node_attribs = torch.minimum(
+                        unclipped_node_node_attribs, imp_feature_acts.unsqueeze(1)
+                    )
+
+                elif down_module == "metric":
+                    node_node_attribs = unclipped_node_node_attribs
+
+                edge_metric_grads = einsum(
+                    imp_node_metric_grads,
+                    node_node_grads,
+                    "imp_id, imp_id up_active_id -> imp_id up_active_id",
+                )
+
+                unclipped_edge_metric_attribs = einsum(
+                    edge_metric_grads,
+                    up_active_feature_acts,
+                    "imp_id up_active_id, imp_id up_active_id -> imp_id up_active_id",
+                )
+
+                if down_module == "mlp":
+                    imp_node_metric_attribs = einsum(
+                        imp_node_metric_grads,
+                        imp_feature_acts,
+                        "imp_id, imp_id -> imp_id",
+                    ).unsqueeze(1)
+                    edge_metric_attribs = torch.minimum(
+                        unclipped_edge_metric_attribs, imp_node_metric_attribs
+                    )
                 else:
                     edge_metric_attribs = unclipped_edge_metric_attribs
 
                 error_attribs = None
                 if self.cfg.store_error_attribs:
                     if up_module == "mlp":
-                        imp_errors : Float[Tensor, "imp_id, layer, d_model"] = self.mlp_errors[imp_down_pos]
+                        imp_errors: Float[Tensor, "imp_id layer d_model"] = (
+                            self.mlp_errors[imp_down_pos]
+                        )
                     elif up_module == "attn":
                         imp_errors = self.attn_errors[imp_down_pos]
                     error_attribs = einsum(
                         imp_errors[:, :down_layer],
                         grad,
-                        "imp_id layer d_model, imp_id d_model -> imp_id layer")
-
+                        "imp_id layer d_model, imp_id d_model -> imp_id layer",
+                    )
 
             elif down_module in ["attn"]:
                 # Compute attribs of imp nodes wrt all upstream MLP nodes
                 node_node_grads = einsum(
                     up_active_W_dec,
                     grad,
-                    "up_active_id d_model, seq imp_id d_model -> seq imp_id up_active_id")
+                    "up_active_id d_model, seq imp_id d_model -> seq imp_id up_active_id",
+                )
 
                 node_node_attribs = einsum(
                     node_node_grads,
                     up_active_feature_acts,
-                    "seq imp_id up_active_id, seq up_active_id -> seq imp_id up_active_id")
-                
-                edge_metric_grads = einsum(imp_node_metric_grads, 
-                                            node_node_grads,
-                                            "imp_id, seq imp_id up_active_id -> seq imp_id up_active_id")
-                
+                    "seq imp_id up_active_id, seq up_active_id -> seq imp_id up_active_id",
+                )
 
-                edge_metric_attribs = einsum(edge_metric_grads,
-                                            up_active_feature_acts,
-                                            "seq imp_id up_active_id, seq up_active_id -> seq imp_id up_active_id")
-                
+                edge_metric_grads = einsum(
+                    imp_node_metric_grads,
+                    node_node_grads,
+                    "imp_id, seq imp_id up_active_id -> seq imp_id up_active_id",
+                )
+
+                edge_metric_attribs = einsum(
+                    edge_metric_grads,
+                    up_active_feature_acts,
+                    "seq imp_id up_active_id, seq up_active_id -> seq imp_id up_active_id",
+                )
+
                 # calculate error attribs (optional)
                 error_attribs = None
                 if self.cfg.store_error_attribs:
                     if up_module == "mlp":
-                        imp_errors  = self.mlp_errors[:, :down_layer]
+                        imp_errors = self.mlp_errors[:, :down_layer]
                     elif up_module == "attn":
                         imp_errors = self.attn_errors[:, :down_layer]
 
                     error_attribs = einsum(
                         imp_errors,
                         grad,
-                        "seq layer d_model, seq imp_id d_model -> seq imp_id layer")
+                        "seq layer d_model, seq imp_id d_model -> seq imp_id layer",
+                    )
             else:
                 print(down_module)
                 raise ValueError("down_module must be one of ['mlp', 'attn', 'metric']")
@@ -652,7 +673,6 @@ class LEAP:
                 up_active_layers,
                 up_active_feature_ids,
             )
-
 
     def add_to_graph(
         self,
