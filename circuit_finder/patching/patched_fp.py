@@ -6,7 +6,6 @@ from einops import rearrange, einsum
 import torch
 from jaxtyping import Int, Float
 from typing import Callable
-from circuit_finder.patching.leap import last_token_logit
 from functools import partial
 from circuit_finder.patching.eap_graph import EAPGraph
 from torch import Tensor
