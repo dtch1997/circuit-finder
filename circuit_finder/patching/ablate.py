@@ -42,6 +42,7 @@ def get_metric_with_ablation(
     ablate_nodes: str | bool = "zero",  # options [False, "bm", "zero"]
     ablate_errors: str | bool = False,  # options [False, "bm", "zero"]
     first_ablated_layer: int = 2,  # Marks et al don't ablate first 2 layers
+    freeze_attention: bool = False,
 ):
     """Cache the activations of the model on a circuit, then return the metric when ablated"""
     assert ablate_errors in [False, "bm", "zero"]
@@ -113,11 +114,24 @@ def get_metric_with_ablation(
             f"blocks.{layer}.attn.hook_z", partial(attn_cache_hook, layer=layer), "fwd"
         )
 
-    model(tokens)
+    # Run forward pass and populate all caches
+    _, pattern_cache = model.run_with_cache(
+        tokens, return_type="loss", names_filter=lambda x: x.endswith("pattern")
+    )
+    assert len(pattern_cache) > 0
+    assert len(mlp_bm_feature_act_cache) > 0
+    assert len(attn_bm_feature_act_cache) > 0
+    assert len(mlp_recons_cache) > 0
+    assert len(mlp_error_cache) > 0
+    assert len(attn_error_cache) > 0
 
     # Now do FP where we patch nodes not in graph with their batchmeaned values
     model.reset_hooks()
     mlp_ablated_recons = {}
+
+    def freeze_pattern_hook(act, hook):
+        assert hook.name.endswith("pattern")
+        return pattern_cache[hook.name]
 
     def mlp_out_ablated_recons_cache_hook(act, hook, layer):
         assert hook.name.endswith("ln2.hook_normalized")
@@ -189,5 +203,9 @@ def get_metric_with_ablation(
         model.add_hook(
             f"blocks.{layer}.attn.hook_z", partial(attn_patch_hook, layer=layer), "fwd"
         )
+        if freeze_attention:
+            model.add_hook(
+                f"blocks.{layer}.attn.hook_pattern", freeze_pattern_hook, "fwd"
+            )
 
     return metric(model, tokens)
