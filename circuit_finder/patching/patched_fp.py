@@ -3,7 +3,7 @@
 import sys
 
 sys.path.append("/root/circuit-finder")
-from einops import *
+from einops import einsum, rearrange
 import torch
 
 from contextlib import contextmanager
