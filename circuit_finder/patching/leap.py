@@ -549,19 +549,19 @@ class LEAP:
                     up_active_feature_acts[imp_down_pos]
                 )
 
+                # Compute node_node_grads
                 node_node_grads = einsum(
                     up_active_W_dec,
                     grad,
                     "up_active_id d_model, imp_id d_model -> imp_id up_active_id",
                 )
 
+                # Compute node_node_attributions
                 unclipped_node_node_attribs = einsum(
                     node_node_grads,
                     up_active_feature_acts,
                     "imp_id up_active_id, imp_id up_active_id -> imp_id up_active_id",
                 )
-
-                # mlp attribs get clipped by relu
                 if down_module == "mlp":
                     imp_feature_acts = self.mlp_feature_acts[:, down_layer, :]
                     imp_feature_acts = imp_feature_acts[
@@ -570,22 +570,24 @@ class LEAP:
                     node_node_attribs = torch.minimum(
                         unclipped_node_node_attribs, imp_feature_acts.unsqueeze(1)
                     )
-
                 elif down_module == "metric":
                     node_node_attribs = unclipped_node_node_attribs
+                else:
+                    raise RuntimeError("Should never reach here")
 
+                # Compute edge_metric_grads
                 edge_metric_grads = einsum(
                     imp_node_metric_grads,
                     node_node_grads,
                     "imp_id, imp_id up_active_id -> imp_id up_active_id",
                 )
 
+                # Compute edge_metric_attributions
                 unclipped_edge_metric_attribs = einsum(
                     edge_metric_grads,
                     up_active_feature_acts,
                     "imp_id up_active_id, imp_id up_active_id -> imp_id up_active_id",
                 )
-
                 if down_module == "mlp":
                     imp_node_metric_attribs = einsum(
                         imp_node_metric_grads,
@@ -595,9 +597,12 @@ class LEAP:
                     edge_metric_attribs = torch.minimum(
                         unclipped_edge_metric_attribs, imp_node_metric_attribs
                     )
-                else:
+                elif down_module == "metric":
                     edge_metric_attribs = unclipped_edge_metric_attribs
+                else:
+                    raise RuntimeError("Should never reach here")
 
+                # Compute error attributions
                 error_attribs = None
                 if self.cfg.store_error_attribs:
                     if up_module == "mlp":
@@ -652,8 +657,9 @@ class LEAP:
                         "seq layer d_model, seq imp_id d_model -> seq imp_id layer",
                     )
             else:
-                print(down_module)
-                raise ValueError("down_module must be one of ['mlp', 'attn', 'metric']")
+                raise ValueError(
+                    f"Expected down_module to be one of ['mlp', 'attn', 'metric'], received {down_module}"
+                )
 
             # attrib can be at most the value of the original downstream feature act
             # mlp_attribs = torch.min(mlp_attribs, imp_mlp_feature_acts)
