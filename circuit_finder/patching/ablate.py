@@ -44,7 +44,32 @@ def get_metric_with_ablation(
     first_ablated_layer: int = 2,  # Marks et al don't ablate first 2 layers
     freeze_attention: bool = False,
 ):
-    """Cache the activations of the model on a circuit, then return the metric when ablated"""
+    model = add_ablation_hooks_to_model(
+        model,
+        graph,
+        tokens,
+        transcoders,
+        attn_saes,
+        ablate_nodes,
+        ablate_errors,
+        first_ablated_layer,
+        freeze_attention,
+    )
+    return metric(model, tokens)
+
+
+def add_ablation_hooks_to_model(
+    model: tl.HookedTransformer,
+    graph: EAPGraph,
+    tokens: Int[Tensor, "batch seq"],
+    transcoders,  # list
+    attn_saes,  # list
+    ablate_nodes: str | bool = "zero",  # options [False, "bm", "zero"]
+    ablate_errors: str | bool = False,  # options [False, "bm", "zero"]
+    first_ablated_layer: int = 2,  # Marks et al don't ablate first 2 layers
+    freeze_attention: bool = False,
+) -> tl.HookedTransformer:
+    """Cache the activations of the model on a circuit, then return the model with relevant ablation hooks added"""
     assert ablate_errors in [False, "bm", "zero"]
     assert ablate_nodes in [False, "bm", "zero"]
     # Do clean FP to get batchmean (bm) feature acts, and reconstructions
@@ -152,14 +177,22 @@ def get_metric_with_ablation(
     def mlp_patch_hook(act, hook, layer):
         assert hook.name.endswith("mlp_out")
 
-        if ablate_errors == "bm":
-            return mlp_ablated_recons[layer] + mlp_error_cache[layer].mean(
-                dim=0, keepdim=True
-            )
-        elif ablate_errors == "zero":
-            return mlp_ablated_recons[layer]
+        if ablate_nodes == "bm":
+            recons = mlp_ablated_recons[layer]
+        elif ablate_nodes == "zero":
+            recons = torch.zeros_like(mlp_ablated_recons[layer])
         else:
-            return mlp_ablated_recons[layer] + mlp_error_cache[layer]
+            # NOTE: This requires us to change the way we're computing the cached objects.
+            raise NotImplementedError
+
+        if ablate_errors == "bm":
+            error = mlp_error_cache[layer].mean(dim=0, keepdim=True)
+        elif ablate_errors == "zero":
+            error = torch.zeros_like(mlp_error_cache[layer])
+        else:
+            error = mlp_error_cache[layer]
+
+        return recons + error
 
     def attn_patch_hook(act, hook, layer):
         assert hook.name.endswith("hook_z")
@@ -184,12 +217,21 @@ def get_metric_with_ablation(
             n_heads=model.cfg.n_heads,
         )
 
+        if ablate_nodes == "bm":
+            recons = ablated_recons
+        elif ablate_nodes == "zero":
+            recons = torch.zeros_like(ablated_recons)
+        else:  # no ablation
+            raise NotImplementedError
+
         if ablate_errors == "bm":
-            return ablated_recons + attn_error_cache[layer].mean(dim=0, keepdim=True)
+            error = attn_error_cache[layer].mean(dim=0, keepdim=True)
         elif ablate_errors == "zero":
-            return ablated_recons
+            error = torch.zeros_like(attn_error_cache[layer])
         else:
-            return ablated_recons + attn_error_cache[layer]
+            error = attn_error_cache[layer]
+
+        return recons + error
 
     for layer in range(first_ablated_layer, model.cfg.n_layers):
         model.add_hook(
@@ -208,4 +250,4 @@ def get_metric_with_ablation(
                 f"blocks.{layer}.attn.hook_pattern", freeze_pattern_hook, "fwd"
             )
 
-    return metric(model, tokens)
+    return model
