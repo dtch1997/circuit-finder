@@ -2,7 +2,7 @@
 # better faithfulness curves via for-looping over batchsize=1, then taking union of graphs?
 import sys
 sys.path.append("/root/circuit-finder")
-from einops import *
+from einops import rearrange, einsum
 import torch
 from jaxtyping import Int, Float
 from typing import Callable
