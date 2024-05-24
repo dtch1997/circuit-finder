@@ -1,5 +1,6 @@
-# TODO freeze layernorms?
+# TODO freeze layernorms? freeze attention?
 # better faithfulness curves via for-looping over batchsize=1, then taking union of graphs?
+
 import sys
 
 sys.path.append("/root/circuit-finder")
@@ -50,6 +51,7 @@ def get_patched_model(
     attn_saes,  # list
     ablate_errors: bool = False,  # options [False, "bm", "zero"]
     first_ablated_layer: int = 2,  # Marks et al don't ablate first 2 layers
+    freeze_attention : bool = False
 ):
     """Returns a patched model with the given graph and ablation strategy.
 
@@ -62,9 +64,10 @@ def get_patched_model(
     # Hooks reset on exiting context
     """
     try:
-        assert ablate_errors in [False, "bm", "zero"]
-
-        # Do clean FP to get batchmean (bm) feature acts, and reconstructions
+        assert ablate_errors in [False, "bm", "zero"]       
+                
+        # Do clean FP to get batchmean (bm) feature acts, and reconstructions,
+        # and attention patterns for freezing (optional).
         # No patching is done during this FP, so the hook fns return nothing
         # Note: MLP transcoders are a bit more fiddly than attn-SAEs, requiring us to cache at both mlp_in and mlp_out
         mlp_bm_feature_act_cache = {}
@@ -133,7 +136,11 @@ def get_patched_model(
                 "fwd",
             )
 
-        model(tokens)
+        loss, pattern_cache = model.run_with_cache(
+            tokens, 
+            return_type="loss",
+            names_filter = lambda x: x.endswith("pattern")
+        )
 
         # Now do FP where we patch nodes not in graph with their batchmeaned values
         model.reset_hooks()
@@ -198,7 +205,11 @@ def get_patched_model(
                 return ablated_recons
             else:
                 return ablated_recons + attn_error_cache[layer]
-
+            
+        def freeze_pattern_hook(act, hook):
+            assert hook.name.endswith("pattern")
+            return pattern_cache[hook.name]
+        
         for layer in range(first_ablated_layer, model.cfg.n_layers):
             model.add_hook(
                 f"blocks.{layer}.ln2.hook_normalized",
@@ -215,6 +226,12 @@ def get_patched_model(
                 partial(attn_patch_hook, layer=layer),
                 "fwd",
             )
+
+            if freeze_attention:
+                model.add_hook(
+                    f"blocks.{layer}.attn.hook_pattern",
+                    freeze_pattern_hook,
+                    "fwd")
 
         yield model
 

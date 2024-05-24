@@ -174,3 +174,9 @@ def attr_patch_sae_acts(
     ]
     sae_act_attr = clean_grad_sae_acts_post * (0 - clean_sae_acts_post)
     return sae_act_attr
+
+def second_last_logit(model, tokens):
+    logits = model(tokens)[:, -2]
+    correct_ids = tokens[:, -1]
+    correct_logits = eindex.eindex(logits, correct_ids, "batch [batch]")
+    return correct_logits.mean()
