@@ -22,6 +22,7 @@ from tqdm import tqdm
 from typing import Literal
 from pathlib import Path
 from circuit_finder.pretrained import (
+    load_model,
     load_attn_saes,
     load_mlp_transcoders,
 )
@@ -68,14 +69,7 @@ def run_leap_experiment(config: LeapExperimentConfig):
         json.dump(config.__dict__, jsonfile)
 
     # Load models
-    model = tl.HookedSAETransformer.from_pretrained(
-        "gpt2",
-        device="cuda",
-        fold_ln=True,
-        center_writing_weights=True,
-        center_unembed=True,
-    )
-
+    model = load_model(requires_grad=True)
     attn_saes = load_attn_saes(use_error_term=True)
     attn_saes = preprocess_attn_saes(attn_saes, model)  # type: ignore
     transcoders = load_mlp_transcoders(use_error_term=True)

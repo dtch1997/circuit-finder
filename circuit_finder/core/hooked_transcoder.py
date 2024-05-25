@@ -151,7 +151,7 @@ class HookedTranscoder(HookedRootModule):
         x_reconstruct = self.decode(sae_acts_post)
         output = self.maybe_reshape_output(input, x_reconstruct)
         if self.cfg.return_acts_in_forward:
-            return output, sae_acts_post
+            return output, sae_acts_post  # type: ignore
         else:
             return output
 
