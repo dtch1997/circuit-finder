@@ -247,19 +247,9 @@ class HookedTranscoderReplacementContext:
         self.model.setup()
         return self
 
-        # # Replace original run_with_cache to include the transcoders' cache
-        # self.orig_run_with_cache = self.model.run_with_cache
-
-        # def run_with_cache(self: tl.HookedTransformer, *args, **kwargs):
-        #     cache = self.model.run_with_cache(*args, **kwargs)
-
-        # self.model.run_with_cache = run_with_cache
-
     def __exit__(self, exc_type, exc_value, exc_tb):
         # Restore original MLPs
         for layer, mlp in self.original_mlps.items():
             self.model.blocks[layer].mlp = mlp
 
-        # # Restore original run_with_cache
-        # self.model.run_with_cache = self.orig_run_with_cache
         self.model.setup()
