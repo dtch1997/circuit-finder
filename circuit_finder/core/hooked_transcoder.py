@@ -146,14 +146,17 @@ class HookedTranscoder(HookedRootModule):
         Returns:
             output: The reconstructed output tensor from the SAE, with the error term optionally added. Same shape as input (eg [..., d_in])
         """
-        x = self.maybe_reshape_input(input)
-        sae_acts_post = self.encode(x)
-        x_reconstruct = self.decode(sae_acts_post)
+        output, _ = self.get_recons_and_act_post(input)
+        return output
+
+    def get_recons_and_act_post(
+        self, input: Float[torch.Tensor, "... d_in"], apply_hooks: bool = True
+    ) -> tuple[Float[torch.Tensor, "... d_in"], Float[torch.Tensor, "... d_model"]]:
+        x = self.maybe_reshape_input(input, apply_hooks=apply_hooks)
+        sae_acts_post = self.encode(x, apply_hooks=apply_hooks)
+        x_reconstruct = self.decode(sae_acts_post, apply_hooks=apply_hooks)
         output = self.maybe_reshape_output(input, x_reconstruct)
-        if self.cfg.return_acts_in_forward:
-            return output, sae_acts_post  # type: ignore
-        else:
-            return output
+        return output, sae_acts_post
 
 
 class HookedTranscoderWrapper(HookedRootModule):

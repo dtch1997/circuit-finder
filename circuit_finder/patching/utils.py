@@ -1,7 +1,26 @@
+from transformer_lens.hook_points import HookedRootModule, HookPoint
 from typing import Callable, Iterator
 
 from contextlib import contextmanager
 from transformer_lens import ActivationCache, HookedTransformer
+
+
+def get_hook_points(
+    module: HookedRootModule, names_filter: str | Callable[[str], bool] = lambda x: True
+) -> list[HookPoint]:
+    """Utility to get the hook points from a module"""
+    hook_names = []
+    if isinstance(names_filter, str):
+        hook_names = [
+            hook_name for hook_name in module.hook_dict if names_filter in hook_name
+        ]
+    else:
+        hook_names = [
+            hook_name for hook_name in module.hook_dict if names_filter(hook_name)
+        ]
+
+    hook_points = [module.hook_dict[hook_name] for hook_name in hook_names]
+    return hook_points
 
 
 def print_hooks(model: HookedTransformer):
