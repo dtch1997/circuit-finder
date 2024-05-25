@@ -46,14 +46,16 @@ def get_metric_with_ablation(
     graph: EAPGraph,
     tokens: Int[Tensor, "batch seq"],
     metric: MetricFn,
-    transcoders,  # list
-    attn_saes,  # list
+    transcoders: dict[LayerIndex, Transcoder] | dict[LayerIndex, HookedTranscoder],
+    attn_saes: dict[LayerIndex, HookedSAE],
     ablate_nodes: str | bool = "zero",  # options [False, "bm", "zero"]
     ablate_errors: str | bool = False,  # options [False, "bm", "zero"]
     first_ablated_layer: int = 2,  # Marks et al don't ablate first 2 layers
     freeze_attention: bool = False,
 ):
-    with wrap_model_with_saes_and_transcoders(model, transcoders, attn_saes):
+    with wrap_model_with_saes_and_transcoders(
+        model, list(transcoders.values()), list(attn_saes.values())
+    ):
         _, cache = model.run_with_cache(tokens)
         hooks = get_ablation_hooks(
             graph,
@@ -70,7 +72,7 @@ def get_metric_with_ablation(
 @contextmanager
 def wrap_model_with_saes_and_transcoders(
     model: tl.HookedSAETransformer,
-    transcoders: list[Transcoder] | list[HookedTranscoder],
+    transcoders: list[Transcoder | HookedTranscoder],
     attn_saes: list[HookedSAE],
 ) -> Iterator[tl.HookedSAETransformer]:
     hooked_transcoders = []

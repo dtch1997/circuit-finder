@@ -22,6 +22,7 @@ from tqdm import tqdm
 from typing import Literal
 from pathlib import Path
 from circuit_finder.pretrained import (
+    load_model,
     load_attn_saes,
     load_mlp_transcoders,
 )
@@ -68,14 +69,7 @@ def run_leap_experiment(config: LeapExperimentConfig):
         json.dump(config.__dict__, jsonfile)
 
     # Load models
-    model = tl.HookedTransformer.from_pretrained(
-        "gpt2",
-        device="cuda",
-        fold_ln=True,
-        center_writing_weights=True,
-        center_unembed=True,
-    )
-
+    model = load_model(requires_grad=True)
     attn_saes = load_attn_saes()
     attn_saes = preprocess_attn_saes(attn_saes, model)  # type: ignore
     transcoders = load_mlp_transcoders()
@@ -106,7 +100,6 @@ def run_leap_experiment(config: LeapExperimentConfig):
             json.dump(config.__dict__, jsonfile)
 
         # Parse the batch
-        key = batch.key
         clean_tokens = batch.clean
         answer_tokens = batch.answers
         wrong_answer_tokens = batch.wrong_answers
@@ -118,7 +111,8 @@ def run_leap_experiment(config: LeapExperimentConfig):
         # Define metric
         def metric_fn(model, tokens):
             logits = model(tokens)
-            return batch_avg_answer_diff(logits, batch)
+            last_token_logits = logits[:, -1, :]
+            return batch_avg_answer_diff(last_token_logits, batch)
 
         # Save the dataset.
         with open(batch_dir / "dataset.json", "w") as jsonfile:
