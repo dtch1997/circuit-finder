@@ -6,9 +6,9 @@ pdm run python -m circuit_finder.experiments.run_leap_experiment [ARGS]
 Run with flag '-h', '--help' to see the arguments.
 """
 
-import transformer_lens as tl
 import pandas as pd
 import json
+import torch
 
 from simple_parsing import ArgumentParser
 from dataclasses import dataclass
@@ -129,20 +129,22 @@ def run_leap_experiment(config: LeapExperimentConfig):
 
         # NOTE: First, get the ceiling of the patching metric.
         # TODO: Replace 'last_token_logit' with logit difference
-        ceiling = metric_fn(model, clean_tokens).item()
+        with torch.no_grad():
+            ceiling = metric_fn(model, clean_tokens).item()
 
         # NOTE: Second, get floor of patching metric using empty graph, i.e. ablate everything
-        empty_graph = EAPGraph([])
-        floor = get_metric_with_ablation(
-            model,
-            empty_graph,
-            ablate_tokens,
-            metric_fn,
-            transcoders,
-            attn_saes,
-            ablate_errors=False,  # Do not ablate errors when running forward pass
-            first_ablated_layer=config.first_ablate_layer,
-        ).item()
+        with torch.no_grad():
+            empty_graph = EAPGraph([])
+            floor = get_metric_with_ablation(
+                model,
+                empty_graph,
+                ablate_tokens,
+                metric_fn,
+                transcoders,
+                attn_saes,
+                ablate_errors=False,  # Do not ablate errors when running forward pass
+                first_ablated_layer=config.first_ablate_layer,
+            ).item()
         clear_memory()
 
         # now sweep over thresholds to get graphs with variety of numbers of nodes
@@ -188,16 +190,17 @@ def run_leap_experiment(config: LeapExperimentConfig):
             clear_memory()
 
             # Calculate the metric under ablation
-            metric = get_metric_with_ablation(
-                model,
-                graph,
-                ablate_tokens,
-                metric_fn,
-                transcoders,
-                attn_saes,
-                ablate_errors=config.ablate_errors,  # type: ignore
-                first_ablated_layer=config.first_ablate_layer,
-            ).item()
+            with torch.no_grad():
+                metric = get_metric_with_ablation(
+                    model,
+                    graph,
+                    ablate_tokens,
+                    metric_fn,
+                    transcoders,
+                    attn_saes,
+                    ablate_errors=config.ablate_errors,  # type: ignore
+                    first_ablated_layer=config.first_ablate_layer,
+                ).item()
 
             # Log the data
             num_nodes_list.append(num_nodes)

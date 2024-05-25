@@ -30,20 +30,20 @@ def load_mlp_transcoders(
     transcoders = {}
     for module_name, transcoder in transcoders_dict.items():
         layer = parse_layer_of_module_name(module_name)
+        transcoder.cfg.use_error_term = use_error_term
         transcoders[layer] = transcoder.to(device)
-        use_error_term = use_error_term
     return transcoders
 
 
 def ts_tc_cfg_to_hooked_tc_cfg(
-    resid_sae_cfg: LanguageModelSAERunnerConfig,
+    tc_cfg: LanguageModelSAERunnerConfig,
 ) -> HookedTranscoderConfig:
     new_cfg = {
-        "d_sae": resid_sae_cfg.d_sae,
-        "d_in": resid_sae_cfg.d_in,
-        "d_out": resid_sae_cfg.d_out,
-        "hook_name": resid_sae_cfg.hook_point,
-        "hook_name_out": resid_sae_cfg.out_hook_point,
+        "d_sae": tc_cfg.d_sae,
+        "d_in": tc_cfg.d_in,
+        "d_out": tc_cfg.d_out,
+        "hook_name": tc_cfg.hook_point,
+        "hook_name_out": tc_cfg.out_hook_point,
     }
     return HookedTranscoderConfig.from_dict(new_cfg)
 
