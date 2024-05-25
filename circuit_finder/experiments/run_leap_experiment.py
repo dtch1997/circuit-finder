@@ -118,7 +118,8 @@ def run_leap_experiment(config: LeapExperimentConfig):
         # Define metric
         def metric_fn(model, tokens):
             logits = model(tokens)
-            return batch_avg_answer_diff(logits, batch)
+            last_token_logits = logits[:, -1, :]
+            return batch_avg_answer_diff(last_token_logits, batch)
 
         # Save the dataset.
         with open(batch_dir / "dataset.json", "w") as jsonfile:
