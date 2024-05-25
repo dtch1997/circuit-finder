@@ -21,6 +21,10 @@ DOCSTRING_DATASETS = [
     "datasets/docstring_prompts.json",
 ]
 
+GREATERTHAN_DATASETS = [
+    "datasets/greaterthan_gpt2-small_prompts.json",
+]
+
 CAPITAL_CITIES_DATASETS = [
     "datasets/capital_cities_pythia-70m-deduped_prompts.json",
 ]
@@ -34,6 +38,7 @@ ALL_DATASETS = [
     *DOCSTRING_DATASETS,
     *CAPITAL_CITIES_DATASETS,
     *SPORTS_PLAYERS_DATASETS,
+    *GREATERTHAN_DATASETS,
     *IOI_DATASETS,
 ]
 
