@@ -1,6 +1,5 @@
-from einops import einsum, rearrange
 import torch
-from jaxtyping import Int, Float
+from jaxtyping import Float
 from functools import partial
 from circuit_finder.core.types import MetricFn, Tokens, LayerIndex, ModuleName
 from circuit_finder.patching.eap_graph import EAPGraph
@@ -9,8 +8,6 @@ import transformer_lens as tl
 
 from typing import Iterator
 from contextlib import contextmanager
-from transcoders_slim.transcoder import Transcoder
-from circuit_finder.pretrained.load_mlp_transcoders import ts_tc_to_hooked_tc
 from circuit_finder.core.hooked_sae import HookedSAE
 from circuit_finder.core.hooked_transcoder import HookedTranscoder
 from circuit_finder.core.hooked_transcoder import HookedTranscoderReplacementContext
