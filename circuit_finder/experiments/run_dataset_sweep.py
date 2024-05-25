@@ -14,7 +14,7 @@ IOI_DATASETS = ABBA_DATASETS + BABA_DATASETS
 
 ANIMAL_DIET_DATASETS = [
     "datasets/animal_diet_long_prompts.json",
-    # "datasets/animal_diet_short_prompts.json", # NOTE: has a bug
+    "datasets/animal_diet_short_prompts.json",  # NOTE: has a bug
 ]
 
 DOCSTRING_DATASETS = [
@@ -30,11 +30,11 @@ SPORTS_PLAYERS_DATASETS = [
 ]
 
 ALL_DATASETS = [
-    *IOI_DATASETS,
     *ANIMAL_DIET_DATASETS,
     *DOCSTRING_DATASETS,
     *CAPITAL_CITIES_DATASETS,
     *SPORTS_PLAYERS_DATASETS,
+    *IOI_DATASETS,
 ]
 
 
@@ -70,4 +70,8 @@ if __name__ == "__main__":
             continue
         config = replace(args.config, dataset_path=dataset_path, save_dir=str(save_dir))
         print(config)
-        run_leap_experiment(config)
+        try:
+            run_leap_experiment(config)
+        except Exception as e:
+            print(e)
+            pass
