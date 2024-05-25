@@ -43,7 +43,7 @@ class LeapExperimentConfig:
     batch_size: int = 4
     total_dataset_size: int = 1024
     ablate_nodes: bool | str = "bm"
-    ablate_errors: bool | str = "bm"
+    ablate_errors: bool | str = False
     ablate_tokens: Literal["clean", "corrupt"] = "clean"
     # NOTE: This specifies what to do with error nodes when calculating faithfulness curves.
     # Options are:
@@ -68,7 +68,7 @@ def run_leap_experiment(config: LeapExperimentConfig):
         json.dump(config.__dict__, jsonfile)
 
     # Load models
-    model = tl.HookedTransformer.from_pretrained(
+    model = tl.HookedSAETransformer.from_pretrained(
         "gpt2",
         device="cuda",
         fold_ln=True,
@@ -212,7 +212,11 @@ def run_leap_experiment(config: LeapExperimentConfig):
         faith = [(metric - floor) / (ceiling - floor) for metric in metrics_list]
 
         # Save the result as a dataframe
-        data = pd.DataFrame({"num_nodes": num_nodes_list, "faithfulness": faith})
+        data = pd.DataFrame(
+            {"num_nodes": num_nodes_list, "faithfulness": faith, "metric": metrics_list}
+        )
+        data["floor"] = floor
+        data["ceiling"] = ceiling
         data.to_csv(batch_dir / "leap_experiment_results.csv", index=False)
 
 

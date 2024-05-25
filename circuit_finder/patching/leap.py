@@ -258,7 +258,7 @@ class LEAP:
             attn_recons, sae_cache = self.attn_saes[layer].run_with_cache(
                 z_concat, names_filter="hook_sae_acts_post"
             )
-            attn_feature_acts = sae_cache["hook_sae_acts_post"]
+            attn_feature_acts = sae_cache[attn_out_pt + ".hook_sae_acts_post"]
 
             if self.cfg.contrast_pairs:
                 z_concat = rearrange(
@@ -268,7 +268,7 @@ class LEAP:
                 attn_recons, sae_cache = self.attn_saes[layer].run_with_cache(
                     z_concat, names_filter="hook_sae_acts_post"
                 )
-                attn_feature_acts -= sae_cache["hook_sae_acts_post"]
+                attn_feature_acts -= sae_cache[attn_out_pt + ".hook_sae_acts_post"]
 
             self.attn_feature_acts[:, layer, :] = attn_feature_acts.mean(0)
             self.attn_is_active[:, layer, :] = (attn_feature_acts > 0).float().mean(0)
