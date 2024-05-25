@@ -76,15 +76,15 @@ def test_leap(model, snapshot):
     # NOTE: All attn saes and transcoders must be hooked in
     # Seed the random generation
     torch.manual_seed(0)
-    attn_saes = [
-        HookedSAE(get_attn_sae_config(model, f"blocks.{layer}.attn.hook_z"))
+    attn_saes = {
+        layer: HookedSAE(get_attn_sae_config(model, f"blocks.{layer}.attn.hook_z"))
         for layer in range(model.cfg.n_layers)
-    ]
+    }
 
     # TODO: Jacob uses the regular transcoder instead of HookedTranscoder.
     # As far as I can tell it doesn't matter outside of the way the forward pass works.
-    transcoders = [
-        HookedTranscoder(
+    transcoders = {
+        layer: HookedTranscoder(
             get_transcoder_config(
                 model,
                 f"blocks.{layer}.ln2.hook_normalized",
@@ -92,10 +92,10 @@ def test_leap(model, snapshot):
             )
         )
         for layer in range(model.cfg.n_layers)
-    ]
-    # Hack: Use the Transcoders API
-    for transcoder in transcoders:
-        transcoder.cfg.return_acts_in_forward = True
+    }
+
+    def metric_fn(model, tokens):
+        return model(tokens, return_type="loss")
 
     leap = LEAP(
         config,
@@ -103,6 +103,7 @@ def test_leap(model, snapshot):
         model,
         attn_saes=attn_saes,
         transcoders=transcoders,
+        metric=metric_fn,
     )
 
     leap.metric_step()
@@ -111,5 +112,5 @@ def test_leap(model, snapshot):
         leap.mlp_step(layer)
         leap.ov_step(layer)
 
-    graph = leap.get_graph()
+    graph = leap.graph
     assert graph == snapshot
