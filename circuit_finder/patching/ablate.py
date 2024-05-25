@@ -43,20 +43,28 @@ def get_mask(
 def get_metric_with_ablation(
     model: tl.HookedSAETransformer,
     graph: EAPGraph,
-    tokens: Int[Tensor, "batch seq"],
+    clean_tokens: Tokens,
     metric: MetricFn,
     transcoders: dict[LayerIndex, Transcoder] | dict[LayerIndex, HookedTranscoder],
     attn_saes: dict[LayerIndex, HookedSAE],
     *,
+    corrupt_tokens: Tokens | None = None,
     ablate_nodes: str | bool = "zero",  # options [False, "bm", "zero"]
     ablate_errors: str | bool = False,  # options [False, "bm", "zero"]
     first_ablated_layer: int = 2,  # Marks et al don't ablate first 2 layers
     freeze_attention: bool = False,
 ):
-    with wrap_model_with_saes_and_transcoders(
+    if corrupt_tokens is None:
+        corrupt_tokens = clean_tokens
+
+    # Splice the SAEs and transcoders into the model
+    with splice_model_with_saes_and_transcoders(
         model, list(transcoders.values()), list(attn_saes.values())
     ):
-        _, cache = model.run_with_cache(tokens)
+        # Cache the activations on the corrupt tokens
+        _, cache = model.run_with_cache(corrupt_tokens)
+
+        # Patch the model with corrupt activations
         hooks = get_ablation_hooks(
             graph,
             cache,
@@ -65,12 +73,14 @@ def get_metric_with_ablation(
             freeze_attention=freeze_attention,
             first_ablated_layer=first_ablated_layer,
         )
+
+        # Run the forward pass on the clean tokens
         with model.hooks(fwd_hooks=hooks):
-            return metric(model, tokens)
+            return metric(model, clean_tokens)
 
 
 @contextmanager
-def wrap_model_with_saes_and_transcoders(
+def splice_model_with_saes_and_transcoders(
     model: tl.HookedSAETransformer,
     transcoders: list[Transcoder | HookedTranscoder],
     attn_saes: list[HookedSAE],
@@ -80,6 +90,18 @@ def wrap_model_with_saes_and_transcoders(
         if isinstance(tc, Transcoder):
             tc = ts_tc_to_hooked_tc(tc)
         hooked_transcoders.append(tc)
+
+    # Check if error term is used
+    for tc in hooked_transcoders:
+        if not tc.cfg.use_error_term:
+            print(
+                f"Warning: Transcoder {tc}does not use error term. Inference will not be exact."
+            )
+    for sae in attn_saes:
+        if not sae.cfg.use_error_term:
+            print(
+                f"Warning: SAE {sae}does not use error term. Inference will not be exact."
+            )
 
     try:
         with HookedTranscoderReplacementContext(

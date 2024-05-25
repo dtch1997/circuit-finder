@@ -76,9 +76,9 @@ def run_leap_experiment(config: LeapExperimentConfig):
         center_unembed=True,
     )
 
-    attn_saes = load_attn_saes()
+    attn_saes = load_attn_saes(use_error_term=True)
     attn_saes = preprocess_attn_saes(attn_saes, model)  # type: ignore
-    transcoders = load_mlp_transcoders()
+    transcoders = load_mlp_transcoders(use_error_term=True)
 
     # Define dataset
     dataset_path = config.dataset_path

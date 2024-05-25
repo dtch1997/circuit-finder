@@ -24,12 +24,14 @@ def parse_layer_of_module_name(module_name: str) -> LayerIndex:
 def load_mlp_transcoders(
     layers: list[int] = ALL_GPT_2_SMALL_LAYERS,
     device: str = device,
+    use_error_term: bool = True,
 ) -> dict[LayerIndex, Transcoder]:
     transcoders_dict = load_pretrained(get_filenames(layers))
     transcoders = {}
     for module_name, transcoder in transcoders_dict.items():
         layer = parse_layer_of_module_name(module_name)
         transcoders[layer] = transcoder.to(device)
+        use_error_term = use_error_term
     return transcoders
 
 
@@ -59,12 +61,14 @@ def ts_tc_to_hooked_tc(
 def load_hooked_mlp_transcoders(
     layers: list[int] = ALL_GPT_2_SMALL_LAYERS,
     device: str = device,
+    use_error_term: bool = True,
 ) -> dict[LayerIndex, HookedTranscoder]:
     transcoders_dict = load_pretrained(get_filenames(layers))
     hooked_transcoders = {}
     for module_name, transcoder in transcoders_dict.items():
         layer = parse_layer_of_module_name(module_name)
         hooked_transcoder = ts_tc_to_hooked_tc(transcoder).to(device)
+        hooked_transcoder.cfg.use_error_term = use_error_term
         hooked_transcoders[layer] = hooked_transcoder
 
     return hooked_transcoders

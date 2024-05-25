@@ -13,6 +13,15 @@ def print_hooks(model: HookedTransformer):
             print(f"{hook_name} | bwd: {lens_handle.hook}")
 
 
+def count_hooks(model: HookedTransformer):
+    """Utility to count all the hooks currently attached to model"""
+    count = 0
+    for _, hook_point in model.hook_dict.items():
+        count += len(hook_point.fwd_hooks)
+        count += len(hook_point.bwd_hooks)
+    return count
+
+
 @contextmanager
 def get_backward_cache(
     model: HookedTransformer,

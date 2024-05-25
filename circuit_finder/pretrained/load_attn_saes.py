@@ -39,6 +39,7 @@ def parse_layer_for_autoencoder_run(auto_encoder_run: str) -> int:
 def load_attn_saes(
     layers: list[int] = ALL_GPT_2_SMALL_LAYERS,
     device: str = device,
+    use_error_term: bool = True,
 ) -> dict[LayerIndex, HookedSAE]:
     """Load the attention-out SAEs trained by Connor Kissane and Rob Kryzgowski
 
@@ -51,6 +52,7 @@ def load_attn_saes(
             continue
         attn_sae_cfg = download_file_from_hf(hf_repo, f"{auto_encoder_run}_cfg.json")
         cfg = attn_sae_cfg_to_hooked_sae_cfg(attn_sae_cfg)
+        cfg.use_error_term = use_error_term
         state_dict = download_file_from_hf(
             hf_repo, f"{auto_encoder_run}.pt", force_is_torch=True
         )

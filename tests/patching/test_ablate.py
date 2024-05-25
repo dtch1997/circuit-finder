@@ -1,6 +1,6 @@
 from circuit_finder.patching.eap_graph import EAPGraph
 from circuit_finder.patching.ablate import (
-    wrap_model_with_saes_and_transcoders,
+    splice_model_with_saes_and_transcoders,
     get_ablation_hooks,
     add_ablation_hooks_to_model,
 )
@@ -88,7 +88,7 @@ def test_wrap_model_with_saes_and_transcoders(model, expected_norm):
 
     tokens = model.to_tokens(["Hello world"])
     orig_logits = model(tokens)
-    with wrap_model_with_saes_and_transcoders(model, [transcoder], [sae]):
+    with splice_model_with_saes_and_transcoders(model, [transcoder], [sae]):
         spliced_logits, cache = model.run_with_cache(tokens)
 
     assert orig_logits.shape == spliced_logits.shape
@@ -131,7 +131,7 @@ def test_apply_ablation_hooks_matches_add_ablation_hooks_to_model(model):
 
     empty_graph = EAPGraph()
 
-    with wrap_model_with_saes_and_transcoders(model, [transcoder], [sae]):
+    with splice_model_with_saes_and_transcoders(model, [transcoder], [sae]):
         _, cache = model.run_with_cache(tokens)
         hooks = get_ablation_hooks(
             empty_graph,
