@@ -4,16 +4,17 @@
 Similar to Edge Attribution Patching, calculates the effect of edges on some downstream metric.
 However, takes advantage of linearity afforded by transcoders and MLPs to parallelize
 """
-
+#%%
+import sys
+sys.path.append("/root/circuit-finder")
 import torch
 import transformer_lens as tl
-
 from typing import Callable
 from transcoders_slim.transcoder import Transcoder
 from torch import Tensor
 from jaxtyping import Int, Float
 from dataclasses import dataclass
-from einops import rearrange, einsum
+from einops import rearrange, einsum, repeat
 
 from circuit_finder.core.types import (
     Node,
@@ -62,6 +63,7 @@ def preprocess_attn_saes(
         normed_sae.W_enc = torch.nn.Parameter(sae.W_enc * norms.T)
         normed_sae.b_enc = torch.nn.Parameter(sae.b_enc * norms.squeeze())
 
+
         attn_saes[layer] = normed_sae
 
     return attn_saes
@@ -75,7 +77,7 @@ class LEAPConfig:
     store_error_attribs: bool = False
 
 
-class LEAP:
+class IndirectLEAP:
     """
     Linear Edge Attribution Patching
 
@@ -140,7 +142,10 @@ class LEAP:
 
         # Cache feature acts, pattern, layernorm scales, SAE errors, active feature IDs
         self.get_initial_cache()
-
+        
+        # Cache gradients at outputs of heads, for use in calculating sum-over-paths attribs
+        self.get_grads()
+      
         # Kissane et al's attention SAEs are trained at hook_z, concatenated across head_idx dimension.
         # Here we process the decoder matrices so their columns can be viewed as residual vectors.
         attn_all_W_dec_z_cat = torch.stack(
@@ -199,9 +204,10 @@ class LEAP:
             )
 
         # Save attention patterns (avg over batch and head) and layernorm scales (avg over batch)
-        self.pattern: Float[Tensor, "layer head q_pos k_pos"] = torch.stack(
+        self.headmean_pattern: Float[Tensor, "layer q_pos k_pos"] = torch.stack(
             [cache["pattern", layer].mean(0) for layer in self.layers]
         )
+
         self.attn_layernorm_scales: Float[Tensor, "layer pos"] = torch.stack(
             [
                 cache[f"blocks.{layer}.ln1.hook_scale"].mean(dim=0)
@@ -288,18 +294,51 @@ class LEAP:
         self.mlp_active_feature_ids = torch.where(self.mlp_is_active.sum(0) > 0)
         self.attn_active_feature_ids = torch.where(self.attn_is_active.sum(0) > 0)
 
-    def metric_step(self):
-        """Step 0 of circuit discovery: get attributions from each node to the metric."""
-        (imp_down_feature_ids, imp_down_pos, imp_node_metric_grads) = (
-            self.get_imp_properties("metric", self.n_layers)
+        del cache
+        torch.cuda.empty_cache()
+        gc.collect()
+
+    def get_grads(self):
+        grad_cache = {}
+        def grad_cache_hook(grad, hook):
+            assert hook.name.endswith("mlp_out") or hook.name.endswith("attn_out")
+            grad_cache[hook.name] = grad.sum(0) # sum not mean!!
+
+        model.reset_hooks()
+        for layer in self.layers:
+            model.add_hook(f'blocks.{layer}.hook_mlp_out', grad_cache_hook, "bwd")
+            model.add_hook(f'blocks.{layer}.hook_attn_out', grad_cache_hook, "bwd")
+
+        m = self.metric(model, tokens)
+        m.backward()
+        
+        self.mlp_out_grads : Float[Tensor, "layer seq d_model"] = torch.stack(
+            [
+                grad_cache[f'blocks.{layer}.hook_mlp_out']
+                for layer in self.layers
+            ]
         )
 
+        self.attn_out_grads : Float[Tensor, "layer seq d_model"] = torch.stack(
+            [
+                grad_cache[f'blocks.{layer}.hook_mlp_out']
+                for layer in self.layers
+            ]
+        )
+
+
+    def metric_step(self):
+        """Step 0 of circuit discovery: get attributions from each node to the metric."""
+        (imp_down_feature_ids, imp_down_pos) = (
+            self.get_imp_properties("metric", self.n_layers)
+        )
+        model.reset_hooks()
         self.model.zero_grad()
         grad_cache = {}
         hook_pt = f"blocks.{self.n_layers-1}.hook_resid_post"
 
         def grad_cache_hook(grad, hook):
-            grad_cache[hook.name] = grad.mean(0)  # [seq, d_model]
+            grad_cache[hook.name] = grad.sum(0)  # [seq, d_model] # sum not mean!
 
         self.model.add_hook(hook_pt, grad_cache_hook, "bwd")
         m = self.metric(self.model, self.tokens)
@@ -310,15 +349,14 @@ class LEAP:
             "metric",
             self.n_layers,
             imp_down_feature_ids,
-            imp_down_pos,
-            imp_node_metric_grads,
-        )
+            imp_down_pos
+                            )
 
     def mlp_step(self, down_layer):
         """For each imp node at this MLP, compute attrib wrt all previous nodes"""
 
         # Get the imp features coming out of the MLP, and the positions at which they're imp
-        (imp_down_feature_ids, imp_down_pos, imp_node_metric_grads) = (
+        (imp_down_feature_ids, imp_down_pos) = (
             self.get_imp_properties("mlp", down_layer)
         )
         # For each imp downstream (feature_id, pos) pair, get batchmeaned is_active, and the corresponding encoder row
@@ -343,15 +381,14 @@ class LEAP:
             "mlp",
             down_layer,
             imp_down_feature_ids,
-            imp_down_pos,
-            imp_node_metric_grads,
+            imp_down_pos
         )
 
     def ov_step(self, down_layer):
         """For each imp node at this attention layer, compute attrib wrt all previous nodes *via the OV circuit*"""
 
         # Get the imp features coming out of the attention layer, and the positions at which they're imp
-        (imp_down_feature_ids, imp_down_pos, imp_node_metric_grads) = (
+        (imp_down_feature_ids, imp_down_pos) = (
             self.get_imp_properties("attn", down_layer)
         )
 
@@ -367,7 +404,7 @@ class LEAP:
             "(head_id d_head) imp_id -> head_id d_head imp_id",
             head_id=self.model.cfg.n_heads,
         )
-        imp_patterns = self.pattern[
+        imp_patterns = self.headmean_pattern[
             down_layer, :, imp_down_pos, :
         ]  # [head imp_id, kpos]
         imp_layernorm_scales = self.attn_layernorm_scales[down_layer].unsqueeze(
@@ -388,35 +425,8 @@ class LEAP:
             "attn",
             down_layer,
             imp_down_feature_ids,
-            imp_down_pos,
-            imp_node_metric_grads,
+            imp_down_pos
         )
-
-    # WIP
-    def qk_step(self, down_layer):
-        #     # Get the imp features coming out of the attention layer, and the positions at which they're imp
-        #     # reused from ov_step. could refactor but who cares lol
-        #     (imp_down_feature_ids,
-        #      imp_down_pos,
-        #      imp_node_metric_grads) = self.get_imp_properties("attn", down_layer)
-
-        #     # For each imp downstream (feature_id, pos) pair, get batchmeaned is_active, encoder row, and pattern
-        #     imp_active = self.attn_is_active[imp_down_pos, down_layer, imp_down_feature_ids]  # [imp_id]
-        #     imp_enc_rows = self.attn_saes[down_layer].W_enc[:, imp_down_feature_ids]  # [d_model, imp_id]
-        #     imp_enc_rows_z = rearrange(imp_enc_rows,
-        #                               "(head_id d_head) imp_id -> head_id d_head imp_id",
-        #                               head_id=self.model.cfg.n_heads)
-        #     imp_patterns = self.pattern[down_layer, :, imp_down_pos, :]  # [head imp_id, kpos]
-        #     imp_layernorm_scales = self.attn_layernorm_scales[down_layer].unsqueeze(1)  # [kpos, 1, 1]
-
-        #     for up_module in ["mlp", "attn"]:
-        #         (up_active_W_dec,
-        #         up_active_layers,
-        #         up_active_feature_ids,
-        #         up_active_feature_acts) = self.get_up_active_stuff(down_module, down_layer, up_module)
-
-        #     # Recompute pattern when ablating each upstream feature
-        pass
 
     """ Helper functions """
 
@@ -435,7 +445,6 @@ class LEAP:
         module : name of upstream module."""
         imp_feature_ids: list[FeatureIndex] = []
         imp_pos: list[TokenIndex] = []
-        imp_node_metric_grads = []
 
         # Get all nodes that are currently in the graph
         up_nodes_set: set[Node] = set()
@@ -451,10 +460,7 @@ class LEAP:
             if module_ == down_module and layer_ == down_layer:
                 imp_feature_ids += [int(feature_id)]
                 imp_pos += [int(pos)]
-                imp_node_metric_grads += [
-                    sum([vals[2] for (edge, vals) in self.graph if edge[1] == node])
-                ]  # TODO comment
-        return imp_feature_ids, imp_pos, torch.tensor(imp_node_metric_grads).cuda()
+        return imp_feature_ids, imp_pos
 
     def get_active_mlp_W_dec(
         self, down_layer: LayerIndex
@@ -494,7 +500,7 @@ class LEAP:
         up_active_W_dec: Float[Tensor, "up_active_id n_features d_model"]
         up_active_layers: Float[Tensor, " up_active_id "]
         up_active_feature_ids: Float[Tensor, " up_active_id"]
-        up_active_feature_acts: Float[Tensor, " imp_id up_active_id"]
+        up_active_feature_acts: Float[Tensor, " seq up_active_id"]
 
         assert up_module in ["attn", "mlp"]
         if up_module == "mlp":
@@ -525,18 +531,31 @@ class LEAP:
         down_module,
         down_layer,
         imp_down_feature_ids,
-        imp_down_pos,
-        imp_node_metric_grads,
+        imp_down_pos
     ):
         """grad : [... imp_id, d_model]"""
 
         for up_module in ["mlp", "attn"]:
-            (
-                up_active_W_dec,
+            (   up_active_W_dec,
                 up_active_layers,
                 up_active_feature_ids,
                 up_active_feature_acts,
             ) = self.get_up_active_stuff(down_module, down_layer, up_module)
+
+            if down_module == "mlp":
+                imp_head_out_metric_grads = self.mlp_out_grads[down_layer, imp_down_pos, :]   # [imp d_model]
+                imp_W_dec = self.transcoders[down_layer].W_dec[imp_down_feature_ids, :]
+                imp_node_metric_grads = einsum(imp_head_out_metric_grads, imp_W_dec,
+                                               "imp_id d_model, imp_id d_model -> imp_id")
+
+            elif down_module == "attn":
+                imp_head_out_metric_grads = self.attn_out_grads[down_layer, imp_down_pos, :]   # [imp d_model]
+                imp_W_dec = self.attn_all_W_dec_resid[down_layer, imp_down_feature_ids]   # [imp d_model]
+                imp_node_metric_grads = einsum(imp_head_out_metric_grads, imp_W_dec,
+                                               "imp_id d_model, imp_id d_model -> imp_id")
+                
+            elif down_module == "metric":
+                imp_node_metric_grads = torch.ones(len(imp_down_pos)).cuda()
 
             # split attrib calc into two cases depending on downstream module type
             # this is because sequence index requires different treatment in the attn case
@@ -544,6 +563,13 @@ class LEAP:
                 up_active_feature_acts: Float[Tensor, " imp_id up_active_id"] = (
                     up_active_feature_acts[imp_down_pos]
                 )
+
+                if down_layer == 12 and up_module == "attn":
+                    self.imp_down_pos = imp_down_pos
+                    self.up_active_feature_ids = up_active_feature_ids
+                    self.up_active_layers = up_active_layers
+                    self.up_active_feature_acts = up_active_feature_acts
+   
 
                 node_node_grads = einsum(
                     up_active_W_dec,
@@ -556,6 +582,8 @@ class LEAP:
                     up_active_feature_acts,
                     "imp_id up_active_id, imp_id up_active_id -> imp_id up_active_id",
                 )
+                if down_layer == 12 and up_module == "attn":
+                    self.nn_attribs = node_node_attribs
 
                 edge_metric_grads = einsum(
                     imp_node_metric_grads,
@@ -778,3 +806,10 @@ class LEAP:
                             )
                             attrib = error_attribs[up_seq, imp_id, up_layer]
                             self.error_graph.append((edge, attrib.item()))
+
+    def run(self):
+        self.metric_step()
+        for layer in reversed(range(1, self.n_layers)):
+            self.mlp_step(layer)
+            self.ov_step(layer)
+

@@ -410,8 +410,39 @@ dash_type = "att-kk" if module=="attn" else "tres-dc"
 print(get_neuronpedia_url_for_quick_list(layer, features, dash_type))
 
 
-# %%
+
+#%%
+import sys
+import json
+sys.path.append("/root/circuit-finder")
+from circuit_finder.patching.eap_graph import EAPGraph
+with open("/root/circuit-finder/results/leap_experiment/batch_1/leap-graph_threshold=0.03.json") as f:
+    graph = EAPGraph.from_json(json.load(f))
+
+#%%
+
 from circuit_finder.plotting import make_html_graph
 make_html_graph(graph,  attrib_type="em")
 
+#%%
+len(graph.get_edges())
 # %%
+import transformer_lens as tl
+model = tl.HookedTransformer.from_pretrained(
+    "gpt2",
+    device="cuda",
+    fold_ln=True,
+    center_writing_weights=True,
+    center_unembed=True,
+)
+#%%
+thomas_id = model.tokenizer(" Thomas")["input_ids"]
+arthur_id = model.tokenizer(" Arthur")["input_ids"]
+
+# %%
+thomas_embed = model.W_E[thomas_id, :].squeeze()
+arthur_embed = model.W_E[arthur_id, :].squeeze()
+
+thomas_embed @ arthur_embed / thomas_embed.norm() / arthur_embed.norm()
+
+1/768**0.5
