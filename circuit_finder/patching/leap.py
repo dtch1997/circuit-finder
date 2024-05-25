@@ -257,8 +257,17 @@ class LEAP:
             attn_recons, sae_cache = self.attn_saes[layer].run_with_cache(
                 z_concat, names_filter="hook_sae_acts_post"
             )
+
+            # NOTE: Here we handle the fact that SAE hook names can change depending on status
+            # - At initialization, the hook names are top-leve
+            # - e.g.: 'hook_sae_acts_post'
+            # - When we splice the SAE into the model for the first time, the hook names are updated
+            # - e.g.: 'blocks.0.attn.hook_z.hook_sae_acts_post'
+            # Here, we parse the SAE's hook points and find the matching one to handle these two cases.
             sae_hook_pts = get_hook_points(self.attn_saes[layer], "hook_sae_acts_post")
-            assert len(sae_hook_pts) == 1, "Multiple hook points found for SAE act post"
+            assert (
+                len(sae_hook_pts) == 1
+            ), "Multiple hook points found for hook_sae_acts_post"
             sae_hook_name: str = sae_hook_pts[0].name
 
             attn_feature_acts = sae_cache[sae_hook_name]
