@@ -88,6 +88,48 @@ class EAPGraph:
                 node_set.add(dest)
         return sorted(list(node_set))
 
+    def get_nn_attribs(
+        self, filter_fn: Callable[[Node], bool] = lambda x: True
+    ) -> list[Node]:
+        """Get the node->node attributions of the graph"""
+        unsorted_edges = [edge for edge, _ in self.graph if filter_fn(edge)]
+        unsorted_attribs = [
+            attribs[1] for edge, attribs in self.graph if filter_fn(edge)]
+        
+        combined = list(zip(unsorted_edges, unsorted_attribs))
+
+        # Sort combined list based on the elements of unsorted_edges
+        combined_sorted = sorted(combined, key=lambda x: x[0])
+
+        # Unzip the combined list
+        sorted_edges, sorted_attribs = zip(*combined_sorted)
+
+        # Convert back to lists if needed
+        sorted_edges = list(sorted_edges)
+        sorted_attribs = list(sorted_attribs)
+        return sorted_attribs
+
+    def get_em_attribs(
+        self, filter_fn: Callable[[Node], bool] = lambda x: True
+    ) -> list[Node]:
+        """Get the node->node attributions of the graph"""
+        unsorted_edges = [edge for edge, _ in self.graph if filter_fn(edge)]
+        unsorted_attribs = [
+            attribs[3] for edge, attribs in self.graph if filter_fn(edge)]
+        
+        combined = list(zip(unsorted_edges, unsorted_attribs))
+
+        # Sort combined list based on the elements of unsorted_edges
+        combined_sorted = sorted(combined, key=lambda x: x[0])
+
+        # Unzip the combined list
+        sorted_edges, sorted_attribs = zip(*combined_sorted)
+
+        # Convert back to lists if needed
+        sorted_edges = list(sorted_edges)
+        sorted_attribs = list(sorted_attribs)
+        return sorted_attribs
+
     def to_json(self) -> dict:
         """Convert the graph to a JSON object"""
         return {
