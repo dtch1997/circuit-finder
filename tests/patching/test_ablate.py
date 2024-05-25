@@ -1,4 +1,9 @@
-from circuit_finder.patching.ablate import get_forward_cache
+from circuit_finder.patching.eap_graph import EAPGraph
+from circuit_finder.patching.ablate import (
+    wrap_model_with_saes_and_transcoders,
+    get_ablation_hooks,
+    add_ablation_hooks_to_model,
+)
 from circuit_finder.core import (
     HookedSAE,
     HookedSAEConfig,
@@ -6,7 +11,6 @@ from circuit_finder.core import (
     HookedTranscoderConfig,
 )
 
-import einops
 import pytest
 import torch
 
@@ -66,7 +70,7 @@ def get_sae_config(model, act_name):
 
 
 # @pytest.mark.xfail
-def test_get_forward_cache(model):
+def test_wrap_model_with_saes_and_transcoders(model):
     sae_config = get_sae_config(model, "blocks.0.attn.hook_z")
     sae = HookedSAE(sae_config)
     transcoder_config = get_transcoder_config(
@@ -77,12 +81,8 @@ def test_get_forward_cache(model):
     transcoder = HookedTranscoder(transcoder_config)
 
     tokens = model.to_tokens(["Hello world"])
-    forward_cache = get_forward_cache(
-        model,
-        tokens,
-        [transcoder],
-        [sae],
-    )
+    with wrap_model_with_saes_and_transcoders(model, [transcoder], [sae]):
+        _, cache = model.run_with_cache(tokens)
 
     expected_hook_names = [
         # Attention
@@ -103,4 +103,47 @@ def test_get_forward_cache(model):
     ]
 
     for hook_name in expected_hook_names:
-        assert hook_name in forward_cache, "Missing hook: " + hook_name
+        assert hook_name in cache, "Missing hook: " + hook_name
+
+
+def test_apply_ablation_hooks_matches_add_ablation_hooks_to_model(model):
+    sae_config = get_sae_config(model, "blocks.0.attn.hook_z")
+    sae = HookedSAE(sae_config)
+    transcoder_config = get_transcoder_config(
+        model,
+        "blocks.0.mlp.ln2.hook_normalized",
+        "blocks.0.mlp.hook_mlp_out",
+    )
+    transcoder = HookedTranscoder(transcoder_config)
+    tokens = model.to_tokens(prompt)
+
+    empty_graph = EAPGraph()
+
+    with wrap_model_with_saes_and_transcoders(model, [transcoder], [sae]):
+        _, cache = model.run_with_cache(tokens)
+        hooks = get_ablation_hooks(
+            empty_graph,
+            cache,
+            ablate_errors="zero",
+            ablate_nodes="zero",
+            freeze_attention=False,
+            first_ablated_layer=0,
+        )
+        with model.hooks(fwd_hooks=hooks):
+            patched_logits_A = model(tokens)
+
+    model.reset_hooks()
+    add_ablation_hooks_to_model(
+        model,
+        empty_graph,
+        tokens,
+        [transcoder],
+        [sae],
+        ablate_errors="zero",
+        ablate_nodes="zero",
+        freeze_attention=False,
+        first_ablated_layer=0,
+    )
+    patched_logits_B = model(tokens)
+
+    assert torch.allclose(patched_logits_A, patched_logits_B, atol=1e-6)
