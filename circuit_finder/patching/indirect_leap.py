@@ -15,6 +15,7 @@ from torch import Tensor
 from jaxtyping import Int, Float
 from dataclasses import dataclass
 from einops import rearrange, einsum, repeat
+import gc
 
 from circuit_finder.core.types import (
     Node,
@@ -304,12 +305,12 @@ class IndirectLEAP:
             assert hook.name.endswith("mlp_out") or hook.name.endswith("attn_out")
             grad_cache[hook.name] = grad.sum(0) # sum not mean!!
 
-        model.reset_hooks()
+        self.model.reset_hooks()
         for layer in self.layers:
-            model.add_hook(f'blocks.{layer}.hook_mlp_out', grad_cache_hook, "bwd")
-            model.add_hook(f'blocks.{layer}.hook_attn_out', grad_cache_hook, "bwd")
+            self.model.add_hook(f'blocks.{layer}.hook_mlp_out', grad_cache_hook, "bwd")
+            self.model.add_hook(f'blocks.{layer}.hook_attn_out', grad_cache_hook, "bwd")
 
-        m = self.metric(model, tokens)
+        m = self.metric(self.model, self.tokens)
         m.backward()
         
         self.mlp_out_grads : Float[Tensor, "layer seq d_model"] = torch.stack(
@@ -332,7 +333,7 @@ class IndirectLEAP:
         (imp_down_feature_ids, imp_down_pos) = (
             self.get_imp_properties("metric", self.n_layers)
         )
-        model.reset_hooks()
+        self.model.reset_hooks()
         self.model.zero_grad()
         grad_cache = {}
         hook_pt = f"blocks.{self.n_layers-1}.hook_resid_post"

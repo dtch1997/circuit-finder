@@ -30,9 +30,9 @@ from circuit_finder.pretrained import (
     load_attn_saes,
     load_mlp_transcoders,
 )
-from circuit_finder.patching.leap import (
+from circuit_finder.patching.indirect_leap import (
     preprocess_attn_saes,
-    LEAP,
+    IndirectLEAP,
     LEAPConfig,
 )
 
@@ -204,14 +204,14 @@ def run_leap_experiment(config: LeapExperimentConfig):
 
         # Sweep over thresholds
         # TODO: make configurable
-        thresholds = [0.001, 0.003, 0.006, 0.01, 0.03]
+        thresholds = [0.01, 0.03, 0.05, 0.07, 0.09, 0.11, 0.13, 0.15, 0.17]
         for threshold in thresholds:
             # Setup LEAP algorithm
             model.reset_hooks()
             cfg = LEAPConfig(
                 threshold=threshold, contrast_pairs=False, chained_attribs=True
             )
-            leap = LEAP(
+            leap = IndirectLEAP(
                 cfg=cfg,
                 tokens=clean_tokens,
                 model=model,
@@ -276,10 +276,10 @@ def run_leap_experiment(config: LeapExperimentConfig):
 
 cfg = LeapExperimentConfig(
     dataset_path = "datasets/greaterthan_gpt2-small_prompts.json",
-    save_dir = "results/leap_experiment/jacob_05_24",
+    save_dir = "results/leap_experiment/jacob_05_25",
     seed = 1,
-    batch_size = 2,
-    total_dataset_size = 4,
+    batch_size = 10,
+    total_dataset_size = 10,
     ablate_errors = False,
     first_ablate_layer = 2,
     verbose = False,
@@ -297,7 +297,7 @@ from circuit_finder.patching.eap_graph import EAPGraph
 from circuit_finder.constants import ProjectDir
 from circuit_finder.plotting import show_attrib_graph
 
-results_dir = ProjectDir / "results" / "leap_experiment" / "jacob_05_24" / "batch_0"
+results_dir = ProjectDir / "results" / "leap_experiment" / "jacob_05_25" / "batch_0"
 assert results_dir.exists()
 
 config = json.load(open(results_dir / "config.json"))
@@ -314,37 +314,15 @@ with open(dataset, 'r') as f:
 
 df = pd.DataFrame(dataset)
 df.head()
-#%%
 
-import matplotlib.pyplot as plt
-
-fig, axs = plt.subplots(nrows=1, ncols=3, figsize=(30, 10))
-thresholds = [
-    0.01,
-    0.03,
-    0.1
-
-]
-
-for ax, threshold in zip(axs, thresholds):
-    with open(results_dir / f"leap-graph_threshold={threshold}.json") as f:
-        graph = EAPGraph.from_json(json.load(f))
-
-    n_edges = len(graph.get_edges())
-    print(f"Threshold: {threshold}, n_edges: {n_edges}")
-    ax.set_title(f"Threshold: {threshold},  n_edges: {n_edges}", fontsize=20)
-
-    if n_edges > 1000:
-        continue
-    show_attrib_graph(graph, ax=ax)
-
-
-fig.show()
 # %%
-threshold = 0.03
+threshold = 0.17
 with open(results_dir / f"leap-graph_threshold={threshold}.json") as f:
     graph = EAPGraph.from_json(json.load(f))
 
+from circuit_finder.plotting import make_html_graph
+make_html_graph(graph,  attrib_type="em")
+len(graph.get_edges())
 # %%
 ## Print the distribution of nodes
 import pandas as pd
@@ -419,30 +397,5 @@ from circuit_finder.patching.eap_graph import EAPGraph
 with open("/root/circuit-finder/results/leap_experiment/batch_1/leap-graph_threshold=0.03.json") as f:
     graph = EAPGraph.from_json(json.load(f))
 
-#%%
-
-from circuit_finder.plotting import make_html_graph
-make_html_graph(graph,  attrib_type="em")
 
 #%%
-len(graph.get_edges())
-# %%
-import transformer_lens as tl
-model = tl.HookedTransformer.from_pretrained(
-    "gpt2",
-    device="cuda",
-    fold_ln=True,
-    center_writing_weights=True,
-    center_unembed=True,
-)
-#%%
-thomas_id = model.tokenizer(" Thomas")["input_ids"]
-arthur_id = model.tokenizer(" Arthur")["input_ids"]
-
-# %%
-thomas_embed = model.W_E[thomas_id, :].squeeze()
-arthur_embed = model.W_E[arthur_id, :].squeeze()
-
-thomas_embed @ arthur_embed / thomas_embed.norm() / arthur_embed.norm()
-
-1/768**0.5

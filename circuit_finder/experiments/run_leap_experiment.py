@@ -5,8 +5,7 @@ pdm run python -m circuit_finder.experiments.run_leap_experiment [ARGS]
 
 Run with flag '-h', '--help' to see the arguments.
 """
-import sys
-sys.path.append("/root/circuit-finder")
+
 import torch
 import transformer_lens as tl
 import pandas as pd
@@ -43,7 +42,7 @@ class LeapExperimentConfig:
     dataset_path: str = "datasets/ioi/ioi_vanilla_template_prompts.json"
     save_dir: str = "results/leap_experiment"
     seed: int = 1
-    batch_size: int = 1
+    batch_size: int = 4
     total_dataset_size: int = 1024
     ablate_errors: bool | str = False
     # NOTE: This specifies what to do with error nodes when calculating faithfulness curves.
@@ -189,7 +188,7 @@ def run_leap_experiment(config: LeapExperimentConfig):
 
         # Sweep over thresholds
         # TODO: make configurable
-        thresholds = [0.001, 0.003, 0.006, 0.01, 0.03]
+        thresholds = [0.001, 0.003, 0.006, 0.01, 0.03, 0.06, 0.1, 0.3, 0.6, 1.0]
         for threshold in thresholds:
             # Setup LEAP algorithm
             model.reset_hooks()
