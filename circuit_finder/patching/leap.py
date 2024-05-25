@@ -8,10 +8,8 @@ However, takes advantage of linearity afforded by transcoders and MLPs to parall
 import torch
 import transformer_lens as tl
 
-from typing import Callable
-from transcoders_slim.transcoder import Transcoder
 from torch import Tensor
-from jaxtyping import Int, Float
+from jaxtyping import Float
 from dataclasses import dataclass
 from einops import rearrange, einsum
 
@@ -30,6 +28,7 @@ from circuit_finder.core.types import (
 )
 from circuit_finder.constants import device
 from circuit_finder.core import HookedSAE, HookedTranscoder
+from circuit_finder.patching.utils import get_hook_points
 
 
 def preprocess_attn_saes(
@@ -258,7 +257,11 @@ class LEAP:
             attn_recons, sae_cache = self.attn_saes[layer].run_with_cache(
                 z_concat, names_filter="hook_sae_acts_post"
             )
-            attn_feature_acts = sae_cache[attn_out_pt + ".hook_sae_acts_post"]
+            sae_hook_pts = get_hook_points(self.attn_saes[layer], "hook_sae_acts_post")
+            assert len(sae_hook_pts) == 1, "Multiple hook points found for SAE act post"
+            sae_hook_name: str = sae_hook_pts[0].name
+
+            attn_feature_acts = sae_cache[sae_hook_name]
 
             if self.cfg.contrast_pairs:
                 z_concat = rearrange(
@@ -268,7 +271,7 @@ class LEAP:
                 attn_recons, sae_cache = self.attn_saes[layer].run_with_cache(
                     z_concat, names_filter="hook_sae_acts_post"
                 )
-                attn_feature_acts -= sae_cache[attn_out_pt + ".hook_sae_acts_post"]
+                attn_feature_acts -= sae_cache[sae_hook_name]
 
             self.attn_feature_acts[:, layer, :] = attn_feature_acts.mean(0)
             self.attn_is_active[:, layer, :] = (attn_feature_acts > 0).float().mean(0)
