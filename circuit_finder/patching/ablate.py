@@ -60,8 +60,8 @@ def get_metric_with_ablation(
         hooks = get_ablation_hooks(
             graph,
             cache,
-            ablate_errors=ablate_nodes,
-            ablate_nodes=ablate_errors,
+            ablate_nodes=ablate_nodes,
+            ablate_errors=ablate_errors,
             freeze_attention=freeze_attention,
             first_ablated_layer=first_ablated_layer,
         )
