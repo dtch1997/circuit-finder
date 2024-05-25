@@ -26,9 +26,10 @@ from circuit_finder.core.types import (
     ModuleName,
     parse_node_name,
     HookNameFilterFn,
+    MetricFn,
 )
 from circuit_finder.constants import device
-from circuit_finder.core.hooked_sae import HookedSAE
+from circuit_finder.core import HookedSAE, HookedTranscoder
 
 
 def preprocess_attn_saes(
@@ -84,12 +85,12 @@ class LEAP:
 
     # Models
     model: tl.HookedTransformer
-    attn_saes: dict[LayerIndex, tl.HookedSAE]
-    transcoders: dict[LayerIndex, Transcoder]
+    attn_saes: dict[LayerIndex, HookedSAE]
+    transcoders: dict[LayerIndex, HookedTranscoder]
 
     # Data
     tokens: Tokens
-    corrupt_tokens: Tokens
+    corrupt_tokens: Tokens | None
 
     # Intermediate computations
     mlp_feature_acts: Float[Tensor, "seq layer d_trans"]
@@ -107,17 +108,12 @@ class LEAP:
     def __init__(
         self,
         cfg: LEAPConfig,
-        tokens: Int[torch.Tensor, "batch seq"],
+        tokens: Tokens,
         model: tl.HookedTransformer,
-        attn_saes: dict[LayerIndex, tl.HookedSAE],  # layer index: attn-out SAE
-        transcoders: dict[LayerIndex, Transcoder],  # layer index: mlp transcoder
-        metric: Callable[
-            [tl.HookedTransformer, Tokens],
-            Float[Tensor, "batch d_model"],
-        ],
-        corrupt_tokens: Int[
-            torch.Tensor, "batch seq"
-        ] = None,  # only specify if contrast_pairs = True
+        attn_saes: dict[LayerIndex, HookedSAE],  # layer index: attn-out SAE
+        transcoders: dict[LayerIndex, HookedTranscoder],  # layer index: mlp transcoder
+        metric: MetricFn,
+        corrupt_tokens: Tokens | None = None,  # only specify if contrast_pairs = True
     ):
         self.cfg = cfg
         self.tokens = tokens
@@ -243,9 +239,13 @@ class LEAP:
             attn_out_pt = f"blocks.{layer}.attn.hook_z"
 
             # Get MLP feature acts and recons errors
-            mlp_recons, mlp_feature_acts = self.transcoders[layer](cache[mlp_in_pt])[:2]
+            mlp_recons, mlp_feature_acts = self.transcoders[
+                layer
+            ].get_recons_and_act_post(cache[mlp_in_pt])
             if self.cfg.contrast_pairs:  # in contrast pairs case, feature_acts now really refers to the change in feature acts
-                mlp_feature_acts -= self.transcoders[layer](corrupt_cache[mlp_in_pt])[1]
+                mlp_feature_acts -= self.transcoders[layer].get_recons_and_act_post(
+                    corrupt_cache[mlp_in_pt]
+                )
             self.mlp_feature_acts[:, layer, :] = mlp_feature_acts.mean(0)
             self.mlp_is_active[:, layer, :] = (mlp_feature_acts > 0).float().mean(0)
             self.mlp_errors[:, layer, :] = (cache[mlp_out_pt] - mlp_recons).mean(0)

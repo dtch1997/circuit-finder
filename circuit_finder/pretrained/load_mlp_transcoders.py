@@ -24,13 +24,11 @@ def parse_layer_of_module_name(module_name: str) -> LayerIndex:
 def load_mlp_transcoders(
     layers: list[int] = ALL_GPT_2_SMALL_LAYERS,
     device: str = device,
-    use_error_term: bool = True,
 ) -> dict[LayerIndex, Transcoder]:
     transcoders_dict = load_pretrained(get_filenames(layers))
     transcoders = {}
     for module_name, transcoder in transcoders_dict.items():
         layer = parse_layer_of_module_name(module_name)
-        transcoder.cfg.use_error_term = use_error_term
         transcoders[layer] = transcoder.to(device)
     return transcoders
 

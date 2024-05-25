@@ -24,7 +24,7 @@ from pathlib import Path
 from circuit_finder.pretrained import (
     load_model,
     load_attn_saes,
-    load_mlp_transcoders,
+    load_hooked_mlp_transcoders,
 )
 from circuit_finder.patching.leap import (
     preprocess_attn_saes,
@@ -72,7 +72,7 @@ def run_leap_experiment(config: LeapExperimentConfig):
     model = load_model(requires_grad=True)
     attn_saes = load_attn_saes(use_error_term=True)
     attn_saes = preprocess_attn_saes(attn_saes, model)  # type: ignore
-    transcoders = load_mlp_transcoders(use_error_term=True)
+    transcoders = load_hooked_mlp_transcoders(use_error_term=True)
 
     # Define dataset
     dataset_path = config.dataset_path

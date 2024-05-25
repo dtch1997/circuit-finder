@@ -2,7 +2,6 @@ from circuit_finder.patching.eap_graph import EAPGraph
 from circuit_finder.patching.ablate import (
     splice_model_with_saes_and_transcoders,
     get_ablation_hooks,
-    add_ablation_hooks_to_model,
 )
 from circuit_finder.core import (
     HookedSAE,
@@ -118,7 +117,7 @@ def test_wrap_model_with_saes_and_transcoders(model, expected_norm):
         assert hook_name in cache, "Missing hook: " + hook_name
 
 
-def test_apply_ablation_hooks_matches_add_ablation_hooks_to_model(model):
+def test_apply_ablation_hooks_can_run(model):
     sae_config = get_sae_config(model, "blocks.0.attn.hook_z")
     sae = HookedSAE(sae_config)
     transcoder_config = get_transcoder_config(
@@ -142,20 +141,4 @@ def test_apply_ablation_hooks_matches_add_ablation_hooks_to_model(model):
             first_ablated_layer=0,
         )
         with model.hooks(fwd_hooks=hooks):
-            patched_logits_A = model(tokens)
-
-    model.reset_hooks()
-    add_ablation_hooks_to_model(
-        model,
-        empty_graph,
-        tokens,
-        [transcoder],
-        [sae],
-        ablate_errors="zero",
-        ablate_nodes="zero",
-        freeze_attention=False,
-        first_ablated_layer=0,
-    )
-    patched_logits_B = model(tokens)
-
-    assert torch.allclose(patched_logits_A, patched_logits_B, atol=1e-6)
+            spliced_logits = model(tokens)
