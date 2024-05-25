@@ -150,7 +150,7 @@ def get_cache_fwd_and_bwd(
 
     model.add_hook(filter_fn, backward_cache_hook, "bwd")
 
-    value = metric_fn(model(tokens))
+    value = metric_fn(model, tokens)
     value.backward()
     model.reset_hooks()
     return (

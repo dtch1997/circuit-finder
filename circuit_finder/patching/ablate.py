@@ -2,10 +2,18 @@ from einops import einsum, rearrange
 import torch
 from jaxtyping import Int, Float
 from functools import partial
-from circuit_finder.core.types import MetricFn
+from circuit_finder.core.types import MetricFn, Tokens, LayerIndex, ModuleName
 from circuit_finder.patching.eap_graph import EAPGraph
 from torch import Tensor
 import transformer_lens as tl
+
+from typing import Iterator
+from contextlib import contextmanager
+from transcoders_slim.transcoder import Transcoder
+from circuit_finder.pretrained.load_mlp_transcoders import ts_tc_to_hooked_tc
+from circuit_finder.core.hooked_sae import HookedSAE
+from circuit_finder.core.hooked_transcoder import HookedTranscoder
+from circuit_finder.core.hooked_transcoder import HookedTranscoderReplacementContext
 
 
 def get_mask(
@@ -33,18 +41,200 @@ def get_mask(
 
 
 def get_metric_with_ablation(
+    model: tl.HookedSAETransformer,
+    graph: EAPGraph,
+    clean_tokens: Tokens,
+    metric: MetricFn,
+    transcoders: dict[LayerIndex, Transcoder] | dict[LayerIndex, HookedTranscoder],
+    attn_saes: dict[LayerIndex, HookedSAE],
+    *,
+    corrupt_tokens: Tokens | None = None,
+    ablate_nodes: str | bool = "zero",  # options [False, "bm", "zero"]
+    ablate_errors: str | bool = False,  # options [False, "bm", "zero"]
+    first_ablated_layer: int = 2,  # Marks et al don't ablate first 2 layers
+    freeze_attention: bool = False,
+):
+    if corrupt_tokens is None:
+        corrupt_tokens = clean_tokens
+
+    # Splice the SAEs and transcoders into the model
+    with splice_model_with_saes_and_transcoders(
+        model, list(transcoders.values()), list(attn_saes.values())
+    ):
+        # Cache the activations on the corrupt tokens
+        _, cache = model.run_with_cache(corrupt_tokens)
+
+        # Patch the model with corrupt activations
+        hooks = get_ablation_hooks(
+            graph,
+            cache,
+            ablate_nodes=ablate_nodes,
+            ablate_errors=ablate_errors,
+            freeze_attention=freeze_attention,
+            first_ablated_layer=first_ablated_layer,
+        )
+
+        # Run the forward pass on the clean tokens
+        with model.hooks(fwd_hooks=hooks):
+            return metric(model, clean_tokens)
+
+
+@contextmanager
+def splice_model_with_saes_and_transcoders(
+    model: tl.HookedSAETransformer,
+    transcoders: list[Transcoder | HookedTranscoder],
+    attn_saes: list[HookedSAE],
+) -> Iterator[tl.HookedSAETransformer]:
+    hooked_transcoders = []
+    for tc in transcoders:
+        if isinstance(tc, Transcoder):
+            tc = ts_tc_to_hooked_tc(tc)
+        hooked_transcoders.append(tc)
+
+    # Check if error term is used
+    for tc in hooked_transcoders:
+        if not tc.cfg.use_error_term:
+            print(
+                f"Warning: Transcoder {tc}does not use error term. Inference will not be exact."
+            )
+    for sae in attn_saes:
+        if not sae.cfg.use_error_term:
+            print(
+                f"Warning: SAE {sae}does not use error term. Inference will not be exact."
+            )
+
+    try:
+        with HookedTranscoderReplacementContext(
+            model,  # type: ignore
+            transcoders=hooked_transcoders,
+        ) as context:
+            with model.saes(saes=attn_saes):  # type: ignore
+                yield model
+
+    finally:
+        pass
+
+
+def get_forward_cache(
+    model: tl.HookedSAETransformer,
+    tokens: Tokens,
+    transcoders: list[Transcoder] | list[HookedTranscoder],
+    attn_saes: list[HookedSAE],
+) -> tl.ActivationCache:
+    hooked_transcoders = []
+    for tc in transcoders:
+        if isinstance(tc, Transcoder):
+            tc = ts_tc_to_hooked_tc(tc)
+        hooked_transcoders.append(tc)
+
+    # Run model
+    with HookedTranscoderReplacementContext(
+        model,  # type: ignore
+        transcoders=hooked_transcoders,
+    ) as context:
+        with model.saes(saes=attn_saes):  # type: ignore
+            _, cache = model.run_with_cache(tokens)
+
+    return cache
+
+
+def get_ablation_hooks(
+    graph: EAPGraph,
+    cache: tl.ActivationCache,
+    *,
+    ablate_nodes: str | bool = "zero",  # options [False, "bm", "zero"]
+    ablate_errors: str | bool = False,  # options [False, "bm", "zero"]
+    freeze_attention: bool = False,
+    first_ablated_layer: int = 2,  # Marks et al don't ablate first 2 layers
+) -> list[tuple]:
+    """Return hooks to ablate a model outside a graph"""
+
+    def patch_act_post_hook(act, hook, layer: LayerIndex, module_name: ModuleName):
+        assert hook.name.endswith("hook_sae_acts_post")
+        feature_acts = cache[hook.name]
+        mask = get_mask(graph, module_name, layer, feature_acts)
+
+        if ablate_nodes == "bm":
+            ablate_acts = cache[hook.name].mean(0, keepdim=True)
+        elif ablate_nodes == "zero":
+            ablate_acts = torch.zeros_like(act)
+        else:
+            ablate_acts = act
+
+        act[:, mask] = ablate_acts[:, mask]
+        return act
+
+    def patch_error_hook(act, hook, layer, module_name):
+        assert hook.name.endswith("hook_sae_error")
+
+        if ablate_errors == "bm":
+            ablate_acts = cache[hook.name].mean(0, keepdim=True)
+        elif ablate_errors == "zero":
+            ablate_acts = torch.zeros_like(act)
+        else:
+            ablate_acts = act
+
+        act = ablate_acts
+        return act
+
+    def patch_pattern_hook(act, hook, layer, module_name):
+        assert hook.name.endswith("attn.hook_pattern")
+        if freeze_attention:
+            return cache[hook.name]
+        else:
+            return act
+
+    fwd_hooks = []
+    for layer in range(first_ablated_layer, cache.model.cfg.n_layers):
+        # Attention pattern hooks
+        fwd_hooks.append(
+            (
+                f"blocks.{layer}.attn.hook_pattern",
+                partial(patch_pattern_hook, layer=layer, module_name="attn"),
+            )
+        )
+        # Attention SAE hooks
+        fwd_hooks.append(
+            (
+                f"blocks.{layer}.attn.hook_z.hook_sae_acts_post",
+                partial(patch_act_post_hook, layer=layer, module_name="attn"),
+            )
+        )
+        fwd_hooks.append(
+            (
+                f"blocks.{layer}.attn.hook_z.hook_sae_error",
+                partial(patch_error_hook, layer=layer, module_name="attn"),
+            )
+        )
+        # MLP transcoder hooks
+        fwd_hooks.append(
+            (
+                f"blocks.{layer}.mlp.transcoder.hook_sae_acts_post",
+                partial(patch_act_post_hook, layer=layer, module_name="mlp"),
+            )
+        )
+        fwd_hooks.append(
+            (
+                f"blocks.{layer}.mlp.hook_sae_error",
+                partial(patch_error_hook, layer=layer, module_name="mlp"),
+            )
+        )
+
+    return fwd_hooks
+
+
+def add_ablation_hooks_to_model(
     model: tl.HookedTransformer,
     graph: EAPGraph,
     tokens: Int[Tensor, "batch seq"],
-    metric: MetricFn,
     transcoders,  # list
     attn_saes,  # list
     ablate_nodes: str | bool = "zero",  # options [False, "bm", "zero"]
     ablate_errors: str | bool = False,  # options [False, "bm", "zero"]
     first_ablated_layer: int = 2,  # Marks et al don't ablate first 2 layers
     freeze_attention: bool = False,
-):
-    """Cache the activations of the model on a circuit, then return the metric when ablated"""
+) -> tl.HookedTransformer:
+    """Cache the activations of the model on a circuit, then return the model with relevant ablation hooks added"""
     assert ablate_errors in [False, "bm", "zero"]
     assert ablate_nodes in [False, "bm", "zero"]
     # Do clean FP to get batchmean (bm) feature acts, and reconstructions
@@ -152,14 +342,22 @@ def get_metric_with_ablation(
     def mlp_patch_hook(act, hook, layer):
         assert hook.name.endswith("mlp_out")
 
-        if ablate_errors == "bm":
-            return mlp_ablated_recons[layer] + mlp_error_cache[layer].mean(
-                dim=0, keepdim=True
-            )
-        elif ablate_errors == "zero":
-            return mlp_ablated_recons[layer]
+        if ablate_nodes == "bm":
+            recons = mlp_ablated_recons[layer]
+        elif ablate_nodes == "zero":
+            recons = torch.zeros_like(mlp_ablated_recons[layer])
         else:
-            return mlp_ablated_recons[layer] + mlp_error_cache[layer]
+            # NOTE: This requires us to change the way we're computing the cached objects.
+            raise NotImplementedError
+
+        if ablate_errors == "bm":
+            error = mlp_error_cache[layer].mean(dim=0, keepdim=True)
+        elif ablate_errors == "zero":
+            error = torch.zeros_like(mlp_error_cache[layer])
+        else:
+            error = mlp_error_cache[layer]
+
+        return recons + error
 
     def attn_patch_hook(act, hook, layer):
         assert hook.name.endswith("hook_z")
@@ -184,12 +382,21 @@ def get_metric_with_ablation(
             n_heads=model.cfg.n_heads,
         )
 
+        if ablate_nodes == "bm":
+            recons = ablated_recons
+        elif ablate_nodes == "zero":
+            recons = torch.zeros_like(ablated_recons)
+        else:  # no ablation
+            raise NotImplementedError
+
         if ablate_errors == "bm":
-            return ablated_recons + attn_error_cache[layer].mean(dim=0, keepdim=True)
+            error = attn_error_cache[layer].mean(dim=0, keepdim=True)
         elif ablate_errors == "zero":
-            return ablated_recons
+            error = torch.zeros_like(attn_error_cache[layer])
         else:
-            return ablated_recons + attn_error_cache[layer]
+            error = attn_error_cache[layer]
+
+        return recons + error
 
     for layer in range(first_ablated_layer, model.cfg.n_layers):
         model.add_hook(
@@ -208,4 +415,4 @@ def get_metric_with_ablation(
                 f"blocks.{layer}.attn.hook_pattern", freeze_pattern_hook, "fwd"
             )
 
-    return metric(model, tokens)
+    return model

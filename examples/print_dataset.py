@@ -2,6 +2,7 @@
 import sys
 
 sys.path.append("/root/circuit-finder")
+import pandas as pd
 import transformer_lens as tl
 from circuit_finder.constants import ProjectDir
 from circuit_finder.data_loader import load_datasets_from_json
@@ -34,7 +35,7 @@ print(wrong_answer_tokens.shape)
 print(corrupt_tokens.shape)
 
 # %%
-import pandas as pd
+
 
 pd.set_option("display.max_colwidth", None)
 

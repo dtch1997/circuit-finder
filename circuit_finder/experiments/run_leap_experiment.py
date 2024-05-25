@@ -6,9 +6,9 @@ pdm run python -m circuit_finder.experiments.run_leap_experiment [ARGS]
 Run with flag '-h', '--help' to see the arguments.
 """
 
-import transformer_lens as tl
 import pandas as pd
 import json
+import torch
 
 from simple_parsing import ArgumentParser
 from dataclasses import dataclass
@@ -22,6 +22,7 @@ from tqdm import tqdm
 from typing import Literal
 from pathlib import Path
 from circuit_finder.pretrained import (
+    load_model,
     load_attn_saes,
     load_mlp_transcoders,
 )
@@ -43,7 +44,7 @@ class LeapExperimentConfig:
     batch_size: int = 4
     total_dataset_size: int = 1024
     ablate_nodes: bool | str = "bm"
-    ablate_errors: bool | str = "bm"
+    ablate_errors: bool | str = False
     ablate_tokens: Literal["clean", "corrupt"] = "clean"
     # NOTE: This specifies what to do with error nodes when calculating faithfulness curves.
     # Options are:
@@ -68,17 +69,10 @@ def run_leap_experiment(config: LeapExperimentConfig):
         json.dump(config.__dict__, jsonfile)
 
     # Load models
-    model = tl.HookedTransformer.from_pretrained(
-        "gpt2",
-        device="cuda",
-        fold_ln=True,
-        center_writing_weights=True,
-        center_unembed=True,
-    )
-
-    attn_saes = load_attn_saes()
+    model = load_model(requires_grad=True)
+    attn_saes = load_attn_saes(use_error_term=True)
     attn_saes = preprocess_attn_saes(attn_saes, model)  # type: ignore
-    transcoders = load_mlp_transcoders()
+    transcoders = load_mlp_transcoders(use_error_term=True)
 
     # Define dataset
     dataset_path = config.dataset_path
@@ -135,20 +129,22 @@ def run_leap_experiment(config: LeapExperimentConfig):
 
         # NOTE: First, get the ceiling of the patching metric.
         # TODO: Replace 'last_token_logit' with logit difference
-        ceiling = metric_fn(model, clean_tokens).item()
+        with torch.no_grad():
+            ceiling = metric_fn(model, clean_tokens).item()
 
         # NOTE: Second, get floor of patching metric using empty graph, i.e. ablate everything
-        empty_graph = EAPGraph([])
-        floor = get_metric_with_ablation(
-            model,
-            empty_graph,
-            ablate_tokens,
-            metric_fn,
-            transcoders,
-            attn_saes,
-            ablate_errors=False,  # Do not ablate errors when running forward pass
-            first_ablated_layer=config.first_ablate_layer,
-        ).item()
+        with torch.no_grad():
+            empty_graph = EAPGraph([])
+            floor = get_metric_with_ablation(
+                model,
+                empty_graph,
+                ablate_tokens,
+                metric_fn,
+                transcoders,
+                attn_saes,
+                ablate_errors=False,  # Do not ablate errors when running forward pass
+                first_ablated_layer=config.first_ablate_layer,
+            ).item()
         clear_memory()
 
         # now sweep over thresholds to get graphs with variety of numbers of nodes
@@ -194,16 +190,17 @@ def run_leap_experiment(config: LeapExperimentConfig):
             clear_memory()
 
             # Calculate the metric under ablation
-            metric = get_metric_with_ablation(
-                model,
-                graph,
-                ablate_tokens,
-                metric_fn,
-                transcoders,
-                attn_saes,
-                ablate_errors=config.ablate_errors,  # type: ignore
-                first_ablated_layer=config.first_ablate_layer,
-            ).item()
+            with torch.no_grad():
+                metric = get_metric_with_ablation(
+                    model,
+                    graph,
+                    ablate_tokens,
+                    metric_fn,
+                    transcoders,
+                    attn_saes,
+                    ablate_errors=config.ablate_errors,  # type: ignore
+                    first_ablated_layer=config.first_ablate_layer,
+                ).item()
 
             # Log the data
             num_nodes_list.append(num_nodes)
@@ -212,7 +209,11 @@ def run_leap_experiment(config: LeapExperimentConfig):
         faith = [(metric - floor) / (ceiling - floor) for metric in metrics_list]
 
         # Save the result as a dataframe
-        data = pd.DataFrame({"num_nodes": num_nodes_list, "faithfulness": faith})
+        data = pd.DataFrame(
+            {"num_nodes": num_nodes_list, "faithfulness": faith, "metric": metrics_list}
+        )
+        data["floor"] = floor
+        data["ceiling"] = ceiling
         data.to_csv(batch_dir / "leap_experiment_results.csv", index=False)
 
 

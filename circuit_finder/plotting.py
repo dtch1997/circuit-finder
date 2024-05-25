@@ -10,7 +10,6 @@ import plotly.graph_objects as go
 from typing import List
 
 import networkx as nx
-import matplotlib.pyplot as plt
 from circuit_finder.core.types import parse_node_name
 
 update_layout_set = {
