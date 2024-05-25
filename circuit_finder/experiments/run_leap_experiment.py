@@ -57,6 +57,8 @@ class LeapExperimentConfig:
     # Marks et al don't ablate the first 2 layers
     # TODO: Find reference for the above
 
+    freeze_attention_pattern: bool = False
+
     verbose: bool = False
 
 
@@ -139,8 +141,11 @@ def run_leap_experiment(config: LeapExperimentConfig):
             metric_fn,
             transcoders,
             attn_saes,
-            ablate_errors=False,  # Do not ablate errors when running forward pass
+            # Config options
+            ablate_nodes=config.ablate_nodes,
+            ablate_errors=config.ablate_errors,
             first_ablated_layer=config.first_ablate_layer,
+            freeze_attention=config.freeze_attention_pattern,
         ).item()
         clear_memory()
 
@@ -194,8 +199,11 @@ def run_leap_experiment(config: LeapExperimentConfig):
                 metric_fn,
                 transcoders,
                 attn_saes,
-                ablate_errors=config.ablate_errors,  # type: ignore
+                # Config options
+                ablate_nodes=config.ablate_nodes,
+                ablate_errors=config.ablate_errors,
                 first_ablated_layer=config.first_ablate_layer,
+                freeze_attention=config.freeze_attention_pattern,
             ).item()
 
             # Log the data
@@ -205,7 +213,15 @@ def run_leap_experiment(config: LeapExperimentConfig):
         faith = [(metric - floor) / (ceiling - floor) for metric in metrics_list]
 
         # Save the result as a dataframe
-        data = pd.DataFrame({"num_nodes": num_nodes_list, "faithfulness": faith})
+        data = pd.DataFrame(
+            {
+                "num_nodes": num_nodes_list,
+                "faithfulness": faith,
+                "metric": metrics_list,
+            }
+        )
+        data["floor"] = floor
+        data["ceiling"] = ceiling
         data.to_csv(batch_dir / "leap_experiment_results.csv", index=False)
 
 

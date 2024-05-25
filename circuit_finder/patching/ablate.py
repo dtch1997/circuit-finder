@@ -7,7 +7,6 @@ from circuit_finder.patching.eap_graph import EAPGraph
 from torch import Tensor
 import transformer_lens as tl
 
-from functools import partial
 from typing import Iterator
 from contextlib import contextmanager
 from transcoders_slim.transcoder import Transcoder
@@ -48,6 +47,7 @@ def get_metric_with_ablation(
     metric: MetricFn,
     transcoders: dict[LayerIndex, Transcoder] | dict[LayerIndex, HookedTranscoder],
     attn_saes: dict[LayerIndex, HookedSAE],
+    *,
     ablate_nodes: str | bool = "zero",  # options [False, "bm", "zero"]
     ablate_errors: str | bool = False,  # options [False, "bm", "zero"]
     first_ablated_layer: int = 2,  # Marks et al don't ablate first 2 layers
