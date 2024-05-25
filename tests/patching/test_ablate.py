@@ -12,7 +12,6 @@ from circuit_finder.core import (
 )
 
 import pytest
-import torch
 
 from transformer_lens import HookedSAETransformer
 
