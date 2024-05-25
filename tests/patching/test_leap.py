@@ -2,8 +2,6 @@ from circuit_finder.core.hooked_sae_config import HookedSAEConfig
 from circuit_finder.core.hooked_sae import HookedSAE
 from circuit_finder.core.hooked_transcoder import (
     HookedTranscoder,
-    HookedTranscoderWrapper,
-    HookedTranscoderReplacementContext,
 )
 from circuit_finder.core.hooked_transcoder_config import HookedTranscoderConfig
 from circuit_finder.patching.leap import LEAP, LEAPConfig
