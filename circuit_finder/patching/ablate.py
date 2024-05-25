@@ -42,7 +42,7 @@ def get_mask(
 
 
 def get_metric_with_ablation(
-    model: tl.HookedTransformer,
+    model: tl.HookedSAETransformer,
     graph: EAPGraph,
     tokens: Int[Tensor, "batch seq"],
     metric: MetricFn,
@@ -53,18 +53,18 @@ def get_metric_with_ablation(
     first_ablated_layer: int = 2,  # Marks et al don't ablate first 2 layers
     freeze_attention: bool = False,
 ):
-    model = add_ablation_hooks_to_model(
-        model,
-        graph,
-        tokens,
-        transcoders,
-        attn_saes,
-        ablate_nodes,
-        ablate_errors,
-        first_ablated_layer,
-        freeze_attention,
-    )
-    return metric(model, tokens)
+    with wrap_model_with_saes_and_transcoders(model, transcoders, attn_saes):
+        _, cache = model.run_with_cache(tokens)
+        hooks = get_ablation_hooks(
+            graph,
+            cache,
+            ablate_errors=ablate_nodes,
+            ablate_nodes=ablate_errors,
+            freeze_attention=freeze_attention,
+            first_ablated_layer=first_ablated_layer,
+        )
+        with model.hooks(fwd_hooks=hooks):
+            return metric(model, tokens)
 
 
 @contextmanager
