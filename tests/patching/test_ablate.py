@@ -11,6 +11,7 @@ from circuit_finder.core import (
     HookedTranscoderConfig,
 )
 
+import torch
 import pytest
 
 from transformer_lens import HookedSAETransformer
@@ -69,7 +70,11 @@ def get_sae_config(model, act_name):
 
 
 # @pytest.mark.xfail
-def test_wrap_model_with_saes_and_transcoders(model):
+@pytest.mark.parametrize(
+    "expected_norm",
+    [1e-3, pytest.param(1e-6, marks=pytest.mark.xfail(reason="Unsure why fails"))],
+)
+def test_wrap_model_with_saes_and_transcoders(model, expected_norm):
     sae_config = get_sae_config(model, "blocks.0.attn.hook_z")
     sae = HookedSAE(sae_config)
     transcoder_config = get_transcoder_config(
@@ -78,10 +83,18 @@ def test_wrap_model_with_saes_and_transcoders(model):
         "blocks.0.mlp.hook_mlp_out",
     )
     transcoder = HookedTranscoder(transcoder_config)
+    assert sae.cfg.use_error_term
+    assert transcoder.cfg.use_error_term
 
     tokens = model.to_tokens(["Hello world"])
+    orig_logits = model(tokens)
     with wrap_model_with_saes_and_transcoders(model, [transcoder], [sae]):
-        _, cache = model.run_with_cache(tokens)
+        spliced_logits, cache = model.run_with_cache(tokens)
+
+    assert orig_logits.shape == spliced_logits.shape
+    assert torch.allclose(
+        orig_logits, spliced_logits, atol=expected_norm
+    ), f"Original and patched logits differ by L2 norm of {torch.linalg.norm(orig_logits - spliced_logits)}"
 
     expected_hook_names = [
         # Attention
