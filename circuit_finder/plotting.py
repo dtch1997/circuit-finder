@@ -142,19 +142,28 @@ def show_attrib_graph(graph, **kwargs):
 
     nx.draw(G, pos, with_labels=True, node_color=color, **kwargs)
 
-
+#### ChatGPT made this
 import networkx as nx
 from pyvis.network import Network
 import numpy as np
+import os
 
 def make_html_graph(graph, attrib_type):
     edges = graph.get_edges()
+    edge_types = graph.get_edge_types()  # Get edge types
+
     if attrib_type == "nn":
         attribs = graph.get_nn_attribs()
     elif attrib_type == "em":
         attribs = graph.get_em_attribs()
     else:
         print("Invalid attrib type chosen. Options are em and nn")
+        return
+
+    # Ensure the number of edges matches the number of edge types and attributes
+    if len(edges) != len(edge_types) or len(edges) != len(attribs):
+        print("Number of edges does not match number of edge types or attributes")
+        return
 
     # Create a directed graph
     G = nx.DiGraph()
@@ -168,43 +177,47 @@ def make_html_graph(graph, attrib_type):
     positions = set()  # To track unique position values
     
     for downstream, upstream in edges:
-        if downstream != 'null':
-            for node in [upstream, downstream]:
-                if not G.has_node(node):
-                    module, layer, position, _id = node.split('.')
-                    layer = int(layer)
-                    position = int(position)
-                    positions.add(position)
-                    color = color_map[module]
-                    title = f"layer {layer} pos {position} id {_id}"
-                    
-                    # Determine the base position
-                    base_x = position * 150  # Increase x-axis spacing
-                    base_y = layer * 80  # Decrease y-axis spacing
-                    
-                    # Offset nodes based on module type
-                    if (position, layer) not in offset_tracker[module]:
-                        offset_tracker[module][(position, layer)] = 0
-                    
-                    if module == 'attn':
-                        pos_x = base_x - 10 - offset_tracker[module][(position, layer)] * 10  # Shift each "attn" node further left
-                        pos_y = base_y - 15  # Shift each "attn" node further downward
-                        url = f"https://www.neuronpedia.org/gpt2-small/{layer}-att-kk/{_id}"
-                    elif module == 'mlp':
-                        pos_x = base_x + 15 + offset_tracker[module][(position, layer)] * 10  # Shift each "mlp" node further right
-                        pos_y = base_y
-                        url = f"https://www.neuronpedia.org/gpt2-small/{layer}-tres-dc/{_id}"
-                    else:
-                        pos_x = base_x + offset_tracker[module][(position, layer)] * 10
-                        pos_y = base_y
-                        url = ""
-                    
-                    offset_tracker[module][(position, layer)] += 1
-                    
-                    # Add node with attributes
-                    G.add_node(node, title=title, color=color, id=_id, x=pos_x, y=pos_y, url=url)
-            G.add_edge(upstream, downstream)
+        if downstream == 'null' or upstream == 'null':
+            continue
+        for node in [upstream, downstream]:
+            if not G.has_node(node):
+                module, layer, position, _id = node.split('.')
+                layer = int(layer)
+                position = int(position)
+                positions.add(position)
+                color = color_map[module]
+                title = f"layer {layer} pos {position} id {_id}"
+                
+                # Determine the base position
+                base_x = position * 150  # Increase x-axis spacing
+                base_y = layer * 80  # Decrease y-axis spacing
+                
+                # Offset nodes based on module type
+                if (position, layer) not in offset_tracker[module]:
+                    offset_tracker[module][(position, layer)] = 0
+                
+                if module == 'attn':
+                    pos_x = base_x - 10 - offset_tracker[module][(position, layer)] * 10  # Shift each "attn" node further left
+                    pos_y = base_y - 15  # Shift each "attn" node further downward
+                    url = f"https://www.neuronpedia.org/gpt2-small/{layer}-att-kk/{_id}"
+                elif module == 'mlp':
+                    pos_x = base_x + 15 + offset_tracker[module][(position, layer)] * 10  # Shift each "mlp" node further right
+                    pos_y = base_y
+                    url = f"https://www.neuronpedia.org/gpt2-small/{layer}-tres-dc/{_id}"
+                else:
+                    pos_x = base_x + offset_tracker[module][(position, layer)] * 10
+                    pos_y = base_y
+                    url = ""
+                
+                offset_tracker[module][(position, layer)] += 1
+                
+                # Add node with attributes
+                G.add_node(node, title=title, color=color, id=_id, x=pos_x, y=pos_y, url=url)
+        G.add_edge(upstream, downstream)
     
+    # Combine edges with their attributes and types
+    edge_data = list(zip(edges, attribs, edge_types))
+
     # Clip the attribs using the 95th percentile
     p95_attrib = np.percentile(attribs, 95)
     clipped_attribs = np.clip(attribs, None, p95_attrib)
@@ -215,6 +228,9 @@ def make_html_graph(graph, attrib_type):
     range_attrib = max_attrib - min_attrib
     
     normalized_attribs = [0.2 + 0.8 * (a - min_attrib) / range_attrib for a in clipped_attribs]
+
+    # Map normalized attributes back to edges
+    edge_data_normalized = [(e[0], e[1], norm_attrib, e[2]) for e, norm_attrib in zip(edge_data, normalized_attribs)]
     
     # Create pyvis network
     net = Network(notebook=True, directed=True, cdn_resources='remote')
@@ -242,14 +258,21 @@ def make_html_graph(graph, attrib_type):
 
     # Add nodes to the pyvis network
     for node, data in G.nodes(data=True):
-        net.add_node(node, label='', title=data['title'], color=data['color'], x=data['x'], y=-data['y'], url=data['url'])
+        net.add_node(node, label=data['id'], title=data['title'], color=data['color'], x=data['x'], y=-data['y'], url=data['url'])
     
-    # Add edges with normalized opacity and hover title
-    for (source, target), attrib, norm_attrib in zip(G.edges(), attribs, normalized_attribs):
+    # Add edges with normalized opacity, hover title, and color based on edge type
+    for (source, target), original_attrib, norm_attrib, edge_type in edge_data_normalized:
+        if source == 'null' or target == 'null':
+            continue
         gray_value = int(255 * (1 - norm_attrib))  # Convert opacity to a grayscale value
-        color = f"rgba({gray_value}, {gray_value}, {gray_value}, {norm_attrib})"
-        title = f"attrib: {attrib:.3f}"  # Round attrib to 3 decimal places
-        net.add_edge(source, target, color=color, title=title)
+        if edge_type == 'q':
+            color = f"rgba(0, 255, 0, {norm_attrib})"  # Green with normalized opacity
+        elif edge_type == 'k':
+            color = f"rgba(255, 0, 0, {norm_attrib})"  # Red with normalized opacity
+        else:
+            color = f"rgba({gray_value}, {gray_value}, {gray_value}, {norm_attrib})"
+        title = f"attrib: {original_attrib:.3f}"  # Round original attrib to 3 decimal places
+        net.add_edge(target, source, color=color, title=title)  # Reversed edge direction
 
     # Add faint vertical lines to delineate different values of `position`
     max_position = max(positions)

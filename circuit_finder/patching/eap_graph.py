@@ -1,3 +1,4 @@
+
 import pandas as pd
 from typing import Callable
 from circuit_finder.core.types import (
@@ -54,7 +55,27 @@ class EAPGraph:
         self, filter_fn: Callable[[Edge], bool] = lambda x: True
     ) -> list[Edge]:
         """Get the edges of the graph"""
-        return sorted([edge for edge, _ in self.graph if filter_fn(edge)])
+        return sorted([edge for edge, _, _ in self.graph if filter_fn(edge)])
+    
+    def get_edge_types(
+        self, filter_fn: Callable[[Edge], bool] = lambda x: True
+    ) -> list[Edge]:
+        unsorted_edges = [edge for edge, _ , _ in self.graph if filter_fn(edge)]
+        unsorted_types = [
+            type for edge, _, type in self.graph if filter_fn(edge)]
+        
+        combined = list(zip(unsorted_edges, unsorted_types))
+
+        # Sort combined list based on the elements of unsorted_edges
+        combined_sorted = sorted(combined, key=lambda x: x[0])
+
+        # Unzip the combined list
+        sorted_edges, sorted_types = zip(*combined_sorted)
+
+        # Convert back to lists if needed
+        sorted_edges = list(sorted_edges)
+        sorted_types = list(sorted_types)
+        return sorted_types
 
     def get_nodes(
         self, filter_fn: Callable[[Node], bool] = lambda x: True
@@ -92,9 +113,9 @@ class EAPGraph:
         self, filter_fn: Callable[[Node], bool] = lambda x: True
     ) -> list[Node]:
         """Get the node->node attributions of the graph"""
-        unsorted_edges = [edge for edge, _ in self.graph if filter_fn(edge)]
+        unsorted_edges = [edge for edge, _ , _ in self.graph if filter_fn(edge)]
         unsorted_attribs = [
-            attribs[1] for edge, attribs in self.graph if filter_fn(edge)]
+            attribs[1] for edge, attribs, _ in self.graph if filter_fn(edge)]
         
         combined = list(zip(unsorted_edges, unsorted_attribs))
 
@@ -113,9 +134,9 @@ class EAPGraph:
         self, filter_fn: Callable[[Node], bool] = lambda x: True
     ) -> list[Node]:
         """Get the node->node attributions of the graph"""
-        unsorted_edges = [edge for edge, _ in self.graph if filter_fn(edge)]
+        unsorted_edges = [edge for edge, _, _ in self.graph if filter_fn(edge)]
         unsorted_attribs = [
-            attribs[3] for edge, attribs in self.graph if filter_fn(edge)]
+            attribs[3] for edge, attribs, _ in self.graph if filter_fn(edge)]
         
         combined = list(zip(unsorted_edges, unsorted_attribs))
 

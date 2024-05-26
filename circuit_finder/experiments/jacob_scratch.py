@@ -56,7 +56,7 @@ transcoders = load_mlp_transcoders()
 #%%
 @dataclass
 class LeapExperimentConfig:
-    dataset_path: str = "datasets/greaterthan_gpt2-small_prompts.json"
+    dataset_path: str = "datasets/no_context_greaterthan_gpt2-small_prompts.json"
     save_dir: str = "results/leap_experiment"
     seed: int = 1
     batch_size: int = 4
@@ -101,7 +101,7 @@ def list_logit_diff(
         wrong_logits = logits[b][wrong_answer[b]]
         #TODO: do we want mean or sum here?
         diff += correct_logits.mean() - wrong_logits.mean()
-    return diff
+    return diff / logits.size(0)
 #%%
 
 def run_leap_experiment(config: LeapExperimentConfig):
@@ -182,6 +182,7 @@ def run_leap_experiment(config: LeapExperimentConfig):
         # TODO: Replace 'last_token_logit' with logit difference
         model.reset_hooks()
         ceiling = metric_fn(model, clean_tokens).item()
+        print("clean model has metric = ", ceiling)
 
         # NOTE: Second, get floor of patching metric using empty graph, i.e. ablate everything
         empty_graph = EAPGraph([])
@@ -204,7 +205,7 @@ def run_leap_experiment(config: LeapExperimentConfig):
 
         # Sweep over thresholds
         # TODO: make configurable
-        thresholds = [0.01, 0.03, 0.05, 0.07, 0.09, 0.11, 0.13, 0.15, 0.17]
+        thresholds = [0.01, 0.05, 0.09, 0.13, 0.17, 0.21, 0.25]
         for threshold in thresholds:
             # Setup LEAP algorithm
             model.reset_hooks()
@@ -278,11 +279,11 @@ cfg = LeapExperimentConfig(
     dataset_path = "datasets/greaterthan_gpt2-small_prompts.json",
     save_dir = "results/leap_experiment/jacob_05_25",
     seed = 1,
-    batch_size = 10,
-    total_dataset_size = 10,
+    batch_size = 5,
+    total_dataset_size = 5,
     ablate_errors = False,
     first_ablate_layer = 2,
-    verbose = False,
+    verbose = False
 )
 
 run_leap_experiment(cfg)
@@ -314,15 +315,23 @@ with open(dataset, 'r') as f:
 
 df = pd.DataFrame(dataset)
 df.head()
-
 # %%
-threshold = 0.17
+
+
+
+
+threshold = 0.01
 with open(results_dir / f"leap-graph_threshold={threshold}.json") as f:
     graph = EAPGraph.from_json(json.load(f))
+
 
 from circuit_finder.plotting import make_html_graph
 make_html_graph(graph,  attrib_type="em")
 len(graph.get_edges())
+
+
+
+
 # %%
 ## Print the distribution of nodes
 import pandas as pd
@@ -399,3 +408,24 @@ with open("/root/circuit-finder/results/leap_experiment/batch_1/leap-graph_thres
 
 
 #%%
+df["clean"]
+
+#%%
+model.reset_hooks()
+tl.utils.test_prompt("in the center of the road was a car, with black rubber",
+                     'he', model)
+#%%
+tl.utils.test_prompt("After analysing, I realise that blue is a type of",
+                     'he', model)
+
+#%%
+tl.utils.test_prompt("The favourable prisoner was released early on good",
+                     'he', model)
+
+# %%
+tl.utils.test_prompt("Let's go with the colour grey. I support it: I'm in",
+                     'he', model)
+#%%
+tl.utils.test_prompt("Grey colour is best. Call __init__() and ensure all attributes are correctly",
+
+                     'he', model)

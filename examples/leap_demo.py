@@ -1,5 +1,7 @@
 # flake8: noqa
 # %%
+%load_ext autoreload
+%autoreload 2
 """Demonstrate how to do linear edge attribution patching using LEAP"""
 
 # Imports and downloads

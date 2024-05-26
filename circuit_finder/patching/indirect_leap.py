@@ -5,6 +5,8 @@ Similar to Edge Attribution Patching, calculates the effect of edges on some dow
 However, takes advantage of linearity afforded by transcoders and MLPs to parallelize
 """
 #%%
+%load_ext autoreload
+%autoreload 2
 import sys
 sys.path.append("/root/circuit-finder")
 import torch
@@ -16,6 +18,7 @@ from jaxtyping import Int, Float
 from dataclasses import dataclass
 from einops import rearrange, einsum, repeat
 import gc
+from eindex import eindex
 
 from circuit_finder.core.types import (
     Node,
@@ -76,6 +79,7 @@ class LEAPConfig:
     contrast_pairs: bool = False
     chained_attribs: bool = True
     store_error_attribs: bool = False
+    qk_enabled : bool = True
 
 
 class IndirectLEAP:
@@ -169,7 +173,7 @@ class IndirectLEAP:
         # node = "{module_name}.{layer}.{pos}.{feature_id}"
         # vals = (node_node_grad, node_node_attrib, edge_metric_grad, edge_metric_attrib)
         self.graph: list[tuple[Edge, Attrib]] = [
-            (("null", f"metric.{self.n_layers}.{seq}.0"), (0.0, 0.0, 1.0, 0.0))
+            (("null", f"metric.{self.n_layers}.{seq}.0"), (0.0, 0.0, 1.0, 0.0), None)
             for seq in range(self.n_seq)
         ]
 
@@ -189,6 +193,9 @@ class IndirectLEAP:
             or x.endswith("hook_z")
             or x.endswith("pattern")
             or x.endswith("hook_scale")
+            or (x.endswith("ln1.hook_normalized") and self.cfg.qk_enabled)
+            or (x.endswith("_k") and self.cfg.qk_enabled)
+            or (x.endswith("_q") and self.cfg.qk_enabled)
         )
         _, cache = self.model.run_with_cache(
             self.tokens, return_type="loss", names_filter=names_filter
@@ -205,6 +212,22 @@ class IndirectLEAP:
             )
 
         # Save attention patterns (avg over batch and head) and layernorm scales (avg over batch)
+        if self.cfg.qk_enabled:
+            self.pattern : Float[Tensor, "layer head q_pos k_pos"] = torch.stack(
+            [cache["pattern", layer].mean(0) for layer in self.layers]
+            )
+
+            self.q : Float[Tensor, "layer pos n_heads_head"] = torch.stack(
+                [cache[f'blocks.{layer}.attn.hook_q'].mean(0) for layer in self.layers]
+            )
+            self.k : Float[Tensor, "layer pos n_heads_head"] = torch.stack(
+                [cache[f'blocks.{layer}.attn.hook_k'].mean(0) for layer in self.layers]
+            )
+
+            self.attn_in : Float[Tensor, "layer pos d_model"] = torch.stack(
+            [cache[f'blocks.{layer}.ln1.hook_normalized'].mean(0) for layer in self.layers]
+            )
+
         self.headmean_pattern: Float[Tensor, "layer q_pos k_pos"] = torch.stack(
             [cache["pattern", layer].mean(0) for layer in self.layers]
         )
@@ -350,7 +373,8 @@ class IndirectLEAP:
             "metric",
             self.n_layers,
             imp_down_feature_ids,
-            imp_down_pos
+            imp_down_pos,
+            edge_type=None
                             )
 
     def mlp_step(self, down_layer):
@@ -382,8 +406,10 @@ class IndirectLEAP:
             "mlp",
             down_layer,
             imp_down_feature_ids,
-            imp_down_pos
+            imp_down_pos,
+            edge_type=None
         )
+
 
     def ov_step(self, down_layer):
         """For each imp node at this attention layer, compute attrib wrt all previous nodes *via the OV circuit*"""
@@ -426,8 +452,145 @@ class IndirectLEAP:
             "attn",
             down_layer,
             imp_down_feature_ids,
-            imp_down_pos
+            imp_down_pos,
+            edge_type="ov"
         )
+
+    def pattern_grad_approx(self, pattern):
+        # Pattern can have any size since we apply the function elementwise.
+        # True pattern derivative is p - p^2, but this underestimates effect of decreasing
+        # a high score. Whereas using derivative = p leads to an overestimate. 
+        # So we do something hacky :)
+        # Create masks for the conditions
+        mask_greater = pattern > 0.5
+        mask_lesser = pattern < 0.5
+        
+        # Apply the function elementwise
+        result = torch.where(mask_greater, pattern - pattern**2, pattern**2)
+        
+        return result
+        
+
+    def q_step(self, down_layer):
+        # Get the imp features coming out of the attention layer, and the positions at which they're imp
+        (imp_down_feature_ids, imp_down_pos) = (
+            self.get_imp_properties("attn", down_layer)
+        )
+
+        # For each imp downstream (feature_id, pos) pair, get batchmeaned is_active, encoder row, and pattern
+        imp_active = self.attn_is_active[
+            imp_down_pos, down_layer, imp_down_feature_ids
+        ]  # [imp_id]
+        imp_enc_rows = self.attn_saes[down_layer].W_enc[
+            :, imp_down_feature_ids
+        ]  # [d_model, imp_id]
+        imp_enc_rows_z = rearrange(
+            imp_enc_rows,
+            "(head_id d_head) imp_id -> head_id d_head imp_id",
+            head_id=self.model.cfg.n_heads,
+        )
+        imp_layernorm_scales = self.attn_layernorm_scales[
+            down_layer, imp_down_pos
+        ]  # [imp_id, 1]
+
+        # TODO: W_dec normalisation?
+
+        # This will make no sense until I send you the equations
+        # The cryptic variable names just follow what's handwritten in front of me
+        kp = einsum(self.k[down_layer], 
+                    self.pattern_grad_approx(self.pattern[down_layer]),
+                    "kseq n_heads d_head, n_heads qseq kseq -> n_heads qseq kseq d_head")
+        kp_centred = kp - kp.mean(dim=-2, keepdim=True)
+
+        dfa = einsum(
+            self.attn_in[down_layer], 
+            model.W_V[down_layer], 
+            imp_enc_rows_z,
+            "kseq d_model_in, n_heads d_model_in d_head, n_heads d_head imp_id -> kseq n_heads imp_id")
+        
+        grad = einsum(
+            model.W_Q[down_layer],
+            kp_centred,
+            dfa,
+            "n_heads d_model d_head, n_heads qseq kseq d_head, kseq n_heads imp_id -> imp_id qseq d_model "
+        )  /  self.model.cfg.d_head**0.5
+
+        grad = eindex(grad, torch.tensor(imp_down_pos, dtype=torch.long),
+                      "imp_id [imp_id] d_model") # [imp_id, d_model]
+        
+        grad /= imp_layernorm_scales
+        # grad *= imp_active.unsqueeze(1)
+        
+        seq_expand_grad = torch.zeros([self.n_seq, len(imp_down_pos), self.d_model]).cuda()
+
+        for i, pos in enumerate(imp_down_pos):
+            seq_expand_grad[pos, i, :] = grad[i, :]
+                
+        self.compute_and_save_attribs(
+            seq_expand_grad,
+            "attn",
+            down_layer,
+            imp_down_feature_ids,
+            imp_down_pos,
+            edge_type="q"
+        )
+    
+    def k_step(self, down_layer):
+        # Get the imp features coming out of the attention layer, and the positions at which they're imp
+        (imp_down_feature_ids, imp_down_pos) = (
+            self.get_imp_properties("attn", down_layer)
+        )
+
+        # For each imp downstream (feature_id, pos) pair, get batchmeaned is_active, encoder row, and pattern
+        imp_active = self.attn_is_active[
+            imp_down_pos, down_layer, imp_down_feature_ids
+        ]  # [imp_id]
+        imp_enc_rows = self.attn_saes[down_layer].W_enc[
+            :, imp_down_feature_ids
+        ]  # [d_model, imp_id]
+        imp_enc_rows_z = rearrange(
+            imp_enc_rows,
+            "(head_id d_head) imp_id -> head_id d_head imp_id",
+            head_id=self.model.cfg.n_heads,
+        )
+        imp_layernorm_scales = self.attn_layernorm_scales[
+            down_layer, imp_down_pos
+        ]  # [imp_id, 1]
+
+        # TODO: W_dec normalisation?
+
+        # This will make no sense until I send you the equations
+        # The cryptic variable names just follow what's handwritten in front of me
+        p_WK_q = einsum(
+            self.pattern_grad_approx(self.pattern[down_layer]),
+            self.model.W_K[down_layer],
+            self.q[down_layer][imp_down_pos, :, :], # [head imp kseq]
+            "n_heads qseq kseq, n_heads d_model d_head, imp_id n_heads d_head -> imp_id n_heads kseq d_model")
+
+        dfa = einsum(
+            self.attn_in[down_layer], 
+            model.W_V[down_layer], 
+            imp_enc_rows_z,
+            "kseq d_model_in, n_heads d_model_in d_head, n_heads d_head imp_id -> kseq n_heads imp_id")
+        
+        grad = einsum(
+            p_WK_q, dfa,
+            "imp_id n_heads kseq d_model, kseq n_heads imp_id -> kseq imp_id d_model"
+            ) / self.model.cfg.d_head**0.5
+
+        grad /= imp_layernorm_scales
+        # grad *= imp_active.unsqueeze(1)
+
+        self.compute_and_save_attribs(
+            grad,
+            "attn",
+            down_layer,
+            imp_down_feature_ids,
+            imp_down_pos,
+            edge_type="k"
+        )
+
+
 
     """ Helper functions """
 
@@ -449,7 +612,7 @@ class IndirectLEAP:
 
         # Get all nodes that are currently in the graph
         up_nodes_set: set[Node] = set()
-        for edge in [e for e, _ in self.graph]:
+        for edge in [e for e, _ , _ in self.graph]:
             _, upstream = edge
             up_nodes_set.add(upstream)
         up_nodes_deduped: list[Node] = list(up_nodes_set)
@@ -532,7 +695,8 @@ class IndirectLEAP:
         down_module,
         down_layer,
         imp_down_feature_ids,
-        imp_down_pos
+        imp_down_pos,
+        edge_type=None #options "q", "k", None
     ):
         """grad : [... imp_id, d_model]"""
 
@@ -563,14 +727,7 @@ class IndirectLEAP:
             if down_module in ["mlp", "metric"]:
                 up_active_feature_acts: Float[Tensor, " imp_id up_active_id"] = (
                     up_active_feature_acts[imp_down_pos]
-                )
-
-                if down_layer == 12 and up_module == "attn":
-                    self.imp_down_pos = imp_down_pos
-                    self.up_active_feature_ids = up_active_feature_ids
-                    self.up_active_layers = up_active_layers
-                    self.up_active_feature_acts = up_active_feature_acts
-   
+                )   
 
                 node_node_grads = einsum(
                     up_active_W_dec,
@@ -670,6 +827,7 @@ class IndirectLEAP:
                 up_module,
                 up_active_layers,
                 up_active_feature_ids,
+                edge_type=edge_type
             )
 
     def add_to_graph(
@@ -686,6 +844,7 @@ class IndirectLEAP:
         up_module_name: ModuleName,
         up_active_layers,
         up_active_feature_ids,
+        edge_type=None
     ):
         # If there are no important nodes at this down_layer, do nothing
         if len(imp_down_pos) == 0:
@@ -779,6 +938,7 @@ class IndirectLEAP:
                             em_grad.item(),
                             em_attrib.item(),
                         ),
+                        edge_type
                     )
                 )  # type: ignore
 
@@ -813,4 +973,99 @@ class IndirectLEAP:
         for layer in reversed(range(1, self.n_layers)):
             self.mlp_step(layer)
             self.ov_step(layer)
+            if self.cfg.qk_enabled:
+                self.q_step(layer)
+                self.k_step(layer)
+
+
+# # %%
+# #Imports and downloads
+# import sys
+
+# sys.path.append("/root/circuit-finder")
+# print(sys.path)
+
+# import transformer_lens as tl
+# from torch import Tensor
+# from jaxtyping import Int
+# from typing import Callable
+# from circuit_finder.patching.eap_graph import EAPGraph
+# from circuit_finder.plotting import show_attrib_graph
+# import torch
+# import gc
+# from tqdm import tqdm
+
+# from circuit_finder.pretrained import (
+#     load_attn_saes,
+#     load_mlp_transcoders,
+# )
+
+# # Load models
+# model = tl.HookedTransformer.from_pretrained(
+#     "gpt2",
+#     device="cuda",
+#     fold_ln=True,
+#     center_writing_weights=True,
+#     center_unembed=True,
+# )
+
+# attn_saes = load_attn_saes()
+# attn_saes = preprocess_attn_saes(attn_saes, model)  # type: ignore
+# transcoders = load_mlp_transcoders()
+
+# # # Define dataset
+# tokens = model.to_tokens(
+#     [    
+#         "When John and Mary were at the store, John gave a bottle to Mary",
+#         "When Linda and Tom were in the park, Linda threw a ball to Tom",
+#         "While Sarah and Jamie are on the run, Jamie gives a gun to Sarah",
+#         "When Hugh and Susan came to the party, Susan passed a drink to Hugh",
+#         "Since Tom and Jim are best of friends, Tom gives a hug to Jim",
+#     ]
+# )
+
+# tokens = model.to_tokens(
+#     [    "in the centre of the road was a car, with black rubber tyres" ])
+
+# # corrupt_tokens = model.to_tokens(
+# #     [
+# #         "When Alice and Bob were at the store, Charlie gave a bottle to Dan",
+# #         "When Alice and Bob were in the park, Charlie threw a ball to Dan",
+# #         "When Alice and Bob are on the run, Charlie gives a gun to Dan",
+# #         "When Alice and Bob came to the party, Charlie passed a drink to Dan",
+# #         "Since Alice and Bob are best of friends, Charlie gives a hug to Dan",
+# #     ]
+# # )
+
+# def last_token_logit(metric, tokens):
+#     logits = model(tokens)[:,-2]
+#     correct_logit = eindex(logits, tokens[:,-1], "batch [batch]")
+#     wrong_logit = eindex(logits, tokens[:,-6], "batch [batch]")
+#     return correct_logit.mean() - wrong_logit.mean()
+
+
+
+#%%
+# model.reset_hooks()
+# cfg = LEAPConfig(threshold=0.1, contrast_pairs=False, chained_attribs=True)
+# leap = IndirectLEAP(
+#     cfg, tokens[:1], model, attn_saes, transcoders, last_token_logit, corrupt_tokens=None
+# )
+# leap.run()
+# print(len(leap.graph))
+
+# # %%
+# from circuit_finder.plotting import make_html_graph
+# from circuit_finder.patching.eap_graph import EAPGraph
+# graph = EAPGraph(leap.graph)
+# make_html_graph(graph, attrib_type="em")
+# # %%
+# types = graph.get_edge_types()
+# print("num ov edges: ", len([t for t in types if t=="ov"]))
+# print("num q edges: ", len([t for t in types if t=="q"]))
+# print("num k edges: ", len([t for t in types if t=="k"]))
+# print("num mlp edges: ", len([t for t in types if t==None]))
+
+
+
 

@@ -159,7 +159,7 @@ def get_year_data(num_examples, model):
     _TOKENIZER = model.tokenizer
     constants = GreaterThanConstants(model)
 
-    template = "The {noun} lasted from the year {year1} to "
+    template = "Historically, the years from {year1} to "
 
     # set some random seed
     t.random.manual_seed(54)
@@ -200,5 +200,10 @@ model = tl.HookedTransformer.from_pretrained("gpt2-small")
 prompt_dicts = get_year_data(1000, model)
 data_json = {"prompts": prompt_dicts}
 
-with open(f"greaterthan_{model_name}_prompts.json", "w") as f:
+import os
+os.chdir("/root/circuit-finder/datasets/")
+with open(f"no_context_greaterthan_{model_name}_prompts.json", "w") as f:
     json.dump(data_json, f)
+
+
+# %%
