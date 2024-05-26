@@ -155,7 +155,7 @@ class EAPGraph:
         """Convert the graph to a JSON object"""
         return {
             "graph": [
-                (str(dest), str(src), attrib) for (dest, src), attrib in self.graph
+                (str(dest), str(src), attrib, edge_type) for (dest, src), attrib, edge_type in self.graph
             ]
         }
 
@@ -163,7 +163,7 @@ class EAPGraph:
     def from_json(json: dict) -> "EAPGraph":
         """Load the graph from a JSON object"""
         graph = [
-            ((Node(dest), Node(src)), attrib) for dest, src, attrib in json["graph"]
+            ((Node(dest), Node(src)), attrib, edge_type) for dest, src, attrib, edge_type in json["graph"]
         ]
         return EAPGraph(graph)
 

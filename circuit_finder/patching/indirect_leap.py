@@ -4,9 +4,9 @@
 Similar to Edge Attribution Patching, calculates the effect of edges on some downstream metric.
 However, takes advantage of linearity afforded by transcoders and MLPs to parallelize
 """
-#%%
-%load_ext autoreload
-%autoreload 2
+# # %%
+# %load_ext autoreload
+# %autoreload 2
 import sys
 sys.path.append("/root/circuit-finder")
 import torch
@@ -978,8 +978,10 @@ class IndirectLEAP:
                 self.k_step(layer)
 
 
-# # %%
-# #Imports and downloads
+# %%
+
+#  This is all just Jacob's stuff for development, left here for convenience.
+#Imports and downloads
 # import sys
 
 # sys.path.append("/root/circuit-finder")
@@ -1014,58 +1016,46 @@ class IndirectLEAP:
 # transcoders = load_mlp_transcoders()
 
 # # # Define dataset
-# tokens = model.to_tokens(
-#     [    
-#         "When John and Mary were at the store, John gave a bottle to Mary",
-#         "When Linda and Tom were in the park, Linda threw a ball to Tom",
-#         "While Sarah and Jamie are on the run, Jamie gives a gun to Sarah",
-#         "When Hugh and Susan came to the party, Susan passed a drink to Hugh",
-#         "Since Tom and Jim are best of friends, Tom gives a hug to Jim",
-#     ]
-# )
+# When John and Mary were at the store, John gave a bottle to Mary
+
+# def logit_diff(model, tokens, correct_str, wrong_str):
+#     correct_token = model.to_tokens(correct_str)[0,1]
+#     wrong_token = model.to_tokens(wrong_str)[0,1]
+#     logits = model(tokens)[0,-1]
+#     return logits[correct_token ] - logits[wrong_token]
 
 # tokens = model.to_tokens(
-#     [    "in the centre of the road was a car, with black rubber tyres" ])
+#     [    "in the centre of the road was a car, with black rubber" ])
 
-# # corrupt_tokens = model.to_tokens(
-# #     [
-# #         "When Alice and Bob were at the store, Charlie gave a bottle to Dan",
-# #         "When Alice and Bob were in the park, Charlie threw a ball to Dan",
-# #         "When Alice and Bob are on the run, Charlie gives a gun to Dan",
-# #         "When Alice and Bob came to the party, Charlie passed a drink to Dan",
-# #         "Since Alice and Bob are best of friends, Charlie gives a hug to Dan",
-# #     ]
-# # )
+# corrupt_tokens = model.to_tokens(
+#     [    "The favourable prisoner was released early on good" ])
 
-# def last_token_logit(metric, tokens):
-#     logits = model(tokens)[:,-2]
-#     correct_logit = eindex(logits, tokens[:,-1], "batch [batch]")
-#     wrong_logit = eindex(logits, tokens[:,-6], "batch [batch]")
-#     return correct_logit.mean() - wrong_logit.mean()
+# metric = partial(logit_diff, correct_str=" tyres", wrong_str=" tires")
+
+# print("clean tokens => metric = ", metric(model, tokens))
+# print("corrupt tokens =>  metric = ", metric(model, corrupt_tokens))
 
 
-
-#%%
+# #%%
+# from functools import partial
 # model.reset_hooks()
-# cfg = LEAPConfig(threshold=0.1, contrast_pairs=False, chained_attribs=True)
+# cfg = LEAPConfig(threshold=0.0008, 
+#                  contrast_pairs=True, 
+#                  chained_attribs=True,
+#                  qk_enabled=True)
 # leap = IndirectLEAP(
-#     cfg, tokens[:1], model, attn_saes, transcoders, last_token_logit, corrupt_tokens=None
+#     cfg, tokens[:1], model, attn_saes, transcoders, metric, corrupt_tokens=corrupt_tokens
 # )
 # leap.run()
-# print(len(leap.graph))
-
-# # %%
+# print("num edges: ", len(leap.graph))
 # from circuit_finder.plotting import make_html_graph
 # from circuit_finder.patching.eap_graph import EAPGraph
 # graph = EAPGraph(leap.graph)
-# make_html_graph(graph, attrib_type="em")
-# # %%
 # types = graph.get_edge_types()
 # print("num ov edges: ", len([t for t in types if t=="ov"]))
 # print("num q edges: ", len([t for t in types if t=="q"]))
 # print("num k edges: ", len([t for t in types if t=="k"]))
 # print("num mlp edges: ", len([t for t in types if t==None]))
+# make_html_graph(graph, attrib_type="em")
 
-
-
-
+# %%

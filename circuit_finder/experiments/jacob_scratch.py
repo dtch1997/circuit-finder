@@ -6,6 +6,8 @@ pdm run python -m circuit_finder.experiments.run_leap_experiment [ARGS]
 Run with flag '-h', '--help' to see the arguments.
 """
 #%% Imports and Downloads
+%load_ext autoreload
+%autoreload 2
 import sys
 sys.path.append("/root/circuit-finder")
 import torch
@@ -56,7 +58,7 @@ transcoders = load_mlp_transcoders()
 #%%
 @dataclass
 class LeapExperimentConfig:
-    dataset_path: str = "datasets/no_context_greaterthan_gpt2-small_prompts.json"
+    dataset_path: str = "datasets/ioi/ioi_ABBA_template_0_prompts.json"
     save_dir: str = "results/leap_experiment"
     seed: int = 1
     batch_size: int = 4
@@ -74,6 +76,7 @@ class LeapExperimentConfig:
     # TODO: Find reference for the above
 
     verbose: bool = False
+    qk_enabled : bool = False
 
 
 def logit_diff(
@@ -210,7 +213,8 @@ def run_leap_experiment(config: LeapExperimentConfig):
             # Setup LEAP algorithm
             model.reset_hooks()
             cfg = LEAPConfig(
-                threshold=threshold, contrast_pairs=False, chained_attribs=True
+                threshold=threshold, contrast_pairs=False, chained_attribs=True,
+                qk_enabled=config.qk_enabled
             )
             leap = IndirectLEAP(
                 cfg=cfg,
@@ -220,6 +224,7 @@ def run_leap_experiment(config: LeapExperimentConfig):
                 attn_saes=attn_saes,  # type: ignore
                 transcoders=transcoders,
                 corrupt_tokens=corrupt_tokens,
+                
             )
 
             # Populate the graph
@@ -272,23 +277,21 @@ def run_leap_experiment(config: LeapExperimentConfig):
 
 
 
-
 #%% RUN EXPERIMENT
 
 cfg = LeapExperimentConfig(
-    dataset_path = "datasets/greaterthan_gpt2-small_prompts.json",
-    save_dir = "results/leap_experiment/jacob_05_25",
+    dataset_path = "datasets/ioi/ioi_ABBA_template_0_prompts.json",
+    save_dir = "results/leap_experiment/jacob_05_26",
     seed = 1,
-    batch_size = 5,
-    total_dataset_size = 5,
+    batch_size = 1,
+    total_dataset_size = 1,
     ablate_errors = False,
     first_ablate_layer = 2,
-    verbose = False
+    verbose = False,
+    qk_enabled = True
 )
 
-run_leap_experiment(cfg)
-
-
+leap  =  run_leap_experiment(cfg)
 
 #%%
 import json
@@ -298,7 +301,7 @@ from circuit_finder.patching.eap_graph import EAPGraph
 from circuit_finder.constants import ProjectDir
 from circuit_finder.plotting import show_attrib_graph
 
-results_dir = ProjectDir / "results" / "leap_experiment" / "jacob_05_25" / "batch_0"
+results_dir = ProjectDir / "results" / "leap_experiment" / "jacob_05_26" / "batch_0"
 assert results_dir.exists()
 
 config = json.load(open(results_dir / "config.json"))
@@ -316,10 +319,6 @@ with open(dataset, 'r') as f:
 df = pd.DataFrame(dataset)
 df.head()
 # %%
-
-
-
-
 threshold = 0.01
 with open(results_dir / f"leap-graph_threshold={threshold}.json") as f:
     graph = EAPGraph.from_json(json.load(f))
@@ -338,7 +337,7 @@ import pandas as pd
 from circuit_finder.core.types import parse_node_name
 
 rows = []
-for edge, edge_info in graph.graph:
+for edge, edge_info, edge_type in graph.graph:
     dest, src = edge
     if 'metric' in src: continue
     nn_grad, nn_attrib, em_grad, em_attrib = edge_info 
@@ -397,35 +396,3 @@ dash_type = "att-kk" if module=="attn" else "tres-dc"
 print(get_neuronpedia_url_for_quick_list(layer, features, dash_type))
 
 
-
-#%%
-import sys
-import json
-sys.path.append("/root/circuit-finder")
-from circuit_finder.patching.eap_graph import EAPGraph
-with open("/root/circuit-finder/results/leap_experiment/batch_1/leap-graph_threshold=0.03.json") as f:
-    graph = EAPGraph.from_json(json.load(f))
-
-
-#%%
-df["clean"]
-
-#%%
-model.reset_hooks()
-tl.utils.test_prompt("in the center of the road was a car, with black rubber",
-                     'he', model)
-#%%
-tl.utils.test_prompt("After analysing, I realise that blue is a type of",
-                     'he', model)
-
-#%%
-tl.utils.test_prompt("The favourable prisoner was released early on good",
-                     'he', model)
-
-# %%
-tl.utils.test_prompt("Let's go with the colour grey. I support it: I'm in",
-                     'he', model)
-#%%
-tl.utils.test_prompt("Grey colour is best. Call __init__() and ensure all attributes are correctly",
-
-                     'he', model)
