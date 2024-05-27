@@ -135,7 +135,7 @@ class HookedTranscoder(HookedRootModule):
         return output
 
     def forward(
-        self, input: Float[torch.Tensor, "... d_in"]
+        self, input: Float[torch.Tensor, "... d_in"], apply_hooks: bool = True
     ) -> Float[torch.Tensor, "... d_in"]:
         """SAE Forward Pass.
 
@@ -146,7 +146,7 @@ class HookedTranscoder(HookedRootModule):
         Returns:
             output: The reconstructed output tensor from the SAE, with the error term optionally added. Same shape as input (eg [..., d_in])
         """
-        output, _ = self.get_recons_and_act_post(input)
+        output, _ = self.get_recons_and_act_post(input, apply_hooks=apply_hooks)
         return output
 
     def get_recons_and_act_post(
@@ -204,18 +204,25 @@ class HookedTranscoderWrapper(HookedRootModule):
     def b_enc(self):
         return self.transcoder.b_enc
 
-    def forward(self, x):
+    def forward(self, x, apply_hooks=True):
         sae_output = self.transcoder(x)
         if not self.cfg.use_error_term:
-            return self.hook_sae_output(sae_output)
-        with torch.no_grad():
-            clean_sae_out = self.transcoder(x)
-            clean_mlp_out = self.mlp(x)
-            sae_error = clean_mlp_out - clean_sae_out
-        sae_error.requires_grad = True
-        sae_error.retain_grad()
-        sae_error = self.hook_sae_error(sae_error)
-        return self.hook_sae_output(sae_output + sae_error)
+            # Not using error term
+            if apply_hooks:
+                sae_output = self.hook_sae_output(sae_output)
+            return sae_output
+
+        else:
+            # Using error term
+            sae_out_clean = self.transcoder(x, apply_hooks=False)
+            mlp_out = self.mlp(x)
+            sae_error = mlp_out - sae_out_clean
+
+            if apply_hooks:
+                sae_error = self.hook_sae_error(sae_error)
+            if apply_hooks:
+                sae_output = self.hook_sae_output(sae_output + sae_error)
+            return sae_output
 
 
 def get_layer_of_hook_name(hook_point):
