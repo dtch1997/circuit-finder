@@ -269,8 +269,8 @@ class IndirectLEAP:
             ].get_recons_and_act_post(cache[mlp_in_pt])
             if self.cfg.contrast_pairs:  # in contrast pairs case, feature_acts now really refers to the change in feature acts
                 mlp_feature_acts -= self.transcoders[layer].get_recons_and_act_post(
-                    corrupt_cache[mlp_in_pt]
-                )[1]  # type: ignore
+                    corrupt_cache[mlp_in_pt] # type: ignore
+                )[1]  
             self.mlp_feature_acts[:, layer, :] = mlp_feature_acts.mean(0)
             self.mlp_is_active[:, layer, :] = (mlp_feature_acts > 0).float().mean(0)
             self.mlp_errors[:, layer, :] = (cache[mlp_out_pt] - mlp_recons).mean(0)
