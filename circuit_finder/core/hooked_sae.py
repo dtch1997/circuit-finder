@@ -89,14 +89,10 @@ class HookedSAE(tl.HookedSAE):
         # END WARNING
 
     def get_error(self, x, apply_hooks=True):
-        with torch.no_grad():
-            # Do not hook these as they are only used to compute the error term via a separate path
-            sae_acts_post_clean = self.encode(x, apply_hooks=False)
-            x_reconstruct_clean = self.decode(sae_acts_post_clean, apply_hooks=False)
-            sae_error = x - x_reconstruct_clean
-
-        sae_error.requires_grad = True
-        sae_error.retain_grad()
+        # Do not hook these as they are only used to compute the error term via a separate path
+        sae_acts_post_clean = self.encode(x, apply_hooks=False)
+        x_reconstruct_clean = self.decode(sae_acts_post_clean, apply_hooks=False)
+        sae_error = x - x_reconstruct_clean
         if apply_hooks:
             sae_error = self.hook_sae_error(sae_error)
         return sae_error
