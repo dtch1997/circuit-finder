@@ -104,4 +104,4 @@ def test_patch_model_with_gradient_cache(model, prompt):
             continue
         orig_grad = orig_grad_cache[key]
         norm = torch.norm(orig_grad - spliced_grad)
-        assert norm < 1e-4, "key: {}, norm: {}".format(key, norm)
+        assert norm < 1e-5, "key: {}, norm: {}".format(key, norm)

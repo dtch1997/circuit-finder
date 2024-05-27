@@ -8,7 +8,7 @@ def load_model(
     name: str = GPT_2_SMALL,
     *,
     device: str = device,
-    requires_grad: bool = False,
+    requires_grad: bool = True,
     use_split_qkv_input: bool = False,
     use_hook_mlp_in: bool = False,
     use_attn_in: bool = False,
