@@ -558,11 +558,12 @@ class IndirectLEAP:
 
         # This will make no sense until I send you the equations
         # The cryptic variable names just follow what's handwritten in front of me
+        imp_pattern = self.pattern[down_layer, :, imp_down_pos]
         p_WK_q = einsum(
-            self.pattern_grad_approx(self.pattern[down_layer]),
+            self.pattern_grad_approx(imp_pattern),
             self.model.W_K[down_layer],
-            self.q[down_layer][imp_down_pos, :, :], # [head imp kseq]
-            "n_heads qseq kseq, n_heads d_model d_head, imp_id n_heads d_head -> imp_id n_heads kseq d_model")
+            self.q[down_layer][imp_down_pos, :, :], # [imp head kseq]
+            "n_heads imp_id kseq, n_heads d_model d_head, imp_id n_heads d_head -> imp_id n_heads kseq d_model")
 
         dfa = einsum(
             self.attn_in[down_layer], 
@@ -1024,48 +1025,70 @@ class IndirectLEAP:
 # transcoders = load_mlp_transcoders()
 
 #%% Define dataset
-#When John and Mary were at the store, John gave a bottle to Mary
+#When John and Mary were at the store, John gave a bottle to
+#in the centre of the road was a car, with black rubber
+# the favourable prisoner was released on good
 
-def logit_diff(model, tokens, correct_str, wrong_str):
-    correct_token = model.to_tokens(correct_str)[0,1]
-    wrong_token = model.to_tokens(wrong_str)[0,1]
-    logits = model(tokens)[0,-1]
-    return logits[correct_token ] - logits[wrong_token]
+# def logit_diff(model, tokens, correct_str, wrong_str):
+#     correct_token = model.to_tokens(correct_str)[0,1]
+#     wrong_token = model.to_tokens(wrong_str)[0,1]
+#     logits = model(tokens)[0,-1]
+#     return logits[correct_token ] - logits[wrong_token]
 
-tokens = model.to_tokens(
-    [    "in the centre of the road was a car, with black rubber" ])
+# task="ioi"
+# if task=="ioi":
+#     tokens = model.to_tokens(
+#         [    "When John and Mary were at the store, John gave a bottle to" ])
 
-corrupt_tokens = model.to_tokens(
-    [    "in the center of the road was a car, with black rubber" ])
+#     corrupt_tokens = model.to_tokens(
+#         [    "When Alice and Bob were at the store, Charlie gave a bottle to" ])
 
-metric = partial(logit_diff, correct_str=" tyres", wrong_str=" tires")
+#     metric = partial(logit_diff, correct_str=" Mary", wrong_str=" John")
 
-print("clean tokens => metric = ", metric(model, tokens))
-print("corrupt tokens =>  metric = ", metric(model, corrupt_tokens))
-model.to_tokens(" favour")[0,1]
 
-#%%
-from functools import partial
-model.reset_hooks()
-cfg = LEAPConfig(threshold=0.001, 
-                 contrast_pairs=True, 
-                 chained_attribs=True,
-                 qk_enabled=True)
-leap = IndirectLEAP(
-    cfg, tokens[:1], model, attn_saes, transcoders, metric, corrupt_tokens=corrupt_tokens
-)
-leap.run()
-print("num edges: ", len(leap.graph))
-from circuit_finder.plotting import make_html_graph
-from circuit_finder.patching.eap_graph import EAPGraph
-graph = EAPGraph(leap.graph)
-types = graph.get_edge_types()
-print("num ov edges: ", len([t for t in types if t=="ov"]))
-print("num q edges: ", len([t for t in types if t=="q"]))
-print("num k edges: ", len([t for t in types if t=="k"]))
-print("num mlp edges: ", len([t for t in types if t==None]))
-make_html_graph(graph, attrib_type="em", node_offset=10.0)
+# if task=="prison":
+#     tokens = model.to_tokens(
+#         [    "the favourable prisoner was released on good" ])
 
-# %%
-model.reset_hooks()
-tl.utils.test_prompt("I realize I like the colour. I support it: I'm in", "he", model)
+#     corrupt_tokens = model.to_tokens(
+#         [    "the favorable prisoner was released on good" ])
+
+#     metric = partial(logit_diff, correct_str=" behaviour", wrong_str=" behavior")
+
+# if task=="car":
+#     tokens = model.to_tokens(
+#         [    "in the centre of the road was a car, with black rubber" ])
+
+#     corrupt_tokens = model.to_tokens(
+#         [    "in the center of the road was a car, with black rubber" ])
+
+#     metric = partial(logit_diff, correct_str=" tyres", wrong_str=" tires")   
+
+# tokens_list = model.to_str_tokens(tokens)
+# print("clean metric = ", metric(model, tokens))
+# print("corrupt  metric = ", metric(model, corrupt_tokens))
+# #%%
+# from functools import partial
+# model.reset_hooks()
+# cfg = LEAPConfig(threshold=0.1, 
+#                  contrast_pairs=True, 
+#                  qk_enabled=True,
+#                  chained_attribs=True)
+# leap = IndirectLEAP(
+#     cfg, tokens[:1], model, attn_saes, transcoders, metric, corrupt_tokens=corrupt_tokens
+# )
+# leap.run()
+# print("num edges: ", len(leap.graph))
+# from circuit_finder.plotting import make_html_graph
+# from circuit_finder.patching.eap_graph import EAPGraph
+# graph = EAPGraph(leap.graph)
+# types = graph.get_edge_types()
+# print("num ov edges: ", len([t for t in types if t=="ov"]))
+# print("num q edges: ", len([t for t in types if t=="q"]))
+# print("num k edges: ", len([t for t in types if t=="k"]))
+# print("num mlp edges: ", len([t for t in types if t==None]))
+# make_html_graph(graph, attrib_type="nn", node_offset=10.0, tokens=tokens_list)
+
+# # %%
+# [edge for edge, type in zip(graph.get_edges(), graph.get_edge_types())
+#                                   if type=="ov"]

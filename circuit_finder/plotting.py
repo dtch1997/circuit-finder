@@ -153,7 +153,12 @@ from pyvis.network import Network
 import numpy as np
 import os
 
-def make_html_graph(graph, attrib_type="em", compact_nodes=False, node_offset=10):
+import networkx as nx
+from pyvis.network import Network
+import numpy as np
+import os
+
+def make_html_graph(graph, attrib_type="em", compact_nodes=False, node_offset=10, tokens=None):
     edges = graph.get_edges()
     edge_types = graph.get_edge_types()  # Get edge types
 
@@ -294,8 +299,9 @@ def make_html_graph(graph, attrib_type="em", compact_nodes=False, node_offset=10
         net.add_edge(start_node, end_node, color='rgba(200, 200, 200, 0.5)', width=0.5, physics=False)
         
         # Add labels at the bottom to indicate the positions
+        label = tokens[position] if tokens and position < len(tokens) else str(position)
         label_node = f'label_{position}'
-        net.add_node(label_node, label=str(position), size=0, x=(position * 150), y=20, color='black', fixed=True, physics=False, font={'size': 30})
+        net.add_node(label_node, label=label, size=0, x=(position * 150), y=20, color='black', fixed=True, physics=False, font={'size': 30})
 
     # Generate the HTML file
     html_file = 'graph.html'
