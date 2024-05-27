@@ -148,7 +148,12 @@ from pyvis.network import Network
 import numpy as np
 import os
 
-def make_html_graph(graph, attrib_type):
+import networkx as nx
+from pyvis.network import Network
+import numpy as np
+import os
+
+def make_html_graph(graph, attrib_type="em", compact_nodes=False, node_offset=10):
     edges = graph.get_edges()
     edge_types = graph.get_edge_types()  # Get edge types
 
@@ -197,15 +202,15 @@ def make_html_graph(graph, attrib_type):
                     offset_tracker[module][(position, layer)] = 0
                 
                 if module == 'attn':
-                    pos_x = base_x - 10 - offset_tracker[module][(position, layer)] * 10  # Shift each "attn" node further left
+                    pos_x = base_x - 10 - offset_tracker[module][(position, layer)] * node_offset  # Shift each "attn" node further left
                     pos_y = base_y - 15  # Shift each "attn" node further downward
                     url = f"https://www.neuronpedia.org/gpt2-small/{layer}-att-kk/{_id}"
                 elif module == 'mlp':
-                    pos_x = base_x + 15 + offset_tracker[module][(position, layer)] * 10  # Shift each "mlp" node further right
+                    pos_x = base_x + 15 + offset_tracker[module][(position, layer)] * node_offset  # Shift each "mlp" node further right
                     pos_y = base_y
                     url = f"https://www.neuronpedia.org/gpt2-small/{layer}-tres-dc/{_id}"
                 else:
-                    pos_x = base_x + offset_tracker[module][(position, layer)] * 10
+                    pos_x = base_x + offset_tracker[module][(position, layer)] * node_offset
                     pos_y = base_y
                     url = ""
                 
@@ -229,8 +234,11 @@ def make_html_graph(graph, attrib_type):
     
     normalized_attribs = [0.2 + 0.8 * (a - min_attrib) / range_attrib for a in clipped_attribs]
 
+    # Determine the threshold for the top 5% of edges by attribute value
+    threshold = np.percentile(attribs, 95)
+
     # Map normalized attributes back to edges
-    edge_data_normalized = [(e[0], e[1], norm_attrib, e[2]) for e, norm_attrib in zip(edge_data, normalized_attribs)]
+    edge_data_normalized = [(e[0], e[1], norm_attrib, e[2], original_attrib) for e, norm_attrib, original_attrib in zip(edge_data, normalized_attribs, attribs)]
     
     # Create pyvis network
     net = Network(notebook=True, directed=True, cdn_resources='remote')
@@ -260,11 +268,12 @@ def make_html_graph(graph, attrib_type):
     for node, data in G.nodes(data=True):
         net.add_node(node, label=data['id'], title=data['title'], color=data['color'], x=data['x'], y=-data['y'], url=data['url'])
     
-    # Add edges with normalized opacity, hover title, and color based on edge type
-    for (source, target), original_attrib, norm_attrib, edge_type in edge_data_normalized:
+    # Add edges with normalized opacity, hover title, color based on edge type, and varying widths
+    for (source, target), original_attrib, norm_attrib, edge_type, original_attrib in edge_data_normalized:
         if source == 'null' or target == 'null':
             continue
         gray_value = int(255 * (1 - norm_attrib))  # Convert opacity to a grayscale value
+        width = 3 if original_attrib >= threshold else 1
         if edge_type == 'q':
             color = f"rgba(0, 255, 0, {norm_attrib})"  # Green with normalized opacity
         elif edge_type == 'k':
@@ -272,7 +281,7 @@ def make_html_graph(graph, attrib_type):
         else:
             color = f"rgba({gray_value}, {gray_value}, {gray_value}, {norm_attrib})"
         title = f"attrib: {original_attrib:.3f}"  # Round original attrib to 3 decimal places
-        net.add_edge(target, source, color=color, title=title)  # Reversed edge direction
+        net.add_edge(target, source, color=color, title=title, width=width)  # Reversed edge direction
 
     # Add faint vertical lines to delineate different values of `position`
     max_position = max(positions)

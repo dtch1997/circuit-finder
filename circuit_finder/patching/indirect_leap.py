@@ -4,9 +4,9 @@
 Similar to Edge Attribution Patching, calculates the effect of edges on some downstream metric.
 However, takes advantage of linearity afforded by transcoders and MLPs to parallelize
 """
-# # %%
-# %load_ext autoreload
-# %autoreload 2
+# %%
+%load_ext autoreload
+%autoreload 2
 import sys
 sys.path.append("/root/circuit-finder")
 import torch
@@ -19,6 +19,7 @@ from dataclasses import dataclass
 from einops import rearrange, einsum, repeat
 import gc
 from eindex import eindex
+from functools import partial
 
 from circuit_finder.core.types import (
     Node,
@@ -201,6 +202,10 @@ class IndirectLEAP:
             self.tokens, return_type="loss", names_filter=names_filter
         )
 
+        self.pattern : Float[Tensor, "layer head q_pos k_pos"] = torch.stack(
+        [cache["pattern", layer].mean(0) for layer in self.layers]
+        )
+
         if self.cfg.contrast_pairs:
             names_filter = lambda x: (
                 x.endswith("ln2.hook_normalized")
@@ -213,10 +218,6 @@ class IndirectLEAP:
 
         # Save attention patterns (avg over batch and head) and layernorm scales (avg over batch)
         if self.cfg.qk_enabled:
-            self.pattern : Float[Tensor, "layer head q_pos k_pos"] = torch.stack(
-            [cache["pattern", layer].mean(0) for layer in self.layers]
-            )
-
             self.q : Float[Tensor, "layer pos n_heads_head"] = torch.stack(
                 [cache[f'blocks.{layer}.attn.hook_q'].mean(0) for layer in self.layers]
             )
@@ -227,10 +228,6 @@ class IndirectLEAP:
             self.attn_in : Float[Tensor, "layer pos d_model"] = torch.stack(
             [cache[f'blocks.{layer}.ln1.hook_normalized'].mean(0) for layer in self.layers]
             )
-
-        self.headmean_pattern: Float[Tensor, "layer q_pos k_pos"] = torch.stack(
-            [cache["pattern", layer].mean(0) for layer in self.layers]
-        )
 
         self.attn_layernorm_scales: Float[Tensor, "layer pos"] = torch.stack(
             [
@@ -399,6 +396,7 @@ class IndirectLEAP:
         grad = einsum(
             imp_active, imp_enc_cols, "imp_id, d_model imp_id -> imp_id d_model"
         )
+        grad = imp_enc_cols.T
         grad /= imp_layernorm_scales
 
         self.compute_and_save_attribs(
@@ -431,19 +429,18 @@ class IndirectLEAP:
             "(head_id d_head) imp_id -> head_id d_head imp_id",
             head_id=self.model.cfg.n_heads,
         )
-        imp_patterns = self.headmean_pattern[
+        imp_patterns = self.pattern[
             down_layer, :, imp_down_pos, :
-        ]  # [head imp_id, kpos]
+        ]  # [head, imp_id, kpos]
         imp_layernorm_scales = self.attn_layernorm_scales[down_layer].unsqueeze(
             1
         )  # [kpos, 1, 1]
 
         grad = einsum(
-            imp_active,
             imp_enc_rows_z,
             self.model.W_V[down_layer],
             imp_patterns,
-            "imp_id, head_id d_head imp_id, head_id d_model d_head, head_id imp_id kpos -> kpos imp_id d_model",
+            "head_id d_head imp_id, head_id d_model d_head, head_id imp_id kpos -> kpos imp_id d_model",
         )
         grad /= imp_layernorm_scales
 
@@ -740,8 +737,6 @@ class IndirectLEAP:
                     up_active_feature_acts,
                     "imp_id up_active_id, imp_id up_active_id -> imp_id up_active_id",
                 )
-                if down_layer == 12 and up_module == "attn":
-                    self.nn_attribs = node_node_attribs
 
                 edge_metric_grads = einsum(
                     imp_node_metric_grads,
@@ -755,17 +750,25 @@ class IndirectLEAP:
                     "imp_id up_active_id, imp_id up_active_id -> imp_id up_active_id",
                 )
 
-                if up_module == "mlp":
-                    imp_errors: Float[Tensor, " imp_id layer d_model"] = (
-                        self.mlp_errors[imp_down_pos]
+                # clip the attribs
+                # edge_metric_attribs = torch.minimum(
+                #     edge_metric_attribs, 
+                #     imp_node_metric_grads.unsqueeze(1)
+                # )
+
+                error_attribs=None
+                if self.cfg.store_error_attribs:
+                    if up_module == "mlp":
+                        imp_errors: Float[Tensor, " imp_id layer d_model"] = (
+                            self.mlp_errors[imp_down_pos]
+                        )
+                    elif up_module == "attn":
+                        imp_errors = self.attn_errors[imp_down_pos]
+                    error_attribs = einsum(
+                        imp_errors[:, :down_layer],
+                        grad,
+                        "imp_id layer d_model, imp_id d_model -> imp_id layer",
                     )
-                elif up_module == "attn":
-                    imp_errors = self.attn_errors[imp_down_pos]
-                error_attribs = einsum(
-                    imp_errors[:, :down_layer],
-                    grad,
-                    "imp_id layer d_model, imp_id d_model -> imp_id layer",
-                )
 
             elif down_module in ["attn"]:
                 # Compute attribs of imp nodes wrt all upstream MLP nodes
@@ -793,6 +796,11 @@ class IndirectLEAP:
                     "seq imp_id up_active_id, seq up_active_id -> seq imp_id up_active_id",
                 )
 
+                # clip the attribs
+                # edge_metric_attribs = torch.minimum(
+                #     edge_metric_attribs, 
+                #     imp_node_metric_grads.unsqueeze(0).unsqueeze(-1)
+                #)
                 # calculate error attribs (optional)
                 error_attribs = None
                 if self.cfg.store_error_attribs:
@@ -980,7 +988,7 @@ class IndirectLEAP:
 
 # %%
 
-#  This is all just Jacob's stuff for development, left here for convenience.
+#This is all just Jacob's stuff for development, left here for convenience.
 #Imports and downloads
 # import sys
 
@@ -1015,47 +1023,49 @@ class IndirectLEAP:
 # attn_saes = preprocess_attn_saes(attn_saes, model)  # type: ignore
 # transcoders = load_mlp_transcoders()
 
-# # # Define dataset
-# When John and Mary were at the store, John gave a bottle to Mary
+#%% Define dataset
+#When John and Mary were at the store, John gave a bottle to Mary
 
-# def logit_diff(model, tokens, correct_str, wrong_str):
-#     correct_token = model.to_tokens(correct_str)[0,1]
-#     wrong_token = model.to_tokens(wrong_str)[0,1]
-#     logits = model(tokens)[0,-1]
-#     return logits[correct_token ] - logits[wrong_token]
+def logit_diff(model, tokens, correct_str, wrong_str):
+    correct_token = model.to_tokens(correct_str)[0,1]
+    wrong_token = model.to_tokens(wrong_str)[0,1]
+    logits = model(tokens)[0,-1]
+    return logits[correct_token ] - logits[wrong_token]
 
-# tokens = model.to_tokens(
-#     [    "in the centre of the road was a car, with black rubber" ])
+tokens = model.to_tokens(
+    [    "in the centre of the road was a car, with black rubber" ])
 
-# corrupt_tokens = model.to_tokens(
-#     [    "The favourable prisoner was released early on good" ])
+corrupt_tokens = model.to_tokens(
+    [    "in the center of the road was a car, with black rubber" ])
 
-# metric = partial(logit_diff, correct_str=" tyres", wrong_str=" tires")
+metric = partial(logit_diff, correct_str=" tyres", wrong_str=" tires")
 
-# print("clean tokens => metric = ", metric(model, tokens))
-# print("corrupt tokens =>  metric = ", metric(model, corrupt_tokens))
+print("clean tokens => metric = ", metric(model, tokens))
+print("corrupt tokens =>  metric = ", metric(model, corrupt_tokens))
+model.to_tokens(" favour")[0,1]
 
-
-# #%%
-# from functools import partial
-# model.reset_hooks()
-# cfg = LEAPConfig(threshold=0.0008, 
-#                  contrast_pairs=True, 
-#                  chained_attribs=True,
-#                  qk_enabled=True)
-# leap = IndirectLEAP(
-#     cfg, tokens[:1], model, attn_saes, transcoders, metric, corrupt_tokens=corrupt_tokens
-# )
-# leap.run()
-# print("num edges: ", len(leap.graph))
-# from circuit_finder.plotting import make_html_graph
-# from circuit_finder.patching.eap_graph import EAPGraph
-# graph = EAPGraph(leap.graph)
-# types = graph.get_edge_types()
-# print("num ov edges: ", len([t for t in types if t=="ov"]))
-# print("num q edges: ", len([t for t in types if t=="q"]))
-# print("num k edges: ", len([t for t in types if t=="k"]))
-# print("num mlp edges: ", len([t for t in types if t==None]))
-# make_html_graph(graph, attrib_type="em")
+#%%
+from functools import partial
+model.reset_hooks()
+cfg = LEAPConfig(threshold=0.001, 
+                 contrast_pairs=True, 
+                 chained_attribs=True,
+                 qk_enabled=True)
+leap = IndirectLEAP(
+    cfg, tokens[:1], model, attn_saes, transcoders, metric, corrupt_tokens=corrupt_tokens
+)
+leap.run()
+print("num edges: ", len(leap.graph))
+from circuit_finder.plotting import make_html_graph
+from circuit_finder.patching.eap_graph import EAPGraph
+graph = EAPGraph(leap.graph)
+types = graph.get_edge_types()
+print("num ov edges: ", len([t for t in types if t=="ov"]))
+print("num q edges: ", len([t for t in types if t=="q"]))
+print("num k edges: ", len([t for t in types if t=="k"]))
+print("num mlp edges: ", len([t for t in types if t==None]))
+make_html_graph(graph, attrib_type="em", node_offset=10.0)
 
 # %%
+model.reset_hooks()
+tl.utils.test_prompt("I realize I like the colour. I support it: I'm in", "he", model)
