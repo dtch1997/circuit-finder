@@ -6,7 +6,7 @@ However, takes advantage of linearity afforded by transcoders and MLPs to parall
 
 import torch
 import transformer_lens as tl
-from typing import Callable
+from typing import Callable, Any
 from torch import Tensor
 from jaxtyping import Float
 from dataclasses import dataclass
@@ -14,7 +14,6 @@ from einops import rearrange, einsum
 import gc
 from eindex import eindex
 from circuit_finder.patching.utils import get_hook_points
-
 from circuit_finder.core.types import (
     Node,
     Edge,
@@ -103,7 +102,7 @@ class IndirectLEAP:
     # Graph
     # (edge, vals)
     # vals = (node_node_grad, node_node_attrib, edge_metric_grad, edge_metric_attrib)
-    graph: list[tuple[Edge, tuple[float, float, float, float]]]
+    graph: list[tuple[Edge, tuple[float, float, float, float], Any]]
 
     def __init__(
         self,

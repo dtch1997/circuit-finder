@@ -26,9 +26,9 @@ from circuit_finder.pretrained import (
     load_attn_saes,
     load_hooked_mlp_transcoders,
 )
-from circuit_finder.patching.leap import (
+from circuit_finder.patching.indirect_leap import (
     preprocess_attn_saes,
-    LEAP,
+    IndirectLEAP,
     LEAPConfig,
 )
 from circuit_finder.metrics import batch_avg_answer_diff
@@ -161,7 +161,7 @@ def run_leap_experiment(config: LeapExperimentConfig):
             cfg = LEAPConfig(
                 threshold=threshold, contrast_pairs=False, chained_attribs=True
             )
-            leap = LEAP(
+            leap = IndirectLEAP(
                 cfg=cfg,
                 tokens=clean_tokens,
                 model=model,
