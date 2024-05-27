@@ -5,7 +5,7 @@
 groups = ["default"]
 strategy = ["cross_platform", "inherit_metadata"]
 lock_version = "4.4.1"
-content_hash = "sha256:df737197e4434f94986a7466def7353dae8204e6c9ab200a839bd9fa5fc4e18a"
+content_hash = "sha256:6b9f81d8f0ffed9e460470bb818d91a60eb831b1b0882d8a49f28433dd82748b"
 
 [[package]]
 name = "accelerate"
@@ -1318,6 +1318,17 @@ groups = ["default"]
 files = [
     {file = "json5-0.9.25-py3-none-any.whl", hash = "sha256:34ed7d834b1341a86987ed52f3f76cd8ee184394906b6e22a1e0deb9ab294e8f"},
     {file = "json5-0.9.25.tar.gz", hash = "sha256:548e41b9be043f9426776f05df8635a00fe06104ea51ed24b67f908856e151ae"},
+]
+
+[[package]]
+name = "jsonpickle"
+version = "3.0.4"
+requires_python = ">=3.7"
+summary = "Serialize any Python object to JSON"
+groups = ["default"]
+files = [
+    {file = "jsonpickle-3.0.4-py3-none-any.whl", hash = "sha256:04ae7567a14269579e3af66b76bda284587458d7e8a204951ca8f71a3309952e"},
+    {file = "jsonpickle-3.0.4.tar.gz", hash = "sha256:a1b14c8d6221cd8f394f2a97e735ea1d7edc927fbd135b26f2f8700657c8c62b"},
 ]
 
 [[package]]
@@ -3101,6 +3112,22 @@ groups = ["default"]
 files = [
     {file = "pytz-2024.1-py2.py3-none-any.whl", hash = "sha256:328171f4e3623139da4983451950b28e95ac706e13f3f2630a879749e7a8b319"},
     {file = "pytz-2024.1.tar.gz", hash = "sha256:2a29735ea9c18baf14b448846bde5a48030ed267578472d8955cd0e7443a9812"},
+]
+
+[[package]]
+name = "pyvis"
+version = "0.3.2"
+requires_python = ">3.6"
+summary = "A Python network graph visualization library"
+groups = ["default"]
+dependencies = [
+    "ipython>=5.3.0",
+    "jinja2>=2.9.6",
+    "jsonpickle>=1.4.1",
+    "networkx>=1.11",
+]
+files = [
+    {file = "pyvis-0.3.2-py3-none-any.whl", hash = "sha256:5720c4ca8161dc5d9ab352015723abb7a8bb8fb443edeb07f7a322db34a97555"},
 ]
 
 [[package]]
