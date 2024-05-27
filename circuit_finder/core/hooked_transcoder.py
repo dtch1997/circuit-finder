@@ -206,15 +206,15 @@ class HookedTranscoderWrapper(HookedRootModule):
 
     def forward(self, x, apply_hooks=True):
         sae_output = self.transcoder(x)
-        if not self.cfg.use_error_term: 
+        if not self.cfg.use_error_term:
             # Not using error term
             if apply_hooks:
                 sae_output = self.hook_sae_output(sae_output)
             return sae_output
-    
-        else: 
+
+        else:
             # Using error term
-            sae_out_clean = self.transcoder(x, apply_hooks = False)
+            sae_out_clean = self.transcoder(x, apply_hooks=False)
             mlp_out = self.mlp(x)
             sae_error = mlp_out - sae_out_clean
 
