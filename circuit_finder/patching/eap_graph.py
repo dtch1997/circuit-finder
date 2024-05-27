@@ -1,12 +1,11 @@
 import pandas as pd
-from typing import Callable
+from typing import Callable, Any
 from circuit_finder.core.types import (
     LayerIndex,
     FeatureIndex,
     TokenIndex,
     Node,
     Edge,
-    Attrib,
     ModuleName,
     parse_node_name,
 )
@@ -14,7 +13,7 @@ from circuit_finder.core.types import (
 
 def convert_graph_to_dataframe(graph: "EAPGraph") -> pd.DataFrame:
     rows = []
-    for edge, edge_info in graph.graph:
+    for edge, edge_info, edge_type in graph.graph:
         dest, src = edge
         if "metric" in src:
             continue
@@ -44,9 +43,9 @@ def convert_graph_to_dataframe(graph: "EAPGraph") -> pd.DataFrame:
 class EAPGraph:
     """A class representing a circuit of nodes."""
 
-    graph: list[tuple[Edge, Attrib]]
+    graph: list[tuple[Edge, Any, Any]]
 
-    def __init__(self, graph: list[tuple[Edge, Attrib]] = []):
+    def __init__(self, graph: list[tuple[Edge, Any, Any]] = []):
         """Initialize the graph"""
         self.graph = graph
 
@@ -108,7 +107,7 @@ class EAPGraph:
         return sorted(list(node_set))
 
     def get_nn_attribs(
-        self, filter_fn: Callable[[Node], bool] = lambda x: True
+        self, filter_fn: Callable[[Edge], bool] = lambda x: True
     ) -> list[Node]:
         """Get the node->node attributions of the graph"""
         unsorted_edges = [edge for edge, _, _ in self.graph if filter_fn(edge)]
@@ -130,7 +129,7 @@ class EAPGraph:
         return sorted_attribs
 
     def get_em_attribs(
-        self, filter_fn: Callable[[Node], bool] = lambda x: True
+        self, filter_fn: Callable[[Edge], bool] = lambda x: True
     ) -> list[Node]:
         """Get the node->node attributions of the graph"""
         unsorted_edges = [edge for edge, _, _ in self.graph if filter_fn(edge)]
