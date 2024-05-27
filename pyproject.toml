@@ -15,6 +15,8 @@ dependencies = [
     "seaborn>=0.13.2",
     "simple-parsing>=0.1.5",
     "pyvis>=0.3.2",
+    "auto-circuit @ git+https://github.com/dtch1997/auto-circuit.git",
+    "tensordict>=0.4.0",
 ]
 name = "circuit-finder"
 version = "0.1.0"
