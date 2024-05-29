@@ -198,14 +198,34 @@ def make_html_graph(leap, attrib_type="em", node_offset=8.0, show_error_nodes=Fa
     # Create a directed graph
     G = nx.DiGraph()
     
-    # Color map for different modules
-    color_map = {'metric': 'green', 'mlp': 'blue', 'attn': 'orange', 'mlp_error': 'blue', 'attn_error': 'orange'}
+    # Color map for different modules (using RGB tuples)
+    color_map = {
+        'metric': (0, 255, 0),  # Green
+        'mlp': (0, 0, 255),  # Blue
+        'attn': (255, 165, 0),  # Orange
+        'mlp_error': (0, 0, 255),  # Blue
+        'attn_error': (255, 165, 0)  # Orange
+    }
     
     # Track position offsets for nodes with the same (position, layer)
     offset_tracker = {'attn': {}, 'mlp': {}, 'metric': {}, 'attn_error': {}, 'mlp_error': {}}
     
     positions = set()  # To track unique position values
     
+    # Create a dictionary for total_attrib
+    node_total_attrib = {node: total_attrib for node, total_attrib in leap.nodes}
+
+    # Collect all total_attribs for clipping
+    all_total_attribs = [total_attrib for total_attrib in node_total_attrib.values()]
+    p95_total_attrib = np.percentile(np.abs(all_total_attribs), 95)
+    clipped_total_attribs = np.clip(np.abs(all_total_attribs), None, p95_total_attrib)
+
+    # Normalize the clipped total_attribs to range from 0.2 to 1
+    min_total_attrib = min(clipped_total_attribs)
+    max_total_attrib = max(clipped_total_attribs)
+    range_total_attrib = max_total_attrib - min_total_attrib
+    normalized_total_attribs = {node: 0.2 + 0.8 * (total_attrib - min_total_attrib) / range_total_attrib for node, total_attrib in node_total_attrib.items()}
+
     for downstream, upstream in edges + error_edges:
         if downstream == 'null' or upstream == 'null':
             continue
@@ -216,8 +236,10 @@ def make_html_graph(leap, attrib_type="em", node_offset=8.0, show_error_nodes=Fa
                 _id = parts[3] if len(parts) > 3 else ''
                 positions.add(position)
                 color = color_map[module]
-                title = f"layer {layer} pos {position} id {_id}"
-                
+                total_attrib = node_total_attrib.get(node, 8888)
+
+                title = f"layer {layer} pos {position} id {_id} \ntotal_attrib: {total_attrib:.3f}"
+
                 # Determine the base position
                 base_x = position * 150  # Increase x-axis spacing
                 base_y = layer * 80  # Decrease y-axis spacing
@@ -241,9 +263,13 @@ def make_html_graph(leap, attrib_type="em", node_offset=8.0, show_error_nodes=Fa
                 
                 offset_tracker[module][(position, layer)] += 1
                 
+                # Get normalized opacity for the node
+                opacity = normalized_total_attribs.get(node, 0.2)
+
                 # Add node with attributes
                 shape = 'dot' if 'error' not in module else 'square'
-                G.add_node(node, title=title, color=color, id=_id, x=pos_x, y=pos_y, url=url, shape=shape)
+                color_with_opacity = f"rgba({color[0]}, {color[1]}, {color[2]}, {opacity})"
+                G.add_node(node, title=title, color=color_with_opacity, id=_id, x=pos_x, y=pos_y, url=url, shape=shape)
         G.add_edge(upstream, downstream)
     
     # Combine edges with their attributes and types
@@ -341,7 +367,6 @@ def make_html_graph(leap, attrib_type="em", node_offset=8.0, show_error_nodes=Fa
         net.add_node(end_node, label='', x=x, y=-1000, size=0, color='rgba(0,0,0,0)', fixed=True, physics=False)
         net.add_edge(start_node, end_node, color='rgba(200, 200, 200, 0.5)', width=0.5, physics=False)
         
-
         # Add labels at the bottom to indicate the positions
         if tokens and (position < len(tokens[0])):
             y_offset = 100
@@ -350,7 +375,6 @@ def make_html_graph(leap, attrib_type="em", node_offset=8.0, show_error_nodes=Fa
                     label = token_set[position]
                     net.add_node(f'label_{position}_{idx}', label=label, size=0, x=(position * 150), y=y_offset, color='black', fixed=True, physics=False, font={'size': 30})
                     y_offset += 30  # Increase the y offset for the next set of labels
-
             
         if corrupt_tokens and (position < len(corrupt_tokens[0])):
             y_offset = 100 + 30*min(len(tokens), 10) + 20
@@ -359,7 +383,6 @@ def make_html_graph(leap, attrib_type="em", node_offset=8.0, show_error_nodes=Fa
                     label = token_set[position]
                     net.add_node(f'corrupt_label_{position}_{idx}', label=label, size=0, x=(position * 150), y=y_offset , color='red', fixed=True, physics=False, font={'size': 30})
                     y_offset += 30  # Increase the y offset for the next set of labels
-
 
     # Generate the HTML file
     html_file = 'graph.html'

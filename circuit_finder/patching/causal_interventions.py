@@ -1,5 +1,6 @@
 #%%
-
+import sys
+sys.path.append("/root/circuit-finder")
 import transformer_lens as tl
 from functools import partial
 from circuit_finder.pretrained import (
@@ -16,7 +17,7 @@ mlp_transcoders = load_hooked_mlp_transcoders(use_error_term=True)
 # Load model
 model = tl.HookedSAETransformer.from_pretrained("gpt2").cuda()
 
-
+#%%
 
 
 #%%
@@ -24,7 +25,7 @@ def ablation_hook(act, hook, id_to_ablate):
     assert hook.name.endswith("hook_sae_acts_post")
     act[:, :, id_to_ablate] = 0
     return act
-#%%
+
 def run_with_ablations(
         model, 
         attn_saes, 
@@ -62,6 +63,9 @@ def run_with_ablations(
         else:
             print("modules must be attn or mlp")
 
+    # Now add patching hooks
+
+
     # Run model
     with HookedTranscoderReplacementContext(
         model,  # type: ignore
@@ -75,7 +79,7 @@ def run_with_ablations(
 
 
 # %%
-ablation_list = [("mlp", 10, id) for id in range(20)]
+ablation_list = [("The favourable prisoner was released on good", 10, id) for id in range(20)]
 logits = run_with_ablations(model, 
                             attn_saes, 
                             mlp_transcoders, 

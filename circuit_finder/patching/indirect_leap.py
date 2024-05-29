@@ -4,7 +4,7 @@ Similar to Edge Attribution Patching, calculates the effect of edges on some dow
 However, takes advantage of linearity afforded by transcoders and MLPs to parallelize
 """
 
-#%%
+
 import sys
 sys.path.append("/root/circuit-finder")
 import torch
@@ -172,6 +172,9 @@ class IndirectLEAP:
             (("null", f"metric.{self.n_layers}.{seq}.0"), (0.0, 0.0, 1.0, 0.0), None)
             for seq in range(self.n_seq)
         ]
+
+        # nodes will contain (node, node->metric attrib)
+        self.nodes = []
 
         self.error_graph = []
 
@@ -460,7 +463,7 @@ class IndirectLEAP:
         # a high score. Whereas using derivative = p leads to an overestimate.
         # So we do something hacky :)
         # Create masks for the conditions
-        mask_greater = pattern > 0.5
+        mask_greater = pattern > 0.0
 
         # Apply the function elementwise
         result = torch.where(mask_greater, pattern - pattern**2, pattern**2)
@@ -711,6 +714,7 @@ class IndirectLEAP:
                 up_active_feature_acts,
             ) = self.get_up_active_stuff(down_module, down_layer, up_module)
 
+            # Get the down_node -> metric grads
             if down_module == "mlp":
                 imp_head_out_metric_grads = self.mlp_out_grads[
                     down_layer, imp_down_pos, :
@@ -720,6 +724,12 @@ class IndirectLEAP:
                     imp_head_out_metric_grads,
                     imp_W_dec,
                     "imp_id d_model, imp_id d_model -> imp_id",
+                )
+
+                imp_node_metric_attribs = einsum(
+                    imp_node_metric_grads,
+                    self.mlp_feature_acts[imp_down_pos, down_layer, imp_down_feature_ids],
+                    "imp_id, imp_id -> imp_id"  
                 )
 
             elif down_module == "attn":
@@ -735,13 +745,21 @@ class IndirectLEAP:
                     "imp_id d_model, imp_id d_model -> imp_id",
                 )
 
+                imp_node_metric_attribs = einsum(
+                    imp_node_metric_grads,
+                    self.attn_feature_acts[imp_down_pos, down_layer, imp_down_feature_ids],
+                    "imp_id, imp_id -> imp_id"  
+                )
+
             elif down_module == "metric":
                 imp_node_metric_grads = torch.ones(len(imp_down_pos)).cuda()
+                imp_node_metric_attribs = torch.ones(len(imp_down_pos)).cuda()
+
 
             else:
                 raise ValueError("down_module must be one of ['mlp', 'attn', 'metric']")
 
-            # split attrib calc into two cases depending on downstream module type
+            # Now split attrib calc into two cases depending on downstream module type
             # this is because sequence index requires different treatment in the attn case
             if down_module in ["mlp", "metric"]:
                 up_active_feature_acts: Float[Tensor, " imp_id up_active_id"] = (
@@ -871,6 +889,7 @@ class IndirectLEAP:
 
             # now add important edges to graph, alongside their (node_node_grad, edge_metric_grad, edge_metric_attrib)
             self.add_to_graph(
+                imp_node_metric_attribs,
                 node_node_grads,
                 node_node_attribs,
                 edge_metric_grads,
@@ -889,6 +908,7 @@ class IndirectLEAP:
 
     def add_to_graph(
         self,
+        imp_node_metric_attribs,
         node_node_grads,  # [seq, imp_id, up_active_id] if down_module==attn.  otherwise [imp_id, up_active_id]
         node_node_attribs,
         edge_metric_grads,
@@ -912,6 +932,14 @@ class IndirectLEAP:
             imp_down_feature_ids, dtype=torch.long, device="cuda"
         )
         imp_down_pos = torch.tensor(imp_down_pos, dtype=torch.long, device="cuda")
+
+        # Add node->metric attribs
+        self.nodes += [ 
+            (f"{down_module_name}.{down_layer}.{imp_down_pos[i]}.{imp_down_feature_ids[i]}",
+             imp_node_metric_attribs[i].item())
+            for i in range(len(imp_down_pos))
+        ]
+        
 
         # Create a mask where attribs are greater than the threshold
 
@@ -1114,158 +1142,138 @@ class IndirectLEAP:
 
 
 #%% Define dataset
-def logit_diff(model, tokens, correct_str, wrong_str):
-    correct_token = model.to_tokens(correct_str)[0,1]
-    wrong_token = model.to_tokens(wrong_str)[0,1]
-    logits = model(tokens)[0,-1]
-    return logits[correct_token ] - logits[wrong_token]
+# def logit_diff(model, tokens, correct_str, wrong_str):
+#     correct_token = model.to_tokens(correct_str)[0,1]
+#     wrong_token = model.to_tokens(wrong_str)[0,1]
+#     logits = model(tokens)[0,-1]
+#     return logits[correct_token ] - logits[wrong_token]
 
-task="ukcar"
-if task=="ioi":
-    tokens = model.to_tokens(
-        [    "When John and Mary were at the store, John gave a bottle to",
+# task="ioi"
+# if task=="ioi":
+#     tokens = model.to_tokens(
+#         [    "When John and Mary were at the store, John gave a bottle to",
          
-          ])
+#           ])
 
-    corrupt_tokens = model.to_tokens(
-        [    "When Alice and Bob were at the store, Charlie gave a bottle to",
+#     corrupt_tokens = model.to_tokens(
+#         [    "When Alice and Bob were at the store, Charlie gave a bottle to",
          
-            ])
+#             ])
 
-    metric = partial(logit_diff, correct_str=" Mary", wrong_str=" John")
+#     metric = partial(logit_diff, correct_str=" Mary", wrong_str=" John")
 
 
-if task=="ukprison":
-    tokens = model.to_tokens(
-        [    "the favourable prisoner was released on good" ])
+# if task=="ukprison":
+#     tokens = model.to_tokens(
+#         [    "the favourable prisoner was released on good" ])
 
-    corrupt_tokens = model.to_tokens(
-        [    "the favorable prisoner was released on good" ])
+#     corrupt_tokens = model.to_tokens(
+#         [    "the favorable prisoner was released on good" ])
 
-    metric = partial(logit_diff, correct_str=" behaviour", wrong_str=" behavior")
+#     metric = partial(logit_diff, correct_str=" behaviour", wrong_str=" behavior")
 
-if task=="ukcar":
-    tokens = model.to_tokens(
-        [    "in the centre of the road was a car, with black rubber" ])
+# if task=="ukcar":
+#     tokens = model.to_tokens(
+#         [    "in the centre of the road was a car, with black rubber" ])
 
-    corrupt_tokens = model.to_tokens(
-        [    "in the center of the road was a car, with black rubber" ])
+#     corrupt_tokens = model.to_tokens(
+#         [    "in the center of the road was a car, with black rubber" ])
 
-    metric = partial(logit_diff, correct_str=" tyres", wrong_str=" tires")   
+#     metric = partial(logit_diff, correct_str=" tyres", wrong_str=" tires")   
 
-if task=="ukdate":
-    tokens = model.to_tokens(
-        [    "24/10/2004 Add salt to improve the food's" ])
+# if task=="ukdate":
+#     tokens = model.to_tokens(
+#         [    "24/10/2004 Add salt to improve the food's" ])
 
-    corrupt_tokens = model.to_tokens(
-        [    "in the center of the road was a car, with black rubber" ])
+#     corrupt_tokens = model.to_tokens(
+#         [    "in the center of the road was a car, with black rubber" ])
 
-    metric = partial(logit_diff, correct_str=" tyres", wrong_str=" tires")   
+#     metric = partial(logit_diff, correct_str=" tyres", wrong_str=" tires")   
 
-if task=="race":
-    tokens = model.to_tokens(
-        [    "Anton was" ])
+# if task=="race":
+#     tokens = model.to_tokens(
+#         [    "Anton was" ])
 
-    corrupt_tokens = model.to_tokens(
-        [    "Charlie was" ])
+#     corrupt_tokens = model.to_tokens(
+#         [    "Charlie was" ])
 
-    metric = partial(logit_diff, correct_str=" arrested", wrong_str=" born")  
+#     metric = partial(logit_diff, correct_str=" arrested", wrong_str=" born")  
 
-if task == "whilst":
-    tokens = model.to_tokens(
-        [    "Although it was bad today, it will be" ])
-    corrupt_tokens = model.to_tokens(
-        ["Since it was bad today, it will be"]
-    )
+# if task == "whilst":
+#     tokens = model.to_tokens(
+#         [    "Although it was bad today, it will be" ])
+#     corrupt_tokens = model.to_tokens(
+#         ["Since it was bad today, it will be"]
+#     )
 
-    metric = partial(logit_diff, correct_str=" light", wrong_str=" dark")      
+#     metric = partial(logit_diff, correct_str=" light", wrong_str=" dark")      
 
-if task == "ifelse":
-    tokens = model.to_tokens(
-        [    "if x in keys: print(x)" ])
-    corrupt_tokens = model.to_tokens(
-        ["while x in keys: print(x)"]
-    )
+# if task == "ifelse":
+#     tokens = model.to_tokens(
+#         [    "if x in keys: print(x)" ])
+#     corrupt_tokens = model.to_tokens(
+#         ["while x in keys: print(x)"]
+#     )
 
-    metric = partial(logit_diff, correct_str=" else", wrong_str=" if")  
+#     metric = partial(logit_diff, correct_str=" else", wrong_str=" if")  
 
-if task=="wtf":
-    tokens = model.to_tokens(
-        [    "What the fuck? Have you lost your" ])
-    corrupt_tokens = model.to_tokens(
-        ["What has happened? Have you lost your"]
-    )    
+# if task=="wtf":
+#     tokens = model.to_tokens(
+#         [    "What the fuck? Have you lost your" ])
+#     corrupt_tokens = model.to_tokens(
+#         ["What has happened? Have you lost your"]
+#     )    
 
-    metric = partial(logit_diff, correct_str=" mind", wrong_str=" job") 
+#     metric = partial(logit_diff, correct_str=" mind", wrong_str=" job") 
 
-if task=="democrats":
-    tokens = model.to_tokens(
-        [    "Several apples and several" ])
-    corrupt_tokens = model.to_tokens(
-        [" "]
-    )    
+# if task=="democrats":
+#     tokens = model.to_tokens(
+#         [    "Several apples and several" ])
+#     corrupt_tokens = model.to_tokens(
+#         [" "]
+#     )    
 
-    metric = partial(logit_diff, correct_str=" oranges", wrong_str=" apples") 
+#     metric = partial(logit_diff, correct_str=" oranges", wrong_str=" apples") 
 
-if task=="doctor":
-    tokens = model.to_tokens(
-        [ "When the doctor is ready, you can go and see"])
+# if task=="doctor":
+#     tokens = model.to_tokens(
+#         [ "When the doctor is ready, you can go and see"])
     
-    corrupt_tokens = model.to_tokens(
-        [ "When the nurse is ready, you can go and see"])
+#     corrupt_tokens = model.to_tokens(
+#         [ "When the nurse is ready, you can go and see"])
     
-    metric = partial(logit_diff, correct_str=" him", wrong_str=" her") 
+#     metric = partial(logit_diff, correct_str=" him", wrong_str=" her") 
 
 
-print("clean metric = ", metric(model, tokens))
-print("corrupt metric = ", metric(model, corrupt_tokens))
-#%%
-model.reset_hooks()
-from circuit_finder.plotting import make_html_graph
+# print("clean metric = ", metric(model, tokens))
+# print("corrupt metric = ", metric(model, corrupt_tokens))
+# #%%
+# model.reset_hooks()
+# from circuit_finder.plotting import make_html_graph
 
-cfg = LEAPConfig(threshold=0.0002,
-                 contrast_pairs=True, 
-                 qk_enabled=True,
-                 chained_attribs=True,
-                 abs_attribs = False,
-                 store_error_attribs=True)
-leap = IndirectLEAP(
-    cfg, tokens, model, attn_saes, transcoders, metric, corrupt_tokens=corrupt_tokens
-)
-leap.run()
-print("num edges: ", len(leap.graph))
-graph = EAPGraph(leap.graph)
-types = graph.get_edge_types()
-print("num ov edges: ", len([t for t in types if t=="ov"]))
-print("num q edges: ", len([t for t in types if t=="q"]))
-print("num k edges: ", len([t for t in types if t=="k"]))
-print("num mlp edges: ", len([t for t in types if t==None]))
-make_html_graph(leap, attrib_type="em", node_offset=8.0, show_error_nodes=False)
+# cfg = LEAPConfig(threshold=0.03,
+#                  contrast_pairs=True, 
+#                  qk_enabled=True,
+#                  chained_attribs=True,
+#                  abs_attribs = False,
+#                  store_error_attribs=True)
+# leap = IndirectLEAP(
+#     cfg, tokens, model, attn_saes, transcoders, metric, corrupt_tokens=corrupt_tokens
+# )
+# leap.run()
+# print("num edges: ", len(leap.graph))
+# graph = EAPGraph(leap.graph)
+# types = graph.get_edge_types()
+# print("num ov edges: ", len([t for t in types if t=="ov"]))
+# print("num q edges: ", len([t for t in types if t=="q"]))
+# print("num k edges: ", len([t for t in types if t=="k"]))
+# print("num mlp edges: ", len([t for t in types if t==None]))
+# make_html_graph(leap, attrib_type="em", node_offset=8.0, show_error_nodes=False)
 
-# %%
-leap.model.to_str_tokens(leap.model.tokenizer.batch_decode(tokens), prepend_bos=False)
-# %%
-s = leap.model.to_str_tokens(leap.model.tokenizer.batch_decode(leap.tokens), prepend_bos=False)
-len(s[0])
-# %%
-tl.utils.test_prompt(
-    """"
-      allNodes = nodes.get({ returnType: "Object" });
-  // originalNodes = JSON.parse(JSON.stringify(""",
-    "he",
-    model
-)
+# # %%
+# leap.model.to_str_tokens(leap.model.tokenizer.batch_decode(tokens), prepend_bos=False)
+# # %%
+# list(set(leap.nodes))
 
-#%%
-tl.utils.test_prompt(
-    """x=0
-    for i in range(n_batches):
-        x += i
-    x_mean = x/""",
-        "dog",
-    model
-)
-
-#%%
-for a,b,c in [(2,1)]:
-    print(a)
+# #%%
+# leap.graph
