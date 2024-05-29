@@ -76,7 +76,7 @@ class LEAPConfig:
     chained_attribs: bool = True
     store_error_attribs: bool = False
     qk_enabled: bool = True
-    abs_attribs : bool = False
+    allow_neg_feature_acts : bool = False
 
 
 class IndirectLEAP:
@@ -278,10 +278,10 @@ class IndirectLEAP:
                     corrupt_cache[mlp_in_pt]  # type: ignore
                 )[1]
             self.mlp_feature_acts[:, layer, :] = mlp_feature_acts.mean(0)
-            if self.cfg.abs_attribs:
-                self.mlp_is_active[:, layer, :] = (mlp_feature_acts != 0).float().mean(0)
-            else:
-                self.mlp_is_active[:, layer, :] = (mlp_feature_acts > 0).float().mean(0)
+            if not self.cfg.allow_neg_feature_acts:
+                self.mlp_feature_acts = torch.relu(self.mlp_feature_acts)
+
+            self.mlp_is_active[:, layer, :] = (mlp_feature_acts > 0).float().mean(0)
      
             self.mlp_errors[:, layer, :] = (cache[mlp_out_pt] - mlp_recons).mean(0)
 
@@ -306,6 +306,8 @@ class IndirectLEAP:
                 z_concat, names_filter="hook_sae_acts_post"
             )
             attn_feature_acts = sae_cache[sae_hook_name]
+            if not self.cfg.allow_neg_feature_acts:
+                self.attn_feature_acts = torch.relu(self.attn_feature_acts)
 
             if self.cfg.contrast_pairs:
                 z_concat = rearrange(
@@ -318,10 +320,7 @@ class IndirectLEAP:
                 attn_feature_acts -= sae_cache[sae_hook_name]
 
             self.attn_feature_acts[:, layer, :] = attn_feature_acts.mean(0)
-            if self.cfg.abs_attribs:
-                self.attn_is_active[:, layer, :] = (attn_feature_acts != 0).float().mean(0)
-            else:
-                self.attn_is_active[:, layer, :] = (attn_feature_acts > 0).float().mean(0)
+            self.attn_is_active[:, layer, :] = (attn_feature_acts > 0).float().mean(0)
             z_error = rearrange(
                 (attn_recons - z_concat).mean(0),
                 "seq (n_heads d_head) -> seq n_heads d_head",
@@ -462,11 +461,11 @@ class IndirectLEAP:
         # a high score. Whereas using derivative = p leads to an overestimate.
         # So we do something hacky :)
         # Create masks for the conditions
-        mask_greater = pattern > 0.5
+        # mask_greater = pattern > 0.0
 
-        # Apply the function elementwise
-        result = torch.where(mask_greater, pattern - pattern**2, pattern**2)
-
+        # # Apply the function elementwise
+        # result = torch.where(mask_greater, pattern - pattern**2, pattern**2)
+        result = pattern
         return result
 
     def q_step(self, down_layer):
@@ -790,11 +789,10 @@ class IndirectLEAP:
                 )
 
                 # clip the attribs
-                if not self.cfg.abs_attribs:
-                    edge_metric_attribs = torch.minimum(
-                        edge_metric_attribs,
-                        imp_node_metric_attribs.unsqueeze(1)
-                    )
+                edge_metric_attribs = torch.minimum(
+                    edge_metric_attribs,
+                    imp_node_metric_attribs.unsqueeze(1)
+                )
 
                 # store error attribs (optional)
                 error_to_node_attribs = None
@@ -850,11 +848,10 @@ class IndirectLEAP:
                 )
 
                 # clip the attribs
-                if not self.cfg.abs_attribs:
-                    edge_metric_attribs = torch.minimum(
-                        edge_metric_attribs,
-                        imp_node_metric_attribs.unsqueeze(0).unsqueeze(-1)
-                    )
+                edge_metric_attribs = torch.minimum(
+                    edge_metric_attribs,
+                    imp_node_metric_attribs.unsqueeze(0).unsqueeze(-1)
+                )
 
                 # calculate error attribs (optional)
                 error_to_node_attribs = None
@@ -943,16 +940,10 @@ class IndirectLEAP:
         # Create a mask where attribs are greater than the threshold
 
         if self.cfg.chained_attribs:
-            if self.cfg.abs_attribs:
-                mask = abs(edge_metric_attribs) > self.cfg.threshold
-            else:
-                mask = edge_metric_attribs > self.cfg.threshold
+            mask = edge_metric_attribs > self.cfg.threshold
 
         else:
-            if self.cfg.abs_attribs:
-                mask = abs(node_node_attribs) > self.cfg.threshold
-            else:
-                mask = node_node_attribs > self.cfg.threshold
+            mask = node_node_attribs > self.cfg.threshold
 
         # Use the mask to find the relevant indices
         if down_module_name in ["mlp", "metric"]:
@@ -1101,7 +1092,7 @@ class IndirectLEAP:
 # %%
 # ~ Jacob's work zone ~
 #Imports and downloads
-%load_ext autoreload
+# %load_ext autoreload
 # %autoreload 2
 # import sys
 # sys.path.append("/root/circuit-finder")
@@ -1147,7 +1138,13 @@ class IndirectLEAP:
 #     logits = model(tokens)[0,-1]
 #     return logits[correct_token ] - logits[wrong_token]
 
-# task="induction"
+# def list_logit_diff(model, tokens, correct_str_list, wrong_str_list):
+#     correct_tokens = model.to_tokens(correct_str_list)[:,1]
+#     wrong_tokens = model.to_tokens(wrong_str_list)[:,1]
+#     logits = model(tokens)[0,-1]
+#     return logits[correct_tokens].mean() - logits[wrong_tokens].mean()
+
+# task="forloop"
 # if task=="ioi":
 #     tokens = model.to_tokens(
 #         [    "When John and Mary were at the store, John gave a bottle to",
@@ -1180,32 +1177,8 @@ class IndirectLEAP:
 
 #     metric = partial(logit_diff, correct_str=" tyres", wrong_str=" tires")   
 
-# if task=="ukdate":
-#     tokens = model.to_tokens(
-#         [    "24/10/2004 Add salt to improve the food's" ])
-
-#     corrupt_tokens = model.to_tokens(
-#         [    "in the center of the road was a car, with black rubber" ])
-
-#     metric = partial(logit_diff, correct_str=" tyres", wrong_str=" tires")   
-
-# if task=="race":
-#     tokens = model.to_tokens(
-#         [    "Anton was" ])
-
-#     corrupt_tokens = model.to_tokens(
-#         [    "Charlie was" ])
-
-#     metric = partial(logit_diff, correct_str=" arrested", wrong_str=" born")  
-
-# if task == "whilst":
-#     tokens = model.to_tokens(
-#         [    "Although it was bad today, it will be" ])
-#     corrupt_tokens = model.to_tokens(
-#         ["Since it was bad today, it will be"]
-#     )
-
-#     metric = partial(logit_diff, correct_str=" light", wrong_str=" dark")      
+ 
+  
 
 # if task == "ifelse":
 #     tokens = model.to_tokens(
@@ -1225,14 +1198,6 @@ class IndirectLEAP:
 
 #     metric = partial(logit_diff, correct_str=" mind", wrong_str=" job") 
 
-# if task=="democrats":
-#     tokens = model.to_tokens(
-#         [    "Several apples and several" ])
-#     corrupt_tokens = model.to_tokens(
-#         [" "]
-#     )    
-
-#     metric = partial(logit_diff, correct_str=" oranges", wrong_str=" apples") 
 
 # if task=="doctor":
 #     tokens = model.to_tokens(
@@ -1252,19 +1217,48 @@ class IndirectLEAP:
     
 #     metric = partial(logit_diff, correct_str=" apple", wrong_str=" sky") 
 
+# if task=="forloop":
+#     tokens = model.to_tokens(
+#         [ "for x in y: print("])
+    
+#     corrupt_tokens = model.to_tokens(
+#         [ "for y in x: print("])
+    
+#     metric = partial(logit_diff, correct_str="x", wrong_str="y")
+
+# if task=="descent":
+#     tokens = model.to_tokens(
+#         ["""1 -- 90.6 
+# 2 -- 87.2 
+# 3 -- 56.1
+# 4 --"""]
+#     ) 
+
+#     corrupt_tokens = model.to_tokens(
+#         [
+#          """1 -- 90.6 
+# 2 -- 3.2 
+# 3 -- 56.1
+# 4 --"""]
+#     )
+
+#     metric = partial(list_logit_diff, 
+#                      correct_str_list = [str(i) for i in range(57)],
+#                      wrong_str_list = [str(i) for i in range(57, 100)])
 
 # print("clean metric = ", metric(model, tokens))
 # print("corrupt metric = ", metric(model, corrupt_tokens))
+
 # #%%
 # model.reset_hooks()
 # from circuit_finder.plotting import make_html_graph
 
-# cfg = LEAPConfig(threshold=0.03,
+# cfg = LEAPConfig(threshold=0.008,
 #                  contrast_pairs=True, 
 #                  qk_enabled=True,
 #                  chained_attribs=True,
-#                  abs_attribs = False,
-#                  store_error_attribs=True)
+#                  store_error_attribs=True,
+#                  allow_neg_feature_acts=False)
 # leap = IndirectLEAP(
 #     cfg, tokens, model, attn_saes, transcoders, metric, corrupt_tokens=corrupt_tokens
 # )
@@ -1284,4 +1278,22 @@ class IndirectLEAP:
 # list(set(leap.nodes))
 
 # #%%
-# leap.graph
+# model.to_str_tokens(""" hi I am
+#                     Jacob""")
+
+# #%%
+
+# tl.utils.test_prompt("""1 -- 21.6 
+# 2 -- 15.2 
+# 3 -- 16.1
+# 4 --""", "he", model)
+
+# #%%
+
+
+
+# #%%
+# tl.utils.test_prompt("When the doctor is ready you can go and see", "a", model)
+
+# #%%
+# leap.mlp_feature_acts[2, 9, 4254]

@@ -107,7 +107,7 @@ def run_with_ablations(
 # %%
 ablation_list = [("mlp", 5, 10087), ("mlp", 5, 6344),
                 ("mlp", 0, 20782), ("mlp", 0, 6646) ]
-patch_list = []
+patch_list = [("mlp", 5, 10087, 'blocks.{6}.')]
 prompts = ["The favourable prisoner was released on good"]
 logits = run_with_ablations(model, 
                             prompts,
