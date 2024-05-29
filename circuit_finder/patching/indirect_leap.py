@@ -4,6 +4,9 @@ Similar to Edge Attribution Patching, calculates the effect of edges on some dow
 However, takes advantage of linearity afforded by transcoders and MLPs to parallelize
 """
 
+#%%
+import sys
+sys.path.append("/root/circuit-finder")
 import torch
 import transformer_lens as tl
 from typing import Callable, Any
@@ -27,7 +30,8 @@ from circuit_finder.core.types import (
     HookNameFilterFn,
 )
 from circuit_finder.constants import device
-from circuit_finder.core import HookedSAE, HookedTranscoder
+from circuit_finder.core.hooked_sae import HookedSAE
+from circuit_finder.core.hooked_transcoder import HookedTranscoder
 
 
 def preprocess_attn_saes(
@@ -73,6 +77,7 @@ class LEAPConfig:
     chained_attribs: bool = True
     store_error_attribs: bool = False
     qk_enabled: bool = True
+    abs_attribs : bool = False
 
 
 class IndirectLEAP:
@@ -271,7 +276,11 @@ class IndirectLEAP:
                     corrupt_cache[mlp_in_pt]  # type: ignore
                 )[1]
             self.mlp_feature_acts[:, layer, :] = mlp_feature_acts.mean(0)
-            self.mlp_is_active[:, layer, :] = (mlp_feature_acts > 0).float().mean(0)
+            if self.cfg.abs_attribs:
+                self.mlp_is_active[:, layer, :] = (mlp_feature_acts != 0).float().mean(0)
+            else:
+                self.mlp_is_active[:, layer, :] = (mlp_feature_acts > 0).float().mean(0)
+     
             self.mlp_errors[:, layer, :] = (cache[mlp_out_pt] - mlp_recons).mean(0)
 
             # NOTE: Here we handle the fact that SAE hook names can change depending on status
@@ -301,13 +310,16 @@ class IndirectLEAP:
                     corrupt_cache[attn_out_pt],  # type: ignore
                     "batch seq n_heads d_head -> batch seq (n_heads d_head)",
                 )
-                attn_recons, sae_cache = self.attn_saes[layer].run_with_cache(
+                _, sae_cache = self.attn_saes[layer].run_with_cache(
                     z_concat, names_filter="hook_sae_acts_post"
                 )
                 attn_feature_acts -= sae_cache[sae_hook_name]
 
             self.attn_feature_acts[:, layer, :] = attn_feature_acts.mean(0)
-            self.attn_is_active[:, layer, :] = (attn_feature_acts > 0).float().mean(0)
+            if self.cfg.abs_attribs:
+                self.attn_is_active[:, layer, :] = (attn_feature_acts != 0).float().mean(0)
+            else:
+                self.attn_is_active[:, layer, :] = (attn_feature_acts > 0).float().mean(0)
             z_error = rearrange(
                 (attn_recons - z_concat).mean(0),
                 "seq (n_heads d_head) -> seq n_heads d_head",
@@ -761,12 +773,15 @@ class IndirectLEAP:
                 )
 
                 # clip the attribs
-                # edge_metric_attribs = torch.minimum(
-                #     edge_metric_attribs,
-                #     imp_node_metric_grads.unsqueeze(1)
-                # )
+                if not self.cfg.abs_attribs:
+                    edge_metric_attribs = torch.minimum(
+                        edge_metric_attribs,
+                        imp_node_metric_grads.unsqueeze(1)
+                    )
 
-                error_attribs = None
+                # store attribs (optional)
+                error_to_node_attribs = None
+                error_edge_to_metric_attribs = None
                 if self.cfg.store_error_attribs:
                     if up_module == "mlp":
                         imp_errors: Float[Tensor, " imp_id layer d_model"] = (
@@ -777,11 +792,19 @@ class IndirectLEAP:
                     else:
                         raise ValueError("up_module must be one of ['mlp', 'attn']")
 
-                    error_attribs = einsum(
+                    error_to_node_attribs = einsum(
                         imp_errors[:, :down_layer],
                         grad,
                         "imp_id layer d_model, imp_id d_model -> imp_id layer",
                     )
+
+                    error_edge_to_metric_attribs = einsum(
+                        error_to_node_attribs,
+                        imp_node_metric_grads,
+                        "imp_id layer, imp_id -> imp_id layer"
+                    )
+
+                    
 
             elif down_module in ["attn"]:
                 # Compute attribs of imp nodes wrt all upstream MLP nodes
@@ -810,12 +833,15 @@ class IndirectLEAP:
                 )
 
                 # clip the attribs
-                # edge_metric_attribs = torch.minimum(
-                #     edge_metric_attribs,
-                #     imp_node_metric_grads.unsqueeze(0).unsqueeze(-1)
-                # )
+                if not self.cfg.abs_attribs:
+                    edge_metric_attribs = torch.minimum(
+                        edge_metric_attribs,
+                        imp_node_metric_grads.unsqueeze(0).unsqueeze(-1)
+                    )
+
                 # calculate error attribs (optional)
-                error_attribs = None
+                error_to_node_attribs = None
+                error_edge_to_metric_attribs = None
                 if self.cfg.store_error_attribs:
                     if up_module == "mlp":
                         imp_errors = self.mlp_errors[:, :down_layer]
@@ -824,11 +850,18 @@ class IndirectLEAP:
                     else:
                         raise ValueError("up_module must be one of ['mlp', 'attn']")
 
-                    error_attribs = einsum(
+                    error_to_node_attribs = einsum(
                         imp_errors,
                         grad,
                         "seq layer d_model, seq imp_id d_model -> seq imp_id layer",
                     )
+
+                    error_edge_to_metric_attribs = einsum(
+                        error_to_node_attribs,
+                        imp_node_metric_grads,
+                        "seq imp_id layer, imp_id -> seq imp_id layer"
+                    )
+
             else:
                 print(down_module)
                 raise ValueError("down_module must be one of ['mlp', 'attn', 'metric']")
@@ -842,7 +875,8 @@ class IndirectLEAP:
                 node_node_attribs,
                 edge_metric_grads,
                 edge_metric_attribs,
-                error_attribs,
+                error_to_node_attribs,
+                error_edge_to_metric_attribs,
                 imp_down_feature_ids,
                 imp_down_pos,
                 down_module,
@@ -859,7 +893,8 @@ class IndirectLEAP:
         node_node_attribs,
         edge_metric_grads,
         edge_metric_attribs,
-        error_attribs,  # [seq, imp_id, layer] if down_module==attn.  otherwise [imp_id, layer]
+        error_to_node_attribs,  # [seq, imp_id, layer] if down_module==attn.  otherwise [imp_id, layer]
+        error_edge_to_metric_attribs,
         imp_down_feature_ids,
         imp_down_pos,
         down_module_name: ModuleName,
@@ -878,11 +913,20 @@ class IndirectLEAP:
         )
         imp_down_pos = torch.tensor(imp_down_pos, dtype=torch.long, device="cuda")
 
-        # Create a mask where attribs are greater than the threshold TODO add option for chained
+        # Create a mask where attribs are greater than the threshold
+
         if self.cfg.chained_attribs:
-            mask = edge_metric_attribs > self.cfg.threshold
+            if self.cfg.abs_attribs:
+                mask = abs(edge_metric_attribs) > self.cfg.threshold
+            else:
+                mask = edge_metric_attribs > self.cfg.threshold
+
         else:
-            mask = node_node_attribs > self.cfg.threshold
+            if self.cfg.abs_attribs:
+                mask = abs(node_node_attribs) > self.cfg.threshold
+            else:
+                mask = node_node_attribs > self.cfg.threshold
+
         # Use the mask to find the relevant indices
         if down_module_name in ["mlp", "metric"]:
             assert (
@@ -966,30 +1010,56 @@ class IndirectLEAP:
                 )  # type: ignore
 
         # Add errors to separate graph
-        # TODO do we care about chained attribs for these too?
         if self.cfg.store_error_attribs:
             if down_module_name in ["mlp", "metric"]:
                 # error_attribs : [imp_id, layer]
-                for imp_id in range(error_attribs.size(0)):
-                    for up_layer in range(error_attribs.size(1)):
+                for imp_id in range(error_to_node_attribs.size(0)):
+                    for up_layer in range(error_to_node_attribs.size(1)):
                         edge = (
                             f"{down_module_name}.{down_layer}.{imp_down_pos[imp_id]}.{imp_down_feature_ids[imp_id]}",
-                            f"{up_module_name}_error.{up_layer}.{imp_down_pos[imp_id]}.{0}",
+                            f"{up_module_name}_error.{up_layer}.{imp_down_pos[imp_id]}",
                         )
-                        attrib = error_attribs[imp_id, up_layer]
-                        self.error_graph.append((edge, attrib.item()))
+                        error_to_node_attrib = error_to_node_attribs[imp_id, up_layer]
+                        error_edge_to_metric_attrib = error_edge_to_metric_attribs[imp_id, up_layer]
+                        
+                        if self.cfg.chained_attribs:
+                            is_large = error_edge_to_metric_attrib > self.cfg.threshold
+                        else:
+                            is_large = error_to_node_attrib > self.cfg.threshold
+
+                        if is_large:                        
+                            self.error_graph.append(  
+                                (
+                                edge, 
+                                (error_to_node_attrib.item(), error_edge_to_metric_attrib.item()),
+                                edge_type
+                                )
+                                )  
 
             if down_module_name in ["attn"]:
                 # error_attribs : [seq, imp_id, layer]
-                for imp_id in range(error_attribs.size(1)):
-                    for up_layer in range(error_attribs.size(2)):
-                        for up_seq in range(error_attribs.size(0)):
+                for imp_id in range(error_to_node_attribs.size(1)):
+                    for up_layer in range(error_to_node_attribs.size(2)):
+                        for up_seq in range(error_to_node_attribs.size(0)):
                             edge = (
                                 f"{down_module_name}.{down_layer}.{imp_down_pos[imp_id]}.{imp_down_feature_ids[imp_id]}",
-                                f"{up_module_name}_error.{up_layer}.{up_seq}.{0}",
+                                f"{up_module_name}_error.{up_layer}.{up_seq}",
                             )
-                            attrib = error_attribs[up_seq, imp_id, up_layer]
-                            self.error_graph.append((edge, attrib.item()))
+                            error_to_node_attrib = error_to_node_attribs[up_seq, imp_id, up_layer]
+                            error_edge_to_metric_attrib = error_edge_to_metric_attribs[up_seq, imp_id, up_layer]
+                            if self.cfg.chained_attribs:
+                                is_large = error_edge_to_metric_attrib > self.cfg.threshold
+                            else:
+                                is_large = error_to_node_attrib > self.cfg.threshold
+                            
+                            if is_large:
+                                self.error_graph.append(  
+                                    (
+                                    edge, 
+                                    (error_to_node_attrib.item(), error_edge_to_metric_attrib.item()),
+                                    edge_type
+                                    )  
+                                    )
 
     def run(self):
         self.metric_step()
@@ -999,3 +1069,190 @@ class IndirectLEAP:
             if self.cfg.qk_enabled:
                 self.q_step(layer)
                 self.k_step(layer)
+
+
+# %%
+# ~ Jacob's work zone ~
+#Imports and downloads
+# %load_ext autoreload
+# %autoreload 2
+# import sys
+# sys.path.append("/root/circuit-finder")
+# print(sys.path)
+# import transformer_lens as tl
+# from torch import Tensor
+# from jaxtyping import Int
+# from typing import Callable
+# from circuit_finder.patching.eap_graph import EAPGraph
+# from circuit_finder.plotting import show_attrib_graph
+# import torch
+# import gc
+# from tqdm import tqdm
+# from functools import partial
+# from circuit_finder.plotting import make_html_graph
+# from circuit_finder.patching.eap_graph import EAPGraph
+
+# from circuit_finder.pretrained import (
+#     load_attn_saes,
+#     load_mlp_transcoders,
+#     load_hooked_mlp_transcoders
+# )
+
+# # Load models
+# model = tl.HookedTransformer.from_pretrained(
+#     "gpt2",
+#     device="cuda",
+#     fold_ln=True,
+#     center_writing_weights=True,
+#     center_unembed=True,
+# )
+
+# attn_saes = load_attn_saes()
+# attn_saes = preprocess_attn_saes(attn_saes, model)  # type: ignore
+# transcoders = transcoders = load_hooked_mlp_transcoders(use_error_term=True)
+
+
+#%% Define dataset
+# def logit_diff(model, tokens, correct_str, wrong_str):
+#     correct_token = model.to_tokens(correct_str)[0,1]
+#     wrong_token = model.to_tokens(wrong_str)[0,1]
+#     logits = model(tokens)[0,-1]
+#     return logits[correct_token ] - logits[wrong_token]
+
+# task="ioi"
+# if task=="ioi":
+#     tokens = model.to_tokens(
+#         [    "When John and Mary were at the store, John gave a bottle to" ])
+
+#     corrupt_tokens = model.to_tokens(
+#         [    "When Alice and Bob were at the store, Charlie gave a bottle to" ])
+
+#     metric = partial(logit_diff, correct_str=" Mary", wrong_str=" John")
+
+
+# if task=="ukprison":
+#     tokens = model.to_tokens(
+#         [    "the favourable prisoner was released on good" ])
+
+#     corrupt_tokens = model.to_tokens(
+#         [    "the favorable prisoner was released on good" ])
+
+#     metric = partial(logit_diff, correct_str=" behaviour", wrong_str=" behavior")
+
+# if task=="ukcar":
+#     tokens = model.to_tokens(
+#         [    "in the centre of the road was a car, with black rubber" ])
+
+#     corrupt_tokens = model.to_tokens(
+#         [    "in the center of the road was a car, with black rubber" ])
+
+#     metric = partial(logit_diff, correct_str=" tyres", wrong_str=" tires")   
+
+# if task=="ukdate":
+#     tokens = model.to_tokens(
+#         [    "24/10/2004 Add salt to improve the food's" ])
+
+#     corrupt_tokens = model.to_tokens(
+#         [    "in the center of the road was a car, with black rubber" ])
+
+#     metric = partial(logit_diff, correct_str=" tyres", wrong_str=" tires")   
+
+# if task=="race":
+#     tokens = model.to_tokens(
+#         [    "Anton was" ])
+
+#     corrupt_tokens = model.to_tokens(
+#         [    "Charlie was" ])
+
+#     metric = partial(logit_diff, correct_str=" arrested", wrong_str=" born")  
+
+# if task == "whilst":
+#     tokens = model.to_tokens(
+#         [    "Although it was bad today, it will be" ])
+#     corrupt_tokens = model.to_tokens(
+#         ["Since it was bad today, it will be"]
+#     )
+
+#     metric = partial(logit_diff, correct_str=" light", wrong_str=" dark")      
+
+# if task == "ifelse":
+#     tokens = model.to_tokens(
+#         [    "if x in keys: print(x)" ])
+#     corrupt_tokens = model.to_tokens(
+#         ["while x in keys: print(x)"]
+#     )
+
+#     metric = partial(logit_diff, correct_str=" else", wrong_str=" if")  
+
+# if task=="wtf":
+#     tokens = model.to_tokens(
+#         [    "What the fuck? Have you lost your" ])
+#     corrupt_tokens = model.to_tokens(
+#         ["What has happened? Have you lost your"]
+#     )    
+
+#     metric = partial(logit_diff, correct_str=" mind", wrong_str=" job") 
+
+# if task=="democrats":
+#     tokens = model.to_tokens(
+#         [    "Several apples and several" ])
+#     corrupt_tokens = model.to_tokens(
+#         [" "]
+#     )    
+
+#     metric = partial(logit_diff, correct_str=" oranges", wrong_str=" apples") 
+
+# if task=="doctor":
+#     tokens = model.to_tokens(
+#         [ "When the doctor is ready, you can go and see"])
+    
+#     corrupt_tokens = model.to_tokens(
+#         [ "When the nurse is ready, you can go and see"])
+    
+#     metric = partial(logit_diff, correct_str=" him", wrong_str=" her") 
+
+
+# tokens_list = model.to_str_tokens(tokens)
+# print("clean metric = ", metric(model, tokens))
+# print("corrupt  metric = ", metric(model, corrupt_tokens))
+# #%%
+# model.reset_hooks()
+# cfg = LEAPConfig(threshold=0.03,
+#                  contrast_pairs=True, 
+#                  qk_enabled=True,
+#                  chained_attribs=True,
+#                  abs_attribs = False,
+#                  store_error_attribs=True)
+# leap = IndirectLEAP(
+#     cfg, tokens[:1], model, attn_saes, transcoders, metric, corrupt_tokens=corrupt_tokens
+# )
+# leap.run()
+# print("num edges: ", len(leap.graph))
+# graph = EAPGraph(leap.graph)
+# types = graph.get_edge_types()
+# print("num ov edges: ", len([t for t in types if t=="ov"]))
+# print("num q edges: ", len([t for t in types if t=="q"]))
+# print("num k edges: ", len([t for t in types if t=="k"]))
+# print("num mlp edges: ", len([t for t in types if t==None]))
+# make_html_graph(graph, attrib_type="em", node_offset=8.0, tokens=tokens_list,
+#                 error_graph = leap.error_graph)
+
+# # %%
+# import plotly.express as px
+# px.histogram([attribs[1] for edge, attribs, _ in leap.error_graph])
+# #%%
+# tl.utils.test_prompt(
+#     """When the nurse is ready, you can go and see"""
+    
+    
+#     , "he",
+#                      model)
+
+    
+# #%%
+# a = torch.tensor(
+#     [attribs[1] for edge, attribs, _ in leap.error_graph 
+#      if edge[0].split('.')[0] == "metric"]
+# )
+# #%%
+# len(leap.error_graph)
