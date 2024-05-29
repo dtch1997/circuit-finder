@@ -3,7 +3,6 @@
 Similar to Edge Attribution Patching, calculates the effect of edges on some downstream metric.
 However, takes advantage of linearity afforded by transcoders and MLPs to parallelize
 """
-
 #%%
 import sys
 sys.path.append("/root/circuit-finder")
@@ -172,6 +171,9 @@ class IndirectLEAP:
             (("null", f"metric.{self.n_layers}.{seq}.0"), (0.0, 0.0, 1.0, 0.0), None)
             for seq in range(self.n_seq)
         ]
+
+        # nodes will contain (node, node->metric attrib)
+        self.nodes = []
 
         self.error_graph = []
 
@@ -711,6 +713,7 @@ class IndirectLEAP:
                 up_active_feature_acts,
             ) = self.get_up_active_stuff(down_module, down_layer, up_module)
 
+            # Get the down_node -> metric grads
             if down_module == "mlp":
                 imp_head_out_metric_grads = self.mlp_out_grads[
                     down_layer, imp_down_pos, :
@@ -720,6 +723,12 @@ class IndirectLEAP:
                     imp_head_out_metric_grads,
                     imp_W_dec,
                     "imp_id d_model, imp_id d_model -> imp_id",
+                )
+
+                imp_node_metric_attribs = einsum(
+                    imp_node_metric_grads,
+                    self.mlp_feature_acts[imp_down_pos, down_layer, imp_down_feature_ids],
+                    "imp_id, imp_id -> imp_id"  
                 )
 
             elif down_module == "attn":
@@ -735,13 +744,21 @@ class IndirectLEAP:
                     "imp_id d_model, imp_id d_model -> imp_id",
                 )
 
+                imp_node_metric_attribs = einsum(
+                    imp_node_metric_grads,
+                    self.attn_feature_acts[imp_down_pos, down_layer, imp_down_feature_ids],
+                    "imp_id, imp_id -> imp_id"  
+                )
+
             elif down_module == "metric":
                 imp_node_metric_grads = torch.ones(len(imp_down_pos)).cuda()
+                imp_node_metric_attribs = torch.ones(len(imp_down_pos)).cuda()
+
 
             else:
                 raise ValueError("down_module must be one of ['mlp', 'attn', 'metric']")
 
-            # split attrib calc into two cases depending on downstream module type
+            # Now split attrib calc into two cases depending on downstream module type
             # this is because sequence index requires different treatment in the attn case
             if down_module in ["mlp", "metric"]:
                 up_active_feature_acts: Float[Tensor, " imp_id up_active_id"] = (
@@ -776,10 +793,10 @@ class IndirectLEAP:
                 if not self.cfg.abs_attribs:
                     edge_metric_attribs = torch.minimum(
                         edge_metric_attribs,
-                        imp_node_metric_grads.unsqueeze(1)
+                        imp_node_metric_attribs.unsqueeze(1)
                     )
 
-                # store attribs (optional)
+                # store error attribs (optional)
                 error_to_node_attribs = None
                 error_edge_to_metric_attribs = None
                 if self.cfg.store_error_attribs:
@@ -836,7 +853,7 @@ class IndirectLEAP:
                 if not self.cfg.abs_attribs:
                     edge_metric_attribs = torch.minimum(
                         edge_metric_attribs,
-                        imp_node_metric_grads.unsqueeze(0).unsqueeze(-1)
+                        imp_node_metric_attribs.unsqueeze(0).unsqueeze(-1)
                     )
 
                 # calculate error attribs (optional)
@@ -871,6 +888,7 @@ class IndirectLEAP:
 
             # now add important edges to graph, alongside their (node_node_grad, edge_metric_grad, edge_metric_attrib)
             self.add_to_graph(
+                imp_node_metric_attribs,
                 node_node_grads,
                 node_node_attribs,
                 edge_metric_grads,
@@ -889,6 +907,7 @@ class IndirectLEAP:
 
     def add_to_graph(
         self,
+        imp_node_metric_attribs,
         node_node_grads,  # [seq, imp_id, up_active_id] if down_module==attn.  otherwise [imp_id, up_active_id]
         node_node_attribs,
         edge_metric_grads,
@@ -912,6 +931,14 @@ class IndirectLEAP:
             imp_down_feature_ids, dtype=torch.long, device="cuda"
         )
         imp_down_pos = torch.tensor(imp_down_pos, dtype=torch.long, device="cuda")
+
+        # Add node->metric attribs
+        self.nodes += [ 
+            (f"{down_module_name}.{down_layer}.{imp_down_pos[i]}.{imp_down_feature_ids[i]}",
+             imp_node_metric_attribs[i].item())
+            for i in range(len(imp_down_pos))
+        ]
+        
 
         # Create a mask where attribs are greater than the threshold
 
@@ -1074,7 +1101,7 @@ class IndirectLEAP:
 # %%
 # ~ Jacob's work zone ~
 #Imports and downloads
-# %load_ext autoreload
+%load_ext autoreload
 # %autoreload 2
 # import sys
 # sys.path.append("/root/circuit-finder")
@@ -1109,7 +1136,8 @@ class IndirectLEAP:
 
 # attn_saes = load_attn_saes()
 # attn_saes = preprocess_attn_saes(attn_saes, model)  # type: ignore
-# transcoders = transcoders = load_hooked_mlp_transcoders(use_error_term=True)
+# transcoders = load_hooked_mlp_transcoders(use_error_term=True)
+
 
 
 #%% Define dataset
@@ -1119,13 +1147,17 @@ class IndirectLEAP:
 #     logits = model(tokens)[0,-1]
 #     return logits[correct_token ] - logits[wrong_token]
 
-# task="ioi"
+# task="induction"
 # if task=="ioi":
 #     tokens = model.to_tokens(
-#         [    "When John and Mary were at the store, John gave a bottle to" ])
+#         [    "When John and Mary were at the store, John gave a bottle to",
+         
+#           ])
 
 #     corrupt_tokens = model.to_tokens(
-#         [    "When Alice and Bob were at the store, Charlie gave a bottle to" ])
+#         [    "When Alice and Bob were at the store, Charlie gave a bottle to",
+         
+#             ])
 
 #     metric = partial(logit_diff, correct_str=" Mary", wrong_str=" John")
 
@@ -1211,12 +1243,22 @@ class IndirectLEAP:
     
 #     metric = partial(logit_diff, correct_str=" him", wrong_str=" her") 
 
+# if task=="induction":
+#     tokens = model.to_tokens(
+#         [ "I looked at the blue apple. Then I saw the blue"])
+    
+#     corrupt_tokens = model.to_tokens(
+#         [ "I looked at the funny bird. Then I saw the blue"])
+    
+#     metric = partial(logit_diff, correct_str=" apple", wrong_str=" sky") 
 
-# tokens_list = model.to_str_tokens(tokens)
+
 # print("clean metric = ", metric(model, tokens))
-# print("corrupt  metric = ", metric(model, corrupt_tokens))
+# print("corrupt metric = ", metric(model, corrupt_tokens))
 # #%%
 # model.reset_hooks()
+# from circuit_finder.plotting import make_html_graph
+
 # cfg = LEAPConfig(threshold=0.03,
 #                  contrast_pairs=True, 
 #                  qk_enabled=True,
@@ -1224,7 +1266,7 @@ class IndirectLEAP:
 #                  abs_attribs = False,
 #                  store_error_attribs=True)
 # leap = IndirectLEAP(
-#     cfg, tokens[:1], model, attn_saes, transcoders, metric, corrupt_tokens=corrupt_tokens
+#     cfg, tokens, model, attn_saes, transcoders, metric, corrupt_tokens=corrupt_tokens
 # )
 # leap.run()
 # print("num edges: ", len(leap.graph))
@@ -1234,25 +1276,12 @@ class IndirectLEAP:
 # print("num q edges: ", len([t for t in types if t=="q"]))
 # print("num k edges: ", len([t for t in types if t=="k"]))
 # print("num mlp edges: ", len([t for t in types if t==None]))
-# make_html_graph(graph, attrib_type="em", node_offset=8.0, tokens=tokens_list,
-#                 error_graph = leap.error_graph)
+# make_html_graph(leap, attrib_type="em", node_offset=8.0, show_error_nodes=False)
 
 # # %%
-# import plotly.express as px
-# px.histogram([attribs[1] for edge, attribs, _ in leap.error_graph])
-# #%%
-# tl.utils.test_prompt(
-#     """When the nurse is ready, you can go and see"""
-    
-    
-#     , "he",
-#                      model)
+# leap.model.to_str_tokens(leap.model.tokenizer.batch_decode(tokens), prepend_bos=False)
+# # %%
+# list(set(leap.nodes))
 
-    
 # #%%
-# a = torch.tensor(
-#     [attribs[1] for edge, attribs, _ in leap.error_graph 
-#      if edge[0].split('.')[0] == "metric"]
-# )
-# #%%
-# len(leap.error_graph)
+# leap.graph
