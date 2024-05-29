@@ -3,8 +3,7 @@
 Similar to Edge Attribution Patching, calculates the effect of edges on some downstream metric.
 However, takes advantage of linearity afforded by transcoders and MLPs to parallelize
 """
-
-
+#%%
 import sys
 sys.path.append("/root/circuit-finder")
 import torch
@@ -1141,14 +1140,14 @@ class IndirectLEAP:
 
 
 
-#%% Define dataset
+# #%% Define dataset
 # def logit_diff(model, tokens, correct_str, wrong_str):
 #     correct_token = model.to_tokens(correct_str)[0,1]
 #     wrong_token = model.to_tokens(wrong_str)[0,1]
 #     logits = model(tokens)[0,-1]
 #     return logits[correct_token ] - logits[wrong_token]
 
-# task="ioi"
+# task="ukprison"
 # if task=="ioi":
 #     tokens = model.to_tokens(
 #         [    "When John and Mary were at the store, John gave a bottle to",
@@ -1251,7 +1250,7 @@ class IndirectLEAP:
 # model.reset_hooks()
 # from circuit_finder.plotting import make_html_graph
 
-# cfg = LEAPConfig(threshold=0.03,
+# cfg = LEAPConfig(threshold=0.0006,
 #                  contrast_pairs=True, 
 #                  qk_enabled=True,
 #                  chained_attribs=True,

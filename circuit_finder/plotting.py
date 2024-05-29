@@ -217,14 +217,14 @@ def make_html_graph(leap, attrib_type="em", node_offset=8.0, show_error_nodes=Fa
 
     # Collect all total_attribs for clipping
     all_total_attribs = [total_attrib for total_attrib in node_total_attrib.values()]
-    p95_total_attrib = np.percentile(np.abs(all_total_attribs), 95)
-    clipped_total_attribs = np.clip(np.abs(all_total_attribs), None, p95_total_attrib)
+    p90_total_attrib = np.percentile(np.abs(all_total_attribs), 90)
+    clipped_total_attribs = np.clip(np.abs(all_total_attribs), None, p90_total_attrib)
 
     # Normalize the clipped total_attribs to range from 0.2 to 1
     min_total_attrib = min(clipped_total_attribs)
     max_total_attrib = max(clipped_total_attribs)
-    range_total_attrib = max_total_attrib - min_total_attrib
-    normalized_total_attribs = {node: 0.2 + 0.8 * (total_attrib - min_total_attrib) / range_total_attrib for node, total_attrib in node_total_attrib.items()}
+    range_total_attrib = p90_total_attrib - min_total_attrib
+    normalized_total_attribs = {node: min(1, 0.2 + 0.8 * (total_attrib - min_total_attrib) / range_total_attrib) for node, total_attrib in node_total_attrib.items()}
 
     for downstream, upstream in edges + error_edges:
         if downstream == 'null' or upstream == 'null':
