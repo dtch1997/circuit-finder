@@ -347,7 +347,7 @@ def make_html_graph(
         )
 
         # Add labels at the bottom to indicate the positions
-        label = tokens[position] if tokens and position < len(tokens) else str(position)
+        label = tokens[position] if tokens is not None and position < len(tokens) else str(position)
         label_node = f"label_{position}"
         net.add_node(
             label_node,
