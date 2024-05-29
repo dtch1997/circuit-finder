@@ -1101,7 +1101,7 @@ class IndirectLEAP:
 # %%
 # ~ Jacob's work zone ~
 #Imports and downloads
-%load_ext autoreload
+# %load_ext autoreload
 # %autoreload 2
 # import sys
 # sys.path.append("/root/circuit-finder")

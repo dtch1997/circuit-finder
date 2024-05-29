@@ -156,8 +156,8 @@ import numpy as np
 
 def make_html_graph(leap, attrib_type="em", node_offset=8.0, show_error_nodes=False):
     graph = EAPGraph(leap.graph)
-    tokens = leap.model.to_str_tokens(leap.model.tokenizer.batch_decode(leap.tokens), prepend_bos=False)
-    corrupt_tokens = leap.model.to_str_tokens(leap.model.tokenizer.batch_decode(leap.corrupt_tokens), prepend_bos=False)
+    tokens = leap.model.to_str_tokens(leap.tokens, prepend_bos=False)
+    corrupt_tokens = leap.model.to_str_tokens(leap.corrupt_tokens, prepend_bos=False)
 
     error_graph = leap.error_graph if (len(leap.error_graph) > 0) and show_error_nodes else None
     
