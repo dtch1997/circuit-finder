@@ -462,7 +462,7 @@ class IndirectLEAP:
         # a high score. Whereas using derivative = p leads to an overestimate.
         # So we do something hacky :)
         # Create masks for the conditions
-        mask_greater = pattern > 0.0
+        mask_greater = pattern > 0.5
 
         # Apply the function elementwise
         result = torch.where(mask_greater, pattern - pattern**2, pattern**2)
@@ -793,7 +793,7 @@ class IndirectLEAP:
                 if not self.cfg.abs_attribs:
                     edge_metric_attribs = torch.minimum(
                         edge_metric_attribs,
-                        imp_node_metric_grads.unsqueeze(1)
+                        imp_node_metric_attribs.unsqueeze(1)
                     )
 
                 # store error attribs (optional)
@@ -853,7 +853,7 @@ class IndirectLEAP:
                 if not self.cfg.abs_attribs:
                     edge_metric_attribs = torch.minimum(
                         edge_metric_attribs,
-                        imp_node_metric_grads.unsqueeze(0).unsqueeze(-1)
+                        imp_node_metric_attribs.unsqueeze(0).unsqueeze(-1)
                     )
 
                 # calculate error attribs (optional)
@@ -1101,7 +1101,7 @@ class IndirectLEAP:
 # %%
 # ~ Jacob's work zone ~
 #Imports and downloads
-# %load_ext autoreload
+%load_ext autoreload
 # %autoreload 2
 # import sys
 # sys.path.append("/root/circuit-finder")
@@ -1140,14 +1140,14 @@ class IndirectLEAP:
 
 
 
-# #%% Define dataset
+#%% Define dataset
 # def logit_diff(model, tokens, correct_str, wrong_str):
 #     correct_token = model.to_tokens(correct_str)[0,1]
 #     wrong_token = model.to_tokens(wrong_str)[0,1]
 #     logits = model(tokens)[0,-1]
 #     return logits[correct_token ] - logits[wrong_token]
 
-# task="ukprison"
+# task="induction"
 # if task=="ioi":
 #     tokens = model.to_tokens(
 #         [    "When John and Mary were at the store, John gave a bottle to",
@@ -1243,6 +1243,15 @@ class IndirectLEAP:
     
 #     metric = partial(logit_diff, correct_str=" him", wrong_str=" her") 
 
+# if task=="induction":
+#     tokens = model.to_tokens(
+#         [ "I looked at the blue apple. Then I saw the blue"])
+    
+#     corrupt_tokens = model.to_tokens(
+#         [ "I looked at the funny bird. Then I saw the blue"])
+    
+#     metric = partial(logit_diff, correct_str=" apple", wrong_str=" sky") 
+
 
 # print("clean metric = ", metric(model, tokens))
 # print("corrupt metric = ", metric(model, corrupt_tokens))
@@ -1250,7 +1259,7 @@ class IndirectLEAP:
 # model.reset_hooks()
 # from circuit_finder.plotting import make_html_graph
 
-# cfg = LEAPConfig(threshold=0.0006,
+# cfg = LEAPConfig(threshold=0.03,
 #                  contrast_pairs=True, 
 #                  qk_enabled=True,
 #                  chained_attribs=True,
