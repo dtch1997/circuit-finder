@@ -1,3 +1,4 @@
+# flake8: ignore
 """Script to run an experiment with LEAP
 
 Usage:
@@ -6,9 +7,15 @@ pdm run python -m circuit_finder.experiments.run_leap_experiment [ARGS]
 Run with flag '-h', '--help' to see the arguments.
 """
 
+import sys
+
+sys.path.append("/workspace/circuit-finder")
+
+import pickle
 import pandas as pd
 import json
 import torch
+import transformer_lens as tl
 
 from simple_parsing import ArgumentParser
 from dataclasses import dataclass
@@ -20,6 +27,7 @@ from circuit_finder.constants import device
 from tqdm import tqdm
 
 from typing import Literal
+from eindex import eindex
 from pathlib import Path
 from circuit_finder.pretrained import (
     load_model,
@@ -31,195 +39,212 @@ from circuit_finder.patching.indirect_leap import (
     IndirectLEAP,
     LEAPConfig,
 )
+from circuit_finder.core.types import Model
 from circuit_finder.metrics import batch_avg_answer_diff
-
 from circuit_finder.constants import ProjectDir
+from circuit_finder.patching.ablate import (
+    splice_model_with_saes_and_transcoders,
+    get_metric_with_ablation,
+)
+
+THRESHOLDS = [0.0006, 0.001, 0.003, 0.006, 0.01]
 
 
-@dataclass
-class LeapExperimentConfig:
-    dataset_path: str = "datasets/ioi/ioi_vanilla_template_prompts.json"
-    save_dir: str = "results/leap_experiment"
-    seed: int = 1
-    batch_size: int = 4
-    total_dataset_size: int = 1024
-    ablate_nodes: bool | str = "bm"
-    ablate_errors: bool | str = False
-    ablate_tokens: Literal["clean", "corrupt"] = "clean"
-    # NOTE: This specifies what to do with error nodes when calculating faithfulness curves.
-    # Options are:
-    # - ablate_errors = False  ->  we don't ablate error nodes
-    # - ablate_errors = "bm"   ->  we batchmean-ablate error nodes
-    # - ablate_errors = "zero" ->  we zero-ablate error nodes (warning: this gives v bad performance)
+@dataclass(frozen=True)
+class CleanCorruptExample:
+    clean_prompt: str
+    answer: str
+    wrong_answer: str
+    corrupt_prompt: str
 
-    first_ablate_layer: int = 2
-    # NOTE:This specifies which layer to start ablating at.
-    # Marks et al don't ablate the first 2 layers
-    # TODO: Find reference for the above
+    def clean_tokens(self, model: Model):
+        return model.to_tokens(self.clean_prompt)
 
-    verbose: bool = False
+    def answer_tokens(self, model: Model):
+        return model.to_tokens(self.answer, prepend_bos=False).squeeze(0)
+
+    def wrong_answer_tokens(self, model: Model):
+        return model.to_tokens(self.wrong_answer, prepend_bos=False).squeeze(0)
+
+    def corrupt_tokens(self, model: Model):
+        return model.to_tokens(self.corrupt_prompt)
 
 
-def run_leap_experiment(config: LeapExperimentConfig):
-    # Define save dir
-    save_dir = ProjectDir / config.save_dir
-    save_dir.mkdir(parents=True, exist_ok=True)
-    # Save the config
-    with open(save_dir / "config.json", "w") as jsonfile:
-        json.dump(config.__dict__, jsonfile)
+datasets: dict[str, CleanCorruptExample] = {
+    # Datasets reported in "Have Faith in Faithfulness" (Hanna et al, 2023)
+    "gender-bias": CleanCorruptExample(
+        clean_prompt="The doctor is ready, you can go see",
+        answer=" him",
+        wrong_answer=" her",
+        corrupt_prompt="The nurse is ready, you can go see",
+    ),
+    # TODO: Subject-verb Agreement
+    "ioi": CleanCorruptExample(
+        clean_prompt="When John and Mary went to the shop, John gave a bottle to",
+        answer=" Mary",
+        wrong_answer=" John",
+        corrupt_prompt="When Alice and Bob went to the shop, Charlie gave a bottle to",
+    ),
+    # TODO: Hypernymy
+    # TODO: Greater-than
+    # Datasets Jacob came up with himself
+    "for-loop": CleanCorruptExample(
+        clean_prompt="for y in x: print(",
+        answer="y",
+        wrong_answer="x",
+        corrupt_prompt="for x in y: print(",
+    ),
+    # "if-else": CleanCorruptExample(
+    #     clean_prompt="if x>5: print(x)",
+    #     answer="else",
+    #     wrong_answer="if",
+    #     corrupt_prompt="while x>5: print(x)",
+    # ),
+}
 
-    # Load models
-    model = load_model(requires_grad=True)
-    attn_saes = load_attn_saes(use_error_term=True)
-    attn_saes = preprocess_attn_saes(attn_saes, model)  # type: ignore
-    transcoders = load_hooked_mlp_transcoders(use_error_term=True)
 
-    # Define dataset
-    dataset_path = config.dataset_path
-    if not dataset_path.startswith("/"):
-        # Assume relative path
-        dataset_path = ProjectDir / dataset_path
+def load_models():
+    model = load_model()
+    attn_sae_dict = load_attn_saes()
+    # TODO: get rid of need to preprocess attn saes
+    attn_sae_dict = preprocess_attn_saes(attn_sae_dict, model)
+    hooked_mlp_transcoder_dict = load_hooked_mlp_transcoders()
+    attn_saes = list(attn_sae_dict.values())
+    transcoders = list(hooked_mlp_transcoder_dict.values())
+
+    return model, attn_saes, transcoders
+
+
+def compute_logit_diff(model, clean_tokens, answer_tokens, wrong_answer_tokens):
+    clean_logits = model(clean_tokens)
+    last_logits = clean_logits[:, -1, :]
+    correct_logits = eindex(last_logits, answer_tokens, "batch [batch]")
+    wrong_logits = eindex(last_logits, wrong_answer_tokens, "batch [batch]")
+    return correct_logits - wrong_logits
+
+
+def get_clean_and_corrupt_metric(
+    model,
+    metric_fn,
+    clean_tokens,
+    corrupt_tokens,
+):
+    with torch.no_grad():
+        clean_metric = metric_fn(model, clean_tokens).item()
+        corrupt_metric = metric_fn(model, corrupt_tokens).item()
+
+    return clean_metric, corrupt_metric
+
+
+@dataclass(frozen=True)
+class LeapExperimentResult:
+    config: LEAPConfig
+    clean_metric: float
+    corrupt_metric: float
+    graph: EAPGraph
+    error_graph: EAPGraph
+
+
+def run_leap(
+    leap_config: LEAPConfig,
+    example: CleanCorruptExample,
+    model: Model,
+    attn_saes,
+    hooked_mlp_transcoders,
+    *,
+    metric_fn_name: str = "logit_diff",
+):
+    # Test prompt
+    print("Testing clean prompt")
+    tl.utils.test_prompt(
+        example.clean_prompt, example.answer, model, prepend_space_to_answer=False
+    )
+    print("=" * 80)
+
+    print("Testing corrupt prompt")
+    tl.utils.test_prompt(
+        example.corrupt_prompt, example.answer, model, prepend_space_to_answer=False
+    )
+    print("=" * 80)
+
+    # Setup the tokens
+    clean_tokens = example.clean_tokens(model)
+    answer_tokens = example.answer_tokens(model)
+    wrong_answer_tokens = example.wrong_answer_tokens(model)
+    corrupt_tokens = example.corrupt_tokens(model)
+
+    # Setup the metric function
+    if metric_fn_name == "logit_diff":
+
+        def metric_fn(model, tokens):
+            logit_diff = compute_logit_diff(
+                model, tokens, answer_tokens, wrong_answer_tokens
+            )
+            return logit_diff.mean()
     else:
-        dataset_path = Path(dataset_path)
-    train_loader, _ = load_datasets_from_json(
-        model=model,
-        path=dataset_path,
-        device=device,  # type: ignore
-        batch_size=config.batch_size,
-        train_test_size=(config.total_dataset_size, config.total_dataset_size),
-        random_seed=config.seed,
+        raise ValueError(f"Unknown metric_fn_name: {metric_fn_name}")
+
+    clean_metric, corrupt_metric = get_clean_and_corrupt_metric(
+        model, metric_fn, clean_tokens, corrupt_tokens
     )
 
-    for idx, batch in tqdm(enumerate(train_loader)):
-        # Set up batch dir
-        batch_dir = save_dir / f"batch_{idx}"
-        batch_dir.mkdir(parents=True, exist_ok=True)
+    # Run LEAP
+    leap = IndirectLEAP(
+        cfg=leap_config,
+        tokens=clean_tokens,
+        model=model,
+        metric=metric_fn,
+        attn_saes=attn_saes,  # type: ignore
+        transcoders=hooked_mlp_transcoders,
+        corrupt_tokens=corrupt_tokens,
+    )
+    leap.run()
+    graph = EAPGraph(leap.graph)
+    error_graph = EAPGraph(leap.error_graph)
 
-        # Save the config
-        with open(batch_dir / "config.json", "w") as jsonfile:
-            json.dump(config.__dict__, jsonfile)
-
-        # Parse the batch
-        key = batch.key
-        clean_tokens = batch.clean
-        answer_tokens = batch.answers
-        wrong_answer_tokens = batch.wrong_answers
-        corrupt_tokens = batch.corrupt
-        ablate_tokens = (
-            clean_tokens if config.ablate_tokens == "clean" else corrupt_tokens
-        )
-
-        # Define metric
-        def metric_fn(model, tokens):
-            logits = model(tokens)
-            last_token_logits = logits[:, -1, :]
-            return batch_avg_answer_diff(last_token_logits, batch)
-
-        # Save the dataset.
-        with open(batch_dir / "dataset.json", "w") as jsonfile:
-            json.dump(
-                {
-                    "clean": model.to_string(clean_tokens),
-                    "answer": model.to_string(answer_tokens),
-                    "wrong_answer": model.to_string(wrong_answer_tokens),
-                    "corrupt": model.to_string(corrupt_tokens),
-                },
-                jsonfile,
-            )
-
-        # NOTE: First, get the ceiling of the patching metric.
-        # TODO: Replace 'last_token_logit' with logit difference
-        with torch.no_grad():
-            ceiling = metric_fn(model, clean_tokens).item()
-
-        # NOTE: Second, get floor of patching metric using empty graph, i.e. ablate everything
-        with torch.no_grad():
-            empty_graph = EAPGraph([])
-            floor = get_metric_with_ablation(
-                model,
-                empty_graph,
-                ablate_tokens,
-                metric_fn,
-                transcoders,
-                attn_saes,
-                ablate_errors=False,  # Do not ablate errors when running forward pass
-                first_ablated_layer=config.first_ablate_layer,
-            ).item()
-        clear_memory()
-
-        # now sweep over thresholds to get graphs with variety of numbers of nodes
-        # for each graph we calculate faithfulness
-        num_nodes_list = []
-        metrics_list = []
-
-        # Sweep over thresholds
-        # TODO: make configurable
-        thresholds = [0.001, 0.003, 0.006, 0.01, 0.03, 0.06, 0.1, 0.3, 0.6, 1.0]
-        for threshold in thresholds:
-            # Setup LEAP algorithm
-            model.reset_hooks()
-            cfg = LEAPConfig(
-                threshold=threshold, contrast_pairs=False, chained_attribs=True
-            )
-            leap = IndirectLEAP(
-                cfg=cfg,
-                tokens=clean_tokens,
-                model=model,
-                metric=metric_fn,
-                attn_saes=attn_saes,  # type: ignore
-                transcoders=transcoders,
-                corrupt_tokens=corrupt_tokens,
-            )
-
-            # Populate the graph
-            leap.metric_step()
-            for layer in reversed(range(1, leap.n_layers)):
-                leap.mlp_step(layer)
-                leap.ov_step(layer)
-
-            # Save the graph
-            graph = EAPGraph(leap.graph)
-            num_nodes = len(graph.get_src_nodes())
-            with open(
-                batch_dir / f"leap-graph_threshold={threshold}.json", "w"
-            ) as jsonfile:
-                json.dump(graph.to_json(), jsonfile)
-
-            # Delete tensors to save memory
-            del leap
-            clear_memory()
-
-            # Calculate the metric under ablation
-            with torch.no_grad():
-                metric = get_metric_with_ablation(
-                    model,
-                    graph,
-                    ablate_tokens,
-                    metric_fn,
-                    transcoders,
-                    attn_saes,
-                    ablate_errors=config.ablate_errors,  # type: ignore
-                    first_ablated_layer=config.first_ablate_layer,
-                ).item()
-
-            # Log the data
-            num_nodes_list.append(num_nodes)
-            metrics_list.append(metric)
-
-        faith = [(metric - floor) / (ceiling - floor) for metric in metrics_list]
-
-        # Save the result as a dataframe
-        data = pd.DataFrame(
-            {"num_nodes": num_nodes_list, "faithfulness": faith, "metric": metrics_list}
-        )
-        data["floor"] = floor
-        data["ceiling"] = ceiling
-        data.to_csv(batch_dir / "leap_experiment_results.csv", index=False)
+    return LeapExperimentResult(
+        config=leap_config,
+        clean_metric=clean_metric,
+        corrupt_metric=corrupt_metric,
+        graph=graph,
+        error_graph=error_graph,
+    )
 
 
 if __name__ == "__main__":
-    parser = ArgumentParser()
-    parser.add_arguments(LeapExperimentConfig, dest="config")
-    args = parser.parse_args()
+    model = load_model()
+    attn_saes = load_attn_saes()
+    attn_saes = preprocess_attn_saes(attn_saes, model)
+    hooked_mlp_transcoders = load_hooked_mlp_transcoders()
+    metric_fn_name = "logit_diff"
+    cfg = LEAPConfig(
+        threshold=0.001,
+        contrast_pairs=True,
+        qk_enabled=True,
+        chained_attribs=True,
+        abs_attribs=False,
+        store_error_attribs=True,
+    )
 
-    run_leap_experiment(args.config)
+    for dataset_name, example in datasets.items():
+        for threshold in [0.0006, 0.001, 0.003, 0.006, 0.01]:
+            cfg.threshold = threshold
+            print(f"Running experiment on dataset: {dataset_name}")
+            leap_experiment_result = run_leap(
+                cfg,
+                example,
+                model,
+                attn_saes,
+                hooked_mlp_transcoders,
+                metric_fn_name=metric_fn_name,
+            )
+
+            print(f"Clean Metric: {leap_experiment_result.clean_metric}")
+            print(f"Corrupt Metric: {leap_experiment_result.corrupt_metric}")
+
+            save_dir = ProjectDir / "leap_experiment_results"
+            save_dir.mkdir(parents=True, exist_ok=True)
+            with open(
+                save_dir / f"dataset={dataset_name}_threshold={threshold}.pkl", "wb"
+            ) as f:
+                pickle.dump(leap_experiment_result, f)
