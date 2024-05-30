@@ -207,7 +207,7 @@ def get_ablation_result(
     coefficients=np.linspace(0, 1, 11),
     setting="noising",
 ):
-    coefficients = []
+    coefs = []
     metrics = []
 
     if setting == "noising":
@@ -223,7 +223,7 @@ def get_ablation_result(
                 with model.hooks(fwd_hooks=fwd_hooks):
                     metric = metric_fn(model, clean_tokens).item()
                     metrics.append(metric)
-                    coefficients.append(coefficient)
+                    coefs.append(coefficient)
     elif setting == "denoising":
         with splice_model_with_saes_and_transcoders(
             model,  # type: ignore
@@ -240,9 +240,9 @@ def get_ablation_result(
                     metric = metric_fn(model, corrupt_tokens).item()
                     metrics.append(metric)
                     # NOTE: in the noising setting, the role of the coefficient is inverted
-                    coefficients.append(1 - coefficient)
+                    coefs.append(1 - coefficient)
 
-    return AblationResult(coefficients, metrics)
+    return AblationResult(coefs, metrics)
 
 
 def get_ablation_hooks(
