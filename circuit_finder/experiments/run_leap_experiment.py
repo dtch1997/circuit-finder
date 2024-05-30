@@ -11,6 +11,7 @@ import sys
 
 sys.path.append("/workspace/circuit-finder")
 
+import pathlib
 import pickle
 import pandas as pd
 import json
@@ -46,6 +47,7 @@ from circuit_finder.patching.ablate import (
     splice_model_with_saes_and_transcoders,
     get_metric_with_ablation,
 )
+from circuit_finder.plotting import make_html_graph
 
 THRESHOLDS = [0.0006, 0.001, 0.003, 0.006, 0.01]
 
@@ -152,6 +154,7 @@ def run_leap(
     attn_saes,
     hooked_mlp_transcoders,
     *,
+    save_dir: pathlib.Path,
     metric_fn_name: str = "logit_diff",
 ):
     # Test prompt
@@ -202,6 +205,8 @@ def run_leap(
     graph = EAPGraph(leap.graph)
     error_graph = EAPGraph(leap.error_graph)
 
+    make_html_graph(leap, html_file=str(save_dir.absolute() / "graph.html"))
+
     return LeapExperimentResult(
         config=leap_config,
         clean_metric=clean_metric,
@@ -222,13 +227,20 @@ if __name__ == "__main__":
         contrast_pairs=True,
         qk_enabled=True,
         chained_attribs=True,
-        abs_attribs=False,
+        allow_neg_feature_acts=True,
         store_error_attribs=True,
     )
 
     for dataset_name, example in datasets.items():
-        for threshold in [0.0006, 0.001, 0.003, 0.006, 0.01]:
+        for threshold in [0.0006, 0.001, 0.003, 0.006, 0.01, 0.03, 0.06]:
             cfg.threshold = threshold
+            save_dir = (
+                ProjectDir
+                / "leap_experiment_results"
+                / f"dataset={dataset_name}_threshold={threshold}"
+            )
+            save_dir.mkdir(parents=True, exist_ok=True)
+
             print(f"Running experiment on dataset: {dataset_name}")
             leap_experiment_result = run_leap(
                 cfg,
@@ -236,15 +248,12 @@ if __name__ == "__main__":
                 model,
                 attn_saes,
                 hooked_mlp_transcoders,
+                save_dir=save_dir,
                 metric_fn_name=metric_fn_name,
             )
 
             print(f"Clean Metric: {leap_experiment_result.clean_metric}")
             print(f"Corrupt Metric: {leap_experiment_result.corrupt_metric}")
 
-            save_dir = ProjectDir / "leap_experiment_results"
-            save_dir.mkdir(parents=True, exist_ok=True)
-            with open(
-                save_dir / f"dataset={dataset_name}_threshold={threshold}.pkl", "wb"
-            ) as f:
+            with open(save_dir / "result.pkl", "wb") as f:
                 pickle.dump(leap_experiment_result, f)
