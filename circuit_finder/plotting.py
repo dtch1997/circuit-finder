@@ -163,8 +163,20 @@ def make_html_graph(
     html_file="graph.html",
 ):
     graph = EAPGraph(leap.graph)
-    tokens = leap.model.to_str_tokens(leap.tokens, prepend_bos=False)
-    corrupt_tokens = leap.model.to_str_tokens(leap.corrupt_tokens, prepend_bos=False)
+
+    # NOTE: Handle the cae where multiple examples in a batch
+    n_batch = leap.tokens.shape[0]
+    if n_batch == 1:
+        tokens = leap.model.to_str_tokens(leap.tokens, prepend_bos=False)
+        corrupt_tokens = leap.model.to_str_tokens(
+            leap.corrupt_tokens, prepend_bos=False
+        )
+    else:
+        # Just take the first batch
+        tokens = leap.model.to_str_tokens(leap.tokens[:1], prepend_bos=False)
+        corrupt_tokens = leap.model.to_str_tokens(
+            leap.corrupt_tokens[:1], prepend_bos=False
+        )
 
     error_graph = (
         leap.error_graph if (len(leap.error_graph) > 0) and show_error_nodes else None
