@@ -151,6 +151,16 @@ def node_patch_hook(
     return act
 
 
+def node_delta_patch_hook(
+    act, hook, reference_value, coefficient, *, token_idx, feature_idx
+):
+    """Patches a node by interpolating towards a reference value."""
+    a = act[:, token_idx, feature_idx]
+    delta = reference_value - a
+    act[:, token_idx, feature_idx] = a + coefficient * delta
+    return act
+
+
 def get_node_patch_hook(node: Node, value: float):
     module_name, layer, token_idx, feature_idx = parse_node_name(node)
     hook_name = get_hook_name(module_name, layer)
@@ -173,18 +183,47 @@ def get_circuit_node_patch_hooks(
 
     fwd_hooks = []
     for node in nodes:
+        module_name, layer, token_idx, feature_idx = parse_node_name(node)
+        hook_name = get_hook_name(module_name, layer)
+        clean_value = get_node_act(clean_cache, node)
+        corrupt_value = get_node_act(corrupt_cache, node)
+
         # Interpolate between clean, corrupt to get the value
         # c = 0 --> corrupt value
         # c = 1 --> clean value
-        clean_value = get_node_act(clean_cache, node)
-        corrupt_value = get_node_act(corrupt_cache, node)
         value = (clean_value - corrupt_value) * coefficient + corrupt_value
 
         # Define the hook function
+        hook_fn = partial(
+            node_patch_hook,
+            token_idx=token_idx,
+            feature_idx=feature_idx,
+            value=value,
+        )
+        fwd_hooks.append((hook_name, hook_fn))
+    return fwd_hooks
+
+
+def get_circuit_node_delta_patch_hooks(
+    corrupt_cache: tl.ActivationCache,
+    nodes: list[Node],
+    coefficient: float,
+):
+    """Return a list of patch hooks"""
+
+    fwd_hooks = []
+    for node in nodes:
         module_name, layer, token_idx, feature_idx = parse_node_name(node)
         hook_name = get_hook_name(module_name, layer)
+        corrupt_value = get_node_act(corrupt_cache, node)
+
+        # Define the hook function
         hook_fn = partial(
-            node_patch_hook, token_idx=token_idx, feature_idx=feature_idx, value=value
+            node_delta_patch_hook,
+            reference_value=corrupt_value,
+            coefficient=coefficient,
+            token_idx=token_idx,
+            feature_idx=feature_idx,
         )
         fwd_hooks.append((hook_name, hook_fn))
     return fwd_hooks
