@@ -3,8 +3,10 @@
 Similar to Edge Attribution Patching, calculates the effect of edges on some downstream metric.
 However, takes advantage of linearity afforded by transcoders and MLPs to parallelize
 """
-#%%
+
+# %%
 import sys
+
 sys.path.append("/root/circuit-finder")
 import torch
 import transformer_lens as tl
@@ -33,6 +35,39 @@ from circuit_finder.core.hooked_sae import HookedSAE
 from circuit_finder.core.hooked_transcoder import HookedTranscoder
 
 
+def expand_parameter(
+    p: torch.nn.Parameter, new_shape: tuple[int]
+) -> torch.nn.Parameter:
+    """Expand a parameter to a new shape by adding zeros."""
+    assert 1 <= len(p.shape) <= 2, "Only supports 1D or 2D parameters"
+    if len(p.shape) == 1:
+        new_p_data = torch.zeros(
+            new_shape,
+            device=p.device,
+            dtype=p.dtype,
+        )
+        new_p_data[: p.size(0)] = p.data
+        new_p = torch.nn.Parameter(
+            new_p_data,
+            requires_grad=p.requires_grad,
+        )
+        return new_p
+    elif len(p.shape) == 2:
+        new_p_data = torch.zeros(
+            new_shape,
+            device=p.device,
+            dtype=p.dtype,
+        )
+        new_p_data[: p.size(0), : p.size(1)] = p.data
+        new_p = torch.nn.Parameter(
+            new_p_data,
+            requires_grad=p.requires_grad,
+        )
+        return new_p
+
+    raise RuntimeError("Should never reach here")
+
+
 def preprocess_attn_saes(
     attn_saes_in: dict[LayerIndex, HookedSAE],
     model: tl.HookedTransformer,
@@ -43,28 +78,12 @@ def preprocess_attn_saes(
     # TODO: implement fix
     attn_saes = {}
     for layer, sae in attn_saes_in.items():
-        # chop off features so all have same size TODO fix this
-        sae.W_enc = torch.nn.Parameter(sae.W_enc[:, :24576], requires_grad=False)
-        sae.b_enc = torch.nn.Parameter(sae.b_enc[:24576], requires_grad=False)
-        sae.W_dec = torch.nn.Parameter(sae.W_dec[:24576, :], requires_grad=False)
-        sae.b_dec = torch.nn.Parameter(sae.b_dec, requires_grad=False)
-
-        # normalize so decoder ols have norm=1 when viewed as resid vectors
-        # TODO: Daniel doesn't understand why this is necessary
-        W_dec_z = rearrange(
-            sae.W_dec, "nf (nhead dhead) -> nf nhead dhead", nhead=model.cfg.n_heads
-        )
-        W_dec_resid = einsum(
-            W_dec_z, model.W_O[layer], "nf nhead dhead, nhead dhead dmodel -> nf dmodel"
-        )
-        norms = W_dec_resid.norm(dim=-1, keepdim=True)  # [nf, 1]
-
-        normed_sae = sae
-        normed_sae.W_dec = torch.nn.Parameter(sae.W_dec / norms)
-        normed_sae.W_enc = torch.nn.Parameter(sae.W_enc * norms.T)
-        normed_sae.b_enc = torch.nn.Parameter(sae.b_enc * norms.squeeze())
-
-        attn_saes[layer] = normed_sae
+        # expand all features to have size 49152 by adding zeros
+        sae.W_enc = expand_parameter(sae.W_enc, (sae.W_enc.size(0), 49152))
+        sae.b_enc = expand_parameter(sae.b_enc, (49152,))
+        sae.W_dec = expand_parameter(sae.W_dec, (49152, sae.W_dec.size(1)))
+        sae.b_dec = expand_parameter(sae.b_dec, (sae.b_dec.size(0)))
+        attn_saes[layer] = sae
 
     return attn_saes
 
@@ -76,7 +95,7 @@ class LEAPConfig:
     chained_attribs: bool = True
     store_error_attribs: bool = False
     qk_enabled: bool = True
-    abs_attribs : bool = False
+    abs_attribs: bool = False
 
 
 class IndirectLEAP:
@@ -279,10 +298,12 @@ class IndirectLEAP:
                 )[1]
             self.mlp_feature_acts[:, layer, :] = mlp_feature_acts.mean(0)
             if self.cfg.abs_attribs:
-                self.mlp_is_active[:, layer, :] = (mlp_feature_acts != 0).float().mean(0)
+                self.mlp_is_active[:, layer, :] = (
+                    (mlp_feature_acts != 0).float().mean(0)
+                )
             else:
                 self.mlp_is_active[:, layer, :] = (mlp_feature_acts > 0).float().mean(0)
-     
+
             self.mlp_errors[:, layer, :] = (cache[mlp_out_pt] - mlp_recons).mean(0)
 
             # NOTE: Here we handle the fact that SAE hook names can change depending on status
@@ -319,9 +340,13 @@ class IndirectLEAP:
 
             self.attn_feature_acts[:, layer, :] = attn_feature_acts.mean(0)
             if self.cfg.abs_attribs:
-                self.attn_is_active[:, layer, :] = (attn_feature_acts != 0).float().mean(0)
+                self.attn_is_active[:, layer, :] = (
+                    (attn_feature_acts != 0).float().mean(0)
+                )
             else:
-                self.attn_is_active[:, layer, :] = (attn_feature_acts > 0).float().mean(0)
+                self.attn_is_active[:, layer, :] = (
+                    (attn_feature_acts > 0).float().mean(0)
+                )
             z_error = rearrange(
                 (attn_recons - z_concat).mean(0),
                 "seq (n_heads d_head) -> seq n_heads d_head",
@@ -727,8 +752,10 @@ class IndirectLEAP:
 
                 imp_node_metric_attribs = einsum(
                     imp_node_metric_grads,
-                    self.mlp_feature_acts[imp_down_pos, down_layer, imp_down_feature_ids],
-                    "imp_id, imp_id -> imp_id"  
+                    self.mlp_feature_acts[
+                        imp_down_pos, down_layer, imp_down_feature_ids
+                    ],
+                    "imp_id, imp_id -> imp_id",
                 )
 
             elif down_module == "attn":
@@ -746,14 +773,15 @@ class IndirectLEAP:
 
                 imp_node_metric_attribs = einsum(
                     imp_node_metric_grads,
-                    self.attn_feature_acts[imp_down_pos, down_layer, imp_down_feature_ids],
-                    "imp_id, imp_id -> imp_id"  
+                    self.attn_feature_acts[
+                        imp_down_pos, down_layer, imp_down_feature_ids
+                    ],
+                    "imp_id, imp_id -> imp_id",
                 )
 
             elif down_module == "metric":
                 imp_node_metric_grads = torch.ones(len(imp_down_pos)).cuda()
                 imp_node_metric_attribs = torch.ones(len(imp_down_pos)).cuda()
-
 
             else:
                 raise ValueError("down_module must be one of ['mlp', 'attn', 'metric']")
@@ -792,8 +820,7 @@ class IndirectLEAP:
                 # clip the attribs
                 if not self.cfg.abs_attribs:
                     edge_metric_attribs = torch.minimum(
-                        edge_metric_attribs,
-                        imp_node_metric_attribs.unsqueeze(1)
+                        edge_metric_attribs, imp_node_metric_attribs.unsqueeze(1)
                     )
 
                 # store error attribs (optional)
@@ -818,10 +845,8 @@ class IndirectLEAP:
                     error_edge_to_metric_attribs = einsum(
                         error_to_node_attribs,
                         imp_node_metric_grads,
-                        "imp_id layer, imp_id -> imp_id layer"
+                        "imp_id layer, imp_id -> imp_id layer",
                     )
-
-                    
 
             elif down_module in ["attn"]:
                 # Compute attribs of imp nodes wrt all upstream MLP nodes
@@ -853,7 +878,7 @@ class IndirectLEAP:
                 if not self.cfg.abs_attribs:
                     edge_metric_attribs = torch.minimum(
                         edge_metric_attribs,
-                        imp_node_metric_attribs.unsqueeze(0).unsqueeze(-1)
+                        imp_node_metric_attribs.unsqueeze(0).unsqueeze(-1),
                     )
 
                 # calculate error attribs (optional)
@@ -876,7 +901,7 @@ class IndirectLEAP:
                     error_edge_to_metric_attribs = einsum(
                         error_to_node_attribs,
                         imp_node_metric_grads,
-                        "seq imp_id layer, imp_id -> seq imp_id layer"
+                        "seq imp_id layer, imp_id -> seq imp_id layer",
                     )
 
             else:
@@ -933,12 +958,13 @@ class IndirectLEAP:
         imp_down_pos = torch.tensor(imp_down_pos, dtype=torch.long, device="cuda")
 
         # Add node->metric attribs
-        self.nodes += [ 
-            (f"{down_module_name}.{down_layer}.{imp_down_pos[i]}.{imp_down_feature_ids[i]}",
-             imp_node_metric_attribs[i].item())
+        self.nodes += [
+            (
+                f"{down_module_name}.{down_layer}.{imp_down_pos[i]}.{imp_down_feature_ids[i]}",
+                imp_node_metric_attribs[i].item(),
+            )
             for i in range(len(imp_down_pos))
         ]
-        
 
         # Create a mask where attribs are greater than the threshold
 
@@ -1047,21 +1073,26 @@ class IndirectLEAP:
                             f"{up_module_name}_error.{up_layer}.{imp_down_pos[imp_id]}",
                         )
                         error_to_node_attrib = error_to_node_attribs[imp_id, up_layer]
-                        error_edge_to_metric_attrib = error_edge_to_metric_attribs[imp_id, up_layer]
-                        
+                        error_edge_to_metric_attrib = error_edge_to_metric_attribs[
+                            imp_id, up_layer
+                        ]
+
                         if self.cfg.chained_attribs:
                             is_large = error_edge_to_metric_attrib > self.cfg.threshold
                         else:
                             is_large = error_to_node_attrib > self.cfg.threshold
 
-                        if is_large:                        
-                            self.error_graph.append(  
+                        if is_large:
+                            self.error_graph.append(
                                 (
-                                edge, 
-                                (error_to_node_attrib.item(), error_edge_to_metric_attrib.item()),
-                                edge_type
+                                    edge,
+                                    (
+                                        error_to_node_attrib.item(),
+                                        error_edge_to_metric_attrib.item(),
+                                    ),
+                                    edge_type,
                                 )
-                                )  
+                            )
 
             if down_module_name in ["attn"]:
                 # error_attribs : [seq, imp_id, layer]
@@ -1072,21 +1103,30 @@ class IndirectLEAP:
                                 f"{down_module_name}.{down_layer}.{imp_down_pos[imp_id]}.{imp_down_feature_ids[imp_id]}",
                                 f"{up_module_name}_error.{up_layer}.{up_seq}",
                             )
-                            error_to_node_attrib = error_to_node_attribs[up_seq, imp_id, up_layer]
-                            error_edge_to_metric_attrib = error_edge_to_metric_attribs[up_seq, imp_id, up_layer]
+                            error_to_node_attrib = error_to_node_attribs[
+                                up_seq, imp_id, up_layer
+                            ]
+                            error_edge_to_metric_attrib = error_edge_to_metric_attribs[
+                                up_seq, imp_id, up_layer
+                            ]
                             if self.cfg.chained_attribs:
-                                is_large = error_edge_to_metric_attrib > self.cfg.threshold
+                                is_large = (
+                                    error_edge_to_metric_attrib > self.cfg.threshold
+                                )
                             else:
                                 is_large = error_to_node_attrib > self.cfg.threshold
-                            
+
                             if is_large:
-                                self.error_graph.append(  
+                                self.error_graph.append(
                                     (
-                                    edge, 
-                                    (error_to_node_attrib.item(), error_edge_to_metric_attrib.item()),
-                                    edge_type
-                                    )  
+                                        edge,
+                                        (
+                                            error_to_node_attrib.item(),
+                                            error_edge_to_metric_attrib.item(),
+                                        ),
+                                        edge_type,
                                     )
+                                )
 
     def run(self):
         self.metric_step()
@@ -1100,7 +1140,7 @@ class IndirectLEAP:
 
 # %%
 # ~ Jacob's work zone ~
-#Imports and downloads
+# Imports and downloads
 # %load_ext autoreload
 # %autoreload 2
 # import sys
@@ -1139,8 +1179,7 @@ class IndirectLEAP:
 # transcoders = load_hooked_mlp_transcoders(use_error_term=True)
 
 
-
-#%% Define dataset
+# %% Define dataset
 # def logit_diff(model, tokens, correct_str, wrong_str):
 #     correct_token = model.to_tokens(correct_str)[0,1]
 #     wrong_token = model.to_tokens(wrong_str)[0,1]
@@ -1151,12 +1190,12 @@ class IndirectLEAP:
 # if task=="ioi":
 #     tokens = model.to_tokens(
 #         [    "When John and Mary were at the store, John gave a bottle to",
-         
+
 #           ])
 
 #     corrupt_tokens = model.to_tokens(
 #         [    "When Alice and Bob were at the store, Charlie gave a bottle to",
-         
+
 #             ])
 
 #     metric = partial(logit_diff, correct_str=" Mary", wrong_str=" John")
@@ -1178,7 +1217,7 @@ class IndirectLEAP:
 #     corrupt_tokens = model.to_tokens(
 #         [    "in the center of the road was a car, with black rubber" ])
 
-#     metric = partial(logit_diff, correct_str=" tyres", wrong_str=" tires")   
+#     metric = partial(logit_diff, correct_str=" tyres", wrong_str=" tires")
 
 # if task=="ukdate":
 #     tokens = model.to_tokens(
@@ -1187,7 +1226,7 @@ class IndirectLEAP:
 #     corrupt_tokens = model.to_tokens(
 #         [    "in the center of the road was a car, with black rubber" ])
 
-#     metric = partial(logit_diff, correct_str=" tyres", wrong_str=" tires")   
+#     metric = partial(logit_diff, correct_str=" tyres", wrong_str=" tires")
 
 # if task=="race":
 #     tokens = model.to_tokens(
@@ -1196,7 +1235,7 @@ class IndirectLEAP:
 #     corrupt_tokens = model.to_tokens(
 #         [    "Charlie was" ])
 
-#     metric = partial(logit_diff, correct_str=" arrested", wrong_str=" born")  
+#     metric = partial(logit_diff, correct_str=" arrested", wrong_str=" born")
 
 # if task == "whilst":
 #     tokens = model.to_tokens(
@@ -1205,7 +1244,7 @@ class IndirectLEAP:
 #         ["Since it was bad today, it will be"]
 #     )
 
-#     metric = partial(logit_diff, correct_str=" light", wrong_str=" dark")      
+#     metric = partial(logit_diff, correct_str=" light", wrong_str=" dark")
 
 # if task == "ifelse":
 #     tokens = model.to_tokens(
@@ -1214,43 +1253,43 @@ class IndirectLEAP:
 #         ["while x in keys: print(x)"]
 #     )
 
-#     metric = partial(logit_diff, correct_str=" else", wrong_str=" if")  
+#     metric = partial(logit_diff, correct_str=" else", wrong_str=" if")
 
 # if task=="wtf":
 #     tokens = model.to_tokens(
 #         [    "What the fuck? Have you lost your" ])
 #     corrupt_tokens = model.to_tokens(
 #         ["What has happened? Have you lost your"]
-#     )    
+#     )
 
-#     metric = partial(logit_diff, correct_str=" mind", wrong_str=" job") 
+#     metric = partial(logit_diff, correct_str=" mind", wrong_str=" job")
 
 # if task=="democrats":
 #     tokens = model.to_tokens(
 #         [    "Several apples and several" ])
 #     corrupt_tokens = model.to_tokens(
 #         [" "]
-#     )    
+#     )
 
-#     metric = partial(logit_diff, correct_str=" oranges", wrong_str=" apples") 
+#     metric = partial(logit_diff, correct_str=" oranges", wrong_str=" apples")
 
 # if task=="doctor":
 #     tokens = model.to_tokens(
 #         [ "When the doctor is ready, you can go and see"])
-    
+
 #     corrupt_tokens = model.to_tokens(
 #         [ "When the nurse is ready, you can go and see"])
-    
-#     metric = partial(logit_diff, correct_str=" him", wrong_str=" her") 
+
+#     metric = partial(logit_diff, correct_str=" him", wrong_str=" her")
 
 # if task=="induction":
 #     tokens = model.to_tokens(
 #         [ "I looked at the blue apple. Then I saw the blue"])
-    
+
 #     corrupt_tokens = model.to_tokens(
 #         [ "I looked at the funny bird. Then I saw the blue"])
-    
-#     metric = partial(logit_diff, correct_str=" apple", wrong_str=" sky") 
+
+#     metric = partial(logit_diff, correct_str=" apple", wrong_str=" sky")
 
 
 # print("clean metric = ", metric(model, tokens))
@@ -1260,7 +1299,7 @@ class IndirectLEAP:
 # from circuit_finder.plotting import make_html_graph
 
 # cfg = LEAPConfig(threshold=0.03,
-#                  contrast_pairs=True, 
+#                  contrast_pairs=True,
 #                  qk_enabled=True,
 #                  chained_attribs=True,
 #                  abs_attribs = False,
