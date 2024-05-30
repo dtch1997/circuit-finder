@@ -1,55 +1,45 @@
-#%%
 import sys
 sys.path.append("/root/circuit-finder")
-import transformer_lens as tl
 from functools import partial
 from einops import rearrange, einsum
-from circuit_finder.pretrained import (
-    load_attn_saes,
-    load_resid_saes,
-    load_hooked_mlp_transcoders,
-)
 from circuit_finder.core.hooked_transcoder import HookedTranscoderReplacementContext
-
-# Initialize SAEs
-attn_saes = load_attn_saes(use_error_term=True)
-mlp_transcoders = load_hooked_mlp_transcoders(use_error_term=True)
-
-# Load model
-model = tl.HookedSAETransformer.from_pretrained("gpt2").cuda()
-
-#%%
-def logit_diff(logits, tokens, correct_str, wrong_str):
-    correct_token = model.to_tokens(correct_str)[0,1]
-    wrong_token = model.to_tokens(wrong_str)[0,1]
-    logits = logits[0,-1]
-    return logits[correct_token ] - logits[wrong_token]
-#%%
-def ablation_hook(act, hook, id_to_ablate):
-    assert hook.name.endswith("hook_sae_acts_post")
-    act[:, :, id_to_ablate] = 0
-    return act
-
-def patch_hook(act, hook, module, layer, feature_id, patch_pt, scale):
-    if module == "mlp":
-        decoder_col = mlp_transcoders[layer].W_dec[feature_id, :]
-    elif module == "attn":
-        decoder_col_concat = attn_saes[layer].W_dec[feature_id, :]
-        decoder_col = rearrange(
-            decoder_col_concat, 
-            "(n_heads d_head -> n_heads d_head)",
-            n_heads=model.cfg.n_heads
-            )
-    return act + scale*decoder_col
 
 def run_with_ablations(
         model, 
         prompts,
         attn_saes, 
         mlp_transcoders, 
-        ablation_list, # elements (module, layer, feature_id)
-        patch_list # elements (module, layer, feature_id, patch_pt, scale)
+        ablation_list = [], # elements (module, layer, feature_id, pos)
+        patch_list = [], # elements (module, layer, feature_id, pos, patch_pt, scale)
+        cache_names_filter = []
         ):
+    
+    # Define the hook functions we'll need for ablating & patching
+    def ablation_hook(act, hook,  # hook.name will determine what module/layer we're looking at
+                      feature_id, pos
+                      ):
+        assert hook.name.endswith("hook_sae_acts_post")
+        act[:, pos, feature_id] = 0
+        return act
+
+    def patch_hook(act, hook, 
+                   module, layer, feature_id,   #these tell us which feature to patch
+                   pos, patch_pt, scale   #these tell us where to patch the feature, and by how much
+                   ):
+        if module == "mlp":
+            decoder_col = mlp_transcoders[layer].W_dec[feature_id, :]
+        elif module == "attn":
+            decoder_col_concat = attn_saes[layer].W_dec[feature_id, :]
+            decoder_col_z = rearrange(
+                decoder_col_concat, 
+                "(n_heads d_head) -> n_heads d_head",
+                n_heads=model.cfg.n_heads
+                )
+            decoder_col_resid = einsum(decoder_col_z,
+                                       model.W_O[layer],
+                                       "n_heads d_head, n_heads d_head d_model -> d_model")
+        act[:, pos, :] += scale*decoder_col_resid
+        return act
     
     # Reset all hooks
     model.reset_hooks()
@@ -59,10 +49,11 @@ def run_with_ablations(
         a.reset_hooks()
 
     # Add ablation hooks to saes/transcoders
-    for module, layer, feature_id in ablation_list:
+    for module, layer, feature_id, pos in ablation_list:
         temp_ablate_hook = partial(
             ablation_hook, 
-            id_to_ablate=feature_id
+            feature_id=feature_id,
+            pos=pos
             )
         
         if module == "mlp":     
@@ -83,11 +74,12 @@ def run_with_ablations(
             print("modules must be attn or mlp")
 
     # Now add patching hooks to model
-    for module, layer, feature_id, patch_pt, scale in patch_list:
+    for module, layer, feature_id, pos, patch_pt, scale in patch_list:
         temp_patch_hook = partial(patch_hook, 
                                   module=module, 
                                   layer=layer, 
-                                  feature_id=feature_id, 
+                                  feature_id=feature_id,
+                                  pos=pos, 
                                   patch_pt=patch_pt, 
                                   scale=scale)
         model.add_hook(patch_pt, temp_patch_hook, "fwd")
@@ -99,23 +91,11 @@ def run_with_ablations(
     ) as context:          
 
         with model.saes(saes=attn_saes.values()):
-            logits  = model(prompts)
+            logits, cache = model.run_with_cache(
+                prompts, 
+                return_type="logits",
+                names_filter=cache_names_filter,
+                prepend_bos=True)
+
+        return logits, cache
     
-    return logits
-
-
-# %%
-ablation_list = [("mlp", 5, 10087), ("mlp", 5, 6344),
-                ("mlp", 0, 20782), ("mlp", 0, 6646) ]
-patch_list = []
-prompts = ["The favourable prisoner was released on good"]
-logits = run_with_ablations(model, 
-                            prompts,
-                            attn_saes, 
-                            mlp_transcoders, 
-                            ablation_list,
-                            patch_list)
-
-logit_diff(logits, prompts, " behaviour", " behavior")
-# %%
-

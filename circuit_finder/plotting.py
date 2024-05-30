@@ -330,7 +330,7 @@ def make_html_graph(leap, attrib_type="em", node_offset=8.0, show_error_nodes=Fa
         if source == 'null' or target == 'null':
             continue
         gray_value = int(255 * (1 - norm_attrib))  # Convert opacity to a grayscale value
-        width = 3 if abs(original_attrib) >= threshold else 1
+        width = 1
         if edge_type == 'q':
             color = f"rgba(0, 255, 0, {norm_attrib})"  # Green with normalized opacity
         elif edge_type == 'k':
@@ -347,10 +347,10 @@ def make_html_graph(leap, attrib_type="em", node_offset=8.0, show_error_nodes=Fa
 
         # Determine the style based on whether the attrib is negative
         style = "dashed" if original_attrib < 0 else "curvedCCW"
-        roundness = 0.2 * edge_offset if original_attrib >= 0 else 0.1 * edge_offset
+        roundness = 0.02 * edge_offset if original_attrib >= 0 else 0.01 * edge_offset
 
         # Add offset to the edge
-        net.add_edge(target, source, color=color, title=title, width=width, dashes=original_attrib < 0)  # Reversed edge direction
+        net.add_edge(target, source, color=color, title=title, width=width, dashes=original_attrib < 0, smooth={'type': style, 'roundness': roundness})  # Reversed edge direction
     
     # Add "clean tokens" label to the left
     net.add_node(f'clean_tokens_label', label='CLEAN TOKENS', size=0, x=-300, y=100, color='black', fixed=True, physics=False, font={'size': 30})
