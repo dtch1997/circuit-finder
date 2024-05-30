@@ -3,7 +3,6 @@
 Similar to Edge Attribution Patching, calculates the effect of edges on some downstream metric.
 However, takes advantage of linearity afforded by transcoders and MLPs to parallelize
 """
-#%%
 import sys
 sys.path.append("/root/circuit-finder")
 import torch
@@ -281,7 +280,9 @@ class IndirectLEAP:
             if not self.cfg.allow_neg_feature_acts:
                 self.mlp_feature_acts = torch.relu(self.mlp_feature_acts)
 
-            self.mlp_is_active[:, layer, :] = (mlp_feature_acts > 0).float().mean(0)
+            # NOTE: if allow_neg_feature_acts is enabled, then some negative feature 
+            # acts will be counted as being active!
+            self.mlp_is_active[:, layer, :] = (mlp_feature_acts != 0).float().mean(0)
      
             self.mlp_errors[:, layer, :] = (cache[mlp_out_pt] - mlp_recons).mean(0)
 
@@ -320,7 +321,7 @@ class IndirectLEAP:
                 attn_feature_acts -= sae_cache[sae_hook_name]
 
             self.attn_feature_acts[:, layer, :] = attn_feature_acts.mean(0)
-            self.attn_is_active[:, layer, :] = (attn_feature_acts > 0).float().mean(0)
+            self.attn_is_active[:, layer, :] = (attn_feature_acts != 0).float().mean(0)
             z_error = rearrange(
                 (attn_recons - z_concat).mean(0),
                 "seq (n_heads d_head) -> seq n_heads d_head",
@@ -1131,7 +1132,7 @@ class IndirectLEAP:
 
 
 
-#%% Define dataset
+# #%% Define dataset
 # def logit_diff(model, tokens, correct_str, wrong_str):
 #     correct_token = model.to_tokens(correct_str)[0,1]
 #     wrong_token = model.to_tokens(wrong_str)[0,1]
@@ -1144,7 +1145,7 @@ class IndirectLEAP:
 #     logits = model(tokens)[0,-1]
 #     return logits[correct_tokens].mean() - logits[wrong_tokens].mean()
 
-# task="forloop"
+# task="doctor"
 # if task=="ioi":
 #     tokens = model.to_tokens(
 #         [    "When John and Mary were at the store, John gave a bottle to",
