@@ -1,10 +1,23 @@
 import torch
 from jaxtyping import Float
 from functools import partial
-from circuit_finder.core.types import MetricFn, Tokens, LayerIndex, ModuleName
+from circuit_finder.core.types import (
+    Model,
+    Node,
+    MetricFn,
+    Tokens,
+    LayerIndex,
+    ModuleName,
+    TokenIndex,
+    FeatureIndex,
+    get_hook_name,
+    parse_node_name,
+)
+from collections import namedtuple
 from circuit_finder.patching.eap_graph import EAPGraph
 from torch import Tensor
 import transformer_lens as tl
+import numpy as np
 
 from typing import Iterator
 from contextlib import contextmanager
@@ -106,6 +119,130 @@ def splice_model_with_saes_and_transcoders(
 
     finally:
         pass
+
+
+def filter_sae_acts_and_errors(name: str):
+    return "hook_sae_acts_post" in name or "hook_sae_error" in name
+
+
+def get_node_act(
+    cache: tl.ActivationCache,
+    node: Node,
+):
+    """Get the activation of a node from the cache."""
+    module_name, layer, token_idx, feature_idx = parse_node_name(node)
+    act_name = get_hook_name(module_name, layer)
+    return cache[act_name][:, token_idx, feature_idx]
+
+
+def node_patch_hook(
+    act,
+    hook,
+    *,
+    token_idx: TokenIndex | None = None,
+    feature_idx: FeatureIndex | None = None,
+    value: float | torch.Tensor = 0.0,
+):
+    """Patches a node by setting its activation to a fixed value.
+
+    Can be converted into a TransformerLens hook by using partial
+    """
+    act[:, token_idx, feature_idx] = value
+    return act
+
+
+def get_node_patch_hook(node: Node, value: float):
+    module_name, layer, token_idx, feature_idx = parse_node_name(node)
+    hook_name = get_hook_name(module_name, layer)
+
+    def hook_fn(act, hook):
+        return node_patch_hook(
+            act, hook, token_idx=token_idx, feature_idx=feature_idx, value=value
+        )
+
+    return hook_name, hook_fn
+
+
+def get_circuit_node_patch_hooks(
+    clean_cache: tl.ActivationCache,
+    corrupt_cache: tl.ActivationCache,
+    nodes: list[Node],
+    coefficient: float,
+):
+    """Return a list of patch hooks"""
+
+    fwd_hooks = []
+    for node in nodes:
+        # Interpolate between clean, corrupt to get the value
+        # c = 0 --> corrupt value
+        # c = 1 --> clean value
+        clean_value = get_node_act(clean_cache, node)
+        corrupt_value = get_node_act(corrupt_cache, node)
+        value = (clean_value - corrupt_value) * coefficient + corrupt_value
+
+        # Define the hook function
+        module_name, layer, token_idx, feature_idx = parse_node_name(node)
+        hook_name = get_hook_name(module_name, layer)
+        hook_fn = partial(
+            node_patch_hook, token_idx=token_idx, feature_idx=feature_idx, value=value
+        )
+        fwd_hooks.append((hook_name, hook_fn))
+    return fwd_hooks
+
+
+AblationResult = namedtuple("AblationResult", ["coefficient", "metric"])
+
+
+def get_ablation_result(
+    model: Model,
+    transcoders,
+    attn_saes,
+    *,
+    clean_tokens,
+    corrupt_tokens,
+    clean_cache,
+    corrupt_cache,
+    nodes,
+    metric_fn: MetricFn,
+    coefficients=np.linspace(0, 1, 11),
+    setting="noising",
+):
+    coefficients = []
+    metrics = []
+
+    if setting == "noising":
+        with splice_model_with_saes_and_transcoders(
+            model,  # type: ignore
+            transcoders,
+            attn_saes,
+        ) as spliced_model:
+            for coefficient in coefficients:
+                fwd_hooks = get_circuit_node_patch_hooks(
+                    clean_cache, corrupt_cache, nodes, coefficient
+                )
+                with model.hooks(fwd_hooks=fwd_hooks):
+                    metric = metric_fn(model, clean_tokens).item()
+                    metrics.append(metric)
+                    coefficients.append(coefficient)
+    elif setting == "denoising":
+        with splice_model_with_saes_and_transcoders(
+            model,  # type: ignore
+            transcoders,
+            attn_saes,
+        ) as spliced_model:
+            for coefficient in coefficients:
+                # NOTE: In the noising setting, the clean and corrupt caches are swapped
+                fwd_hooks = get_circuit_node_patch_hooks(
+                    corrupt_cache, clean_cache, nodes, coefficient
+                )
+                with model.hooks(fwd_hooks=fwd_hooks):
+                    # NOTE: In the noising setting, the clean and corrupt tokens are swapped
+                    metric = metric_fn(model, corrupt_tokens).item()
+                    metrics.append(metric)
+                    # NOTE: in the noising setting, the role of the coefficient is inverted
+                    coefficients.append(1 - coefficient)
+
+    return AblationResult(coefficients, metrics)
 
 
 def get_ablation_hooks(
