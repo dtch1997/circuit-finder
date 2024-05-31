@@ -20,7 +20,7 @@ CAPITAL_CITIES_DATASETS = [
 ]
 
 SPORTS_PLAYERS_DATASETS = [
-    "datasets/sports_players_pythia-410m-deduped_prompts.json",
+    "datasets/sports-players/sports_players_pythia-410m-deduped_prompts.json",
 ]
 
 SUBJECT_VERB_AGREEMENT_DATASETS = [
@@ -32,14 +32,31 @@ GENDER_BIAS_DATASETS = [
 ]
 
 ALL_DATASETS = [
-    # *ANIMAL_DIET_DATASETS,
-    # *DOCSTRING_DATASETS,
+    *ANIMAL_DIET_DATASETS,
+    *DOCSTRING_DATASETS,
     # *CAPITAL_CITIES_DATASETS,
     # *SPORTS_PLAYERS_DATASETS,
     *GENDER_BIAS_DATASETS,
-    *GREATERTHAN_DATASETS,  # NOTE: This has a weird bug related to indexing.
-    *SUBJECT_VERB_AGREEMENT_DATASETS,  # NOTE: also has a weird indexing bug.
-    *IOI_DATASETS,
+    *GREATERTHAN_DATASETS,
+    *SUBJECT_VERB_AGREEMENT_DATASETS,
+    ABBA_DATASETS[0],
+    BABA_DATASETS[0],
+    ABBA_DATASETS[2],
+    BABA_DATASETS[2],
+]
+
+# Selected based on two criteria
+# - Whether GPT-2 small can reliably pick the correct answer
+# - Whether the logit diff is significant
+SELECTED_DATASETS = [
+    *DOCSTRING_DATASETS,
+    *GENDER_BIAS_DATASETS,
+    *GREATERTHAN_DATASETS,
+    *SUBJECT_VERB_AGREEMENT_DATASETS,
+    ABBA_DATASETS[0],
+    BABA_DATASETS[0],
+    ABBA_DATASETS[2],
+    BABA_DATASETS[2],
 ]
 
 

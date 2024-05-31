@@ -64,8 +64,8 @@ def get_metric_with_ablation(
     attn_saes: dict[LayerIndex, HookedSAE],
     ablate_cache: tl.ActivationCache,
     *,
-    feature_ablate_type: AblateType = "value",  # options [False, "bm", "zero"]
-    error_ablate_type: AblateType = "value",  # options [False, "bm", "zero"]
+    feature_ablate_type: AblateType = "value",
+    error_ablate_type: AblateType = "value",
     first_ablated_layer: int = 2,  # Marks et al don't ablate first 2 layers
 ):
     # Splice the SAEs and transcoders into the model
