@@ -1,9 +1,3 @@
-import simple_parsing
-import pathlib
-
-from dataclasses import replace
-
-from circuit_finder.constants import ProjectDir
 from circuit_finder.data.ioi import ABBA_DATASETS, BABA_DATASETS
 
 IOI_DATASETS = ABBA_DATASETS[:2] + BABA_DATASETS[:2]
@@ -29,12 +23,22 @@ SPORTS_PLAYERS_DATASETS = [
     "datasets/sports_players_pythia-410m-deduped_prompts.json",
 ]
 
+SUBJECT_VERB_AGREEMENT_DATASETS = [
+    "datasets/subject_verb_agreement.json",
+]
+
+GENDER_BIAS_DATASETS = [
+    "datasets/gender_bias.json",
+]
+
 ALL_DATASETS = [
     # *ANIMAL_DIET_DATASETS,
     # *DOCSTRING_DATASETS,
     # *CAPITAL_CITIES_DATASETS,
     # *SPORTS_PLAYERS_DATASETS,
+    *GENDER_BIAS_DATASETS,
     *GREATERTHAN_DATASETS,
+    *SUBJECT_VERB_AGREEMENT_DATASETS,
     *IOI_DATASETS,
 ]
 
@@ -55,24 +59,3 @@ def get_datasets(sweep_name: str) -> list[str]:
         return ALL_DATASETS
     else:
         raise ValueError(f"Unknown dataset sweep: {sweep_name}")
-
-
-if __name__ == "__main__":
-    parser = simple_parsing.ArgumentParser()
-    parser.add_arguments(LeapExperimentConfig, dest="config")
-    parser.add_argument("--sweep-name", type=str, default="all")
-    args = parser.parse_args()
-
-    for dataset_path in get_datasets(args.sweep_name):
-        dataset_name = pathlib.Path(dataset_path).stem
-        save_dir = ProjectDir / "results" / dataset_name
-        if save_dir.exists():
-            print(f"Found existing results for {dataset_name}. Skipping...")
-            continue
-        config = replace(args.config, dataset_path=dataset_path, save_dir=str(save_dir))
-        print(config)
-        try:
-            run_leap_experiment(config)
-        except Exception as e:
-            print(e)
-            pass

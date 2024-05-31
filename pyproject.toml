@@ -15,6 +15,7 @@ dependencies = [
     "seaborn>=0.13.2",
     "simple-parsing>=0.1.5",
     "pyvis>=0.3.2",
+    "transformers>=4.41.2",
 ]
 name = "circuit-finder"
 version = "0.1.0"
@@ -23,7 +24,7 @@ authors = [
     { name = "Daniel Tan", email = "dtch1997@users.noreply.github.com" },
     { name = "Daniel CH Tan", email = "dtch1997@users.noreply.github.com" },
 ]
-requires-python = "==3.10.*"
+requires-python = ">=3.10"
 readme = "README.md"
 license = { text = "MIT" }
 
