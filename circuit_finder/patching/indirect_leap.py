@@ -3,7 +3,6 @@
 Similar to Edge Attribution Patching, calculates the effect of edges on some downstream metric.
 However, takes advantage of linearity afforded by transcoders and MLPs to parallelize
 """
-#%%
 import sys
 sys.path.append("/root/circuit-finder")
 import torch
@@ -1089,7 +1088,11 @@ class IndirectLEAP:
             if self.cfg.qk_enabled:
                 self.q_step(layer)
                 self.k_step(layer)
-
+        # store error node -> metric total attribs
+        self.nodes += [
+            (edge[1], attribs[1]) for edge, attribs, _ in self.error_graph
+            if "metric" in edge[0]
+        ]
 
 # %%
 # ~ Jacob's work zone ~

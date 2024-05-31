@@ -236,7 +236,7 @@ def make_html_graph(leap, attrib_type="em", node_offset=8.0, show_error_nodes=Fa
                 _id = parts[3] if len(parts) > 3 else ''
                 positions.add(position)
                 color = color_map[module]
-                total_attrib = node_total_attrib.get(node, 8888)
+                total_attrib = node_total_attrib.get(node, 0.)
 
                 title = f"layer {layer} pos {position} id {_id} \ntotal_attrib: {total_attrib:.3f}"
 
