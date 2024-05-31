@@ -89,12 +89,12 @@ def preprocess_attn_saes(
 
 @dataclass
 class LEAPConfig:
-    threshold: float = 0.01
-    contrast_pairs: bool = False
+    threshold: float = 0.001
+    contrast_pairs: bool = True
     chained_attribs: bool = True
-    store_error_attribs: bool = False
+    store_error_attribs: bool = True
     qk_enabled: bool = True
-    allow_neg_feature_acts: bool = False
+    allow_neg_feature_acts: bool = True
 
 
 class IndirectLEAP:

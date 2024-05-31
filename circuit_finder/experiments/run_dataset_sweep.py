@@ -2,15 +2,11 @@ import simple_parsing
 import pathlib
 
 from dataclasses import replace
-from circuit_finder.experiments.run_leap_experiment import (
-    LeapExperimentConfig,
-    run_leap_experiment,
-)
 
 from circuit_finder.constants import ProjectDir
 from circuit_finder.data.ioi import ABBA_DATASETS, BABA_DATASETS
 
-IOI_DATASETS = ABBA_DATASETS + BABA_DATASETS
+IOI_DATASETS = ABBA_DATASETS[:2] + BABA_DATASETS[:2]
 
 ANIMAL_DIET_DATASETS = [
     "datasets/animal_diet_long_prompts.json",
@@ -34,10 +30,10 @@ SPORTS_PLAYERS_DATASETS = [
 ]
 
 ALL_DATASETS = [
-    *ANIMAL_DIET_DATASETS,
-    *DOCSTRING_DATASETS,
-    *CAPITAL_CITIES_DATASETS,
-    *SPORTS_PLAYERS_DATASETS,
+    # *ANIMAL_DIET_DATASETS,
+    # *DOCSTRING_DATASETS,
+    # *CAPITAL_CITIES_DATASETS,
+    # *SPORTS_PLAYERS_DATASETS,
     *GREATERTHAN_DATASETS,
     *IOI_DATASETS,
 ]
