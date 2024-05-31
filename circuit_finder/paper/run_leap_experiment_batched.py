@@ -18,14 +18,17 @@ import json
 import torch
 import transformer_lens as tl
 
+from pprint import pprint
 from simple_parsing import ArgumentParser
-from dataclasses import dataclass
+from dataclasses import dataclass, replace, asdict
 from circuit_finder.patching.eap_graph import EAPGraph
 from circuit_finder.utils import clear_memory
 from circuit_finder.patching.ablate import get_metric_with_ablation
-from circuit_finder.data_loader import load_datasets_from_json
+from circuit_finder.data_loader import load_datasets_from_json, PromptPairBatch
 from circuit_finder.constants import device
 from tqdm import tqdm
+from circuit_finder.patching.ablate import get_metric_with_ablation
+from circuit_finder.experiments.run_dataset_sweep import ALL_DATASETS
 
 from typing import Literal
 from eindex import eindex
@@ -46,10 +49,21 @@ from circuit_finder.constants import ProjectDir
 from circuit_finder.patching.ablate import (
     splice_model_with_saes_and_transcoders,
     get_metric_with_ablation,
+    AblateType,
 )
 from circuit_finder.plotting import make_html_graph
 
-THRESHOLDS = [0.0006, 0.001, 0.003, 0.006, 0.01]
+THRESHOLDS = [0.001, 0.003, 0.006, 0.01, 0.03, 0.06, 0.1]
+# THRESHOLDS = [0.03]
+
+
+def batch_to_str_dict(batch: PromptPairBatch, model):
+    return {
+        "clean": model.to_string(batch.clean),
+        "answer": model.to_string(batch.answers),
+        "wrong_answer": model.to_string(batch.wrong_answers),
+        "corrupt": model.to_string(batch.corrupt),
+    }
 
 
 @dataclass(frozen=True)
@@ -138,10 +152,24 @@ def get_clean_and_corrupt_metric(
     return clean_metric, corrupt_metric
 
 
+@dataclass
+class LeapExperimentConfig:
+    leap_config: LEAPConfig
+    ablate_act_type: str = "unstructured"  # "structured"
+    feature_ablate_type: str | None = "value"
+    error_ablate_type: str | None = None
+    first_ablated_layer: int = 2
+    thresholds: tuple[float] = tuple(THRESHOLDS)
+    metric_fn_name: str = "logit_diff"
+    batch_size: int = 1
+    save_dir_prefix: str = "leap_experiment_results"
+
+
 @dataclass(frozen=True)
 class LeapExperimentResult:
     config: LEAPConfig
     clean_metric: float
+    ablate_metric: float
     corrupt_metric: float
     graph: EAPGraph
     error_graph: EAPGraph
@@ -149,40 +177,36 @@ class LeapExperimentResult:
 
 def run_leap(
     leap_config: LEAPConfig,
-    example: CleanCorruptExample,
+    batch: PromptPairBatch,
     model: Model,
     attn_saes,
     hooked_mlp_transcoders,
+    ablate_cache: tl.ActivationCache,
     *,
     save_dir: pathlib.Path,
     metric_fn_name: str = "logit_diff",
+    feature_ablate_type: AblateType = "value",
+    error_ablate_type: AblateType = None,
+    first_ablated_layer: int = 2,
 ):
-    # Test prompt
-    print("Testing clean prompt")
-    tl.utils.test_prompt(
-        example.clean_prompt, example.answer, model, prepend_space_to_answer=False
-    )
-    print("=" * 80)
-
-    print("Testing corrupt prompt")
-    tl.utils.test_prompt(
-        example.corrupt_prompt, example.answer, model, prepend_space_to_answer=False
-    )
-    print("=" * 80)
-
     # Setup the tokens
-    clean_tokens = example.clean_tokens(model)
-    answer_tokens = example.answer_tokens(model)
-    wrong_answer_tokens = example.wrong_answer_tokens(model)
-    corrupt_tokens = example.corrupt_tokens(model)
+    clean_tokens = batch.clean
+    answer_tokens = batch.answers
+    wrong_answer_tokens = batch.wrong_answers
+    corrupt_tokens = batch.corrupt
+
+    # Save the batch
+    batch_dict = batch_to_str_dict(batch, model)
+    with open(save_dir / "batch.json", "w") as f:
+        json.dump(batch_dict, f)
 
     # Setup the metric function
     if metric_fn_name == "logit_diff":
 
         def metric_fn(model, tokens):
-            logit_diff = compute_logit_diff(
-                model, tokens, answer_tokens, wrong_answer_tokens
-            )
+            # Get the last-token logits
+            logits = model(tokens)[:, -1, :]
+            logit_diff = batch_avg_answer_diff(logits, batch)
             return logit_diff.mean()
     else:
         raise ValueError(f"Unknown metric_fn_name: {metric_fn_name}")
@@ -205,55 +229,121 @@ def run_leap(
     graph = EAPGraph(leap.graph)
     error_graph = EAPGraph(leap.error_graph)
 
+    # Save the graph
     make_html_graph(leap, html_file=str(save_dir.absolute() / "graph.html"))
+
+    # Run ablation experiment
+    ablate_metric = get_metric_with_ablation(
+        model,  # type: ignore
+        graph,
+        clean_tokens,
+        metric_fn,
+        hooked_mlp_transcoders,
+        attn_saes,
+        ablate_cache,
+        feature_ablate_type=feature_ablate_type,
+        error_ablate_type=error_ablate_type,
+        first_ablated_layer=first_ablated_layer,
+    ).item()
+
+    # TODO: noising, denoising plots.
 
     return LeapExperimentResult(
         config=leap_config,
         clean_metric=clean_metric,
+        ablate_metric=ablate_metric,
         corrupt_metric=corrupt_metric,
         graph=graph,
         error_graph=error_graph,
     )
 
 
-if __name__ == "__main__":
+def run_leap_experiment(config: LeapExperimentConfig):
     model = load_model()
     attn_saes = load_attn_saes()
     attn_saes = preprocess_attn_saes(attn_saes, model)
     hooked_mlp_transcoders = load_hooked_mlp_transcoders()
-    metric_fn_name = "logit_diff"
-    cfg = LEAPConfig(
-        threshold=0.001,
-        contrast_pairs=True,
-        qk_enabled=True,
-        chained_attribs=True,
-        allow_neg_feature_acts=True,
-        store_error_attribs=True,
-    )
 
-    for dataset_name, example in datasets.items():
-        for threshold in [0.0006, 0.001, 0.003, 0.006, 0.01, 0.03, 0.06]:
-            cfg.threshold = threshold
-            save_dir = (
-                ProjectDir
-                / "leap_experiment_results"
-                / f"dataset={dataset_name}_threshold={threshold}"
-            )
+    # Sweep over datasets
+    sweep_dir = ProjectDir / "results" / config.save_dir_prefix
+    sweep_dir.mkdir(parents=True, exist_ok=True)
+    with open(sweep_dir / "config.json", "w") as f:
+        json.dump(asdict(config), f)
+
+    for dataset_path in ALL_DATASETS:
+        dataset_name = pathlib.Path(dataset_path).stem
+
+        # Load the dataset
+        train_loader, _ = load_datasets_from_json(
+            model,
+            ProjectDir / dataset_path,
+            device=torch.device("cuda"),
+            batch_size=config.batch_size,
+            # NOTE: Do not specify total_dataset_size.
+            # It leads to some weird indexing bug I don't understand
+        )
+        batch = next(iter(train_loader))
+
+        # Load ablate cache
+        if config.ablate_act_type == "unstructured":
+            with open(ProjectDir / "data" / "c4_mean_acts.pkl", "rb") as file:
+                ablate_cache = pickle.load(file)
+        elif config.ablate_act_type == "structured":
+            with open(
+                ProjectDir / "data" / f"{dataset_name}_mean_acts.pkl", "rb"
+            ) as file:
+                ablate_cache = pickle.load(file)
+        else:
+            raise ValueError(f"Unknown ablate_act_type: {config.ablate_act_type}")
+
+        # Sweep over thresholds
+        for threshold in THRESHOLDS:
+            # Main script
+            cfg = replace(config.leap_config, threshold=threshold)
+            pprint(cfg)
+
+            save_dir = sweep_dir / f"dataset={dataset_name}_threshold={threshold}"
             save_dir.mkdir(parents=True, exist_ok=True)
+
+            # Save the config
+            with open(save_dir / "config.json", "w") as f:
+                json.dump(asdict(cfg), f)
 
             print(f"Running experiment on dataset: {dataset_name}")
             leap_experiment_result = run_leap(
                 cfg,
-                example,
+                batch,
                 model,
                 attn_saes,
                 hooked_mlp_transcoders,
+                ablate_cache,
                 save_dir=save_dir,
-                metric_fn_name=metric_fn_name,
+                metric_fn_name=config.metric_fn_name,
+                feature_ablate_type=config.feature_ablate_type,  # type: ignore
+                error_ablate_type=config.error_ablate_type,  # type: ignore
+                first_ablated_layer=config.first_ablated_layer,
             )
+            clear_memory()
 
+            if leap_experiment_result is None:
+                continue
+
+            print(
+                f"Graph size: n_nodes = {len(leap_experiment_result.graph.get_src_nodes())}"
+            )
             print(f"Clean Metric: {leap_experiment_result.clean_metric}")
+            print(f"Ablate Metric: {leap_experiment_result.ablate_metric}")
             print(f"Corrupt Metric: {leap_experiment_result.corrupt_metric}")
 
             with open(save_dir / "result.pkl", "wb") as f:
                 pickle.dump(leap_experiment_result, f)
+
+
+if __name__ == "__main__":
+    parser = ArgumentParser()
+    parser.add_arguments(LeapExperimentConfig, dest="config")
+    args = parser.parse_args()
+
+    config = args.config
+    print(config)
+    run_leap_experiment(config)
