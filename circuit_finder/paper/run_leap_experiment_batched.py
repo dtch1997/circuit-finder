@@ -49,6 +49,11 @@ from circuit_finder.plotting import make_html_graph
 
 THRESHOLDS = [0.001, 0.003, 0.006, 0.01, 0.03, 0.06, 0.1]
 
+def get_batchmean_cache(cache: tl.ActivationCache):
+    new_cache_dict = {}
+    for hook_name, act in cache.items():
+        new_cache_dict[hook_name] = act.mean(dim=0)
+    return tl.ActivationCache(new_cache_dict, model = cache.model)
 
 def batch_to_str_dict(batch: PromptPairBatch, model):
     return {
@@ -245,9 +250,14 @@ def run_leap_experiment(config: LeapExperimentConfig):
                 ablate_cache = pickle.load(file)
 
         elif config.ablate_act_type == "corrupt":
-            assert config.batch_size == 1
-            _, ablate_cache = model.run_with_cache(batch.corrupt)
-            ablate_cache.remove_batch_dim()
+            _, _cache = model.run_with_cache(batch.corrupt)
+            # Take the mean over the batch
+            ablate_cache = get_batchmean_cache(_cache)
+
+        elif config.ablate_act_type == "clean":
+            _, _cache = model.run_with_cache(batch.clean)
+            # Take the mean over the batch
+            ablate_cache = get_batchmean_cache(_cache)
         else:
             raise ValueError(f"Unknown ablate_act_type: {config.ablate_act_type}")
 
