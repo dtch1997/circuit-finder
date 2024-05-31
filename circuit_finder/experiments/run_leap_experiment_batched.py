@@ -19,7 +19,7 @@ import torch
 import transformer_lens as tl
 
 from simple_parsing import ArgumentParser
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, replace, field
 from circuit_finder.patching.eap_graph import EAPGraph
 from circuit_finder.utils import clear_memory
 from circuit_finder.patching.ablate import get_metric_with_ablation
@@ -154,13 +154,14 @@ def get_clean_and_corrupt_metric(
 @dataclass
 class LeapExperimentConfig:
     leap_config: LEAPConfig
-    ablate_cache: str = "c4"
-    feature_ablate_type: AblateType = "value"
-    error_ablate_type: AblateType = None
+    ablate_act_type: str = "unstructured"  # "structured"
+    feature_ablate_type: str | None = "value"
+    error_ablate_type: str | None = None
     first_ablated_layer: int = 2
-    thresholds: list[float] = THRESHOLDS
+    thresholds: list[float] = field(default_factory=lambda: THRESHOLDS)
     metric_fn_name: str = "logit_diff"
     batch_size: int = 1
+    save_dir_prefix: str = "leap_experiment_results"
 
 
 @dataclass(frozen=True)
@@ -262,12 +263,11 @@ def run_leap_experiment(config: LeapExperimentConfig):
     attn_saes = preprocess_attn_saes(attn_saes, model)
     hooked_mlp_transcoders = load_hooked_mlp_transcoders()
 
-    with open(ProjectDir / "data" / "c4_mean_acts.pkl", "rb") as file:
-        ablate_cache = pickle.load(file)
-
     # Sweep over datasets
     for dataset_path in ALL_DATASETS:
         dataset_name = pathlib.Path(dataset_path).stem
+
+        # Load the dataset
         train_loader, _ = load_datasets_from_json(
             model,
             ProjectDir / dataset_path,
@@ -277,14 +277,27 @@ def run_leap_experiment(config: LeapExperimentConfig):
         )
         batch = next(iter(train_loader))
 
+        # Load ablate cache
+        if config.ablate_act_type == "unstructured":
+            with open(ProjectDir / "data" / "c4_mean_acts.pkl", "rb") as file:
+                ablate_cache = pickle.load(file)
+        elif config.ablate_act_type == "structured":
+            with open(
+                ProjectDir / "data" / f"{dataset_name}_mean_acts.pkl", "rb"
+            ) as file:
+                ablate_cache = pickle.load(file)
+        else:
+            raise ValueError(f"Unknown ablate_act_type: {config.ablate_act_type}")
+
         # Sweep over thresholds
         for threshold in THRESHOLDS:
             # Main script
             cfg = replace(config.leap_config, threshold=threshold)
             save_dir = (
                 ProjectDir
-                / "leap_experiment_results"
-                / f"dataset={dataset_name}_threshold={threshold}_batch-size={config.batch_size}"
+                / "results"
+                / config.save_dir_prefix
+                / f"dataset={dataset_name}_threshold={threshold}"
             )
             save_dir.mkdir(parents=True, exist_ok=True)
 
@@ -298,8 +311,8 @@ def run_leap_experiment(config: LeapExperimentConfig):
                 ablate_cache,
                 save_dir=save_dir,
                 metric_fn_name=config.metric_fn_name,
-                feature_ablate_type=config.feature_ablate_type,
-                error_ablate_type=config.error_ablate_type,
+                feature_ablate_type=config.feature_ablate_type,  # type: ignore
+                error_ablate_type=config.error_ablate_type,  # type: ignore
                 first_ablated_layer=config.first_ablated_layer,
             )
             clear_memory()
