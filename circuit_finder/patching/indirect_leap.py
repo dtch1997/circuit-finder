@@ -3,6 +3,7 @@
 Similar to Edge Attribution Patching, calculates the effect of edges on some downstream metric.
 However, takes advantage of linearity afforded by transcoders and MLPs to parallelize
 """
+#%%
 import sys
 sys.path.append("/root/circuit-finder")
 import torch
@@ -1113,7 +1114,6 @@ class IndirectLEAP:
 
 # from circuit_finder.pretrained import (
 #     load_attn_saes,
-#     load_mlp_transcoders,
 #     load_hooked_mlp_transcoders
 # )
 
@@ -1145,10 +1145,23 @@ class IndirectLEAP:
 #     logits = model(tokens)[0,-1]
 #     return logits[correct_tokens].mean() - logits[wrong_tokens].mean()
 
-# task="doctor"
+# task="ioi2"
 # if task=="ioi":
 #     tokens = model.to_tokens(
 #         [    "When John and Mary were at the store, John gave a bottle to",
+         
+#           ])
+
+#     corrupt_tokens = model.to_tokens(
+#         [    "When Alice and Bob were at the store, Charlie gave a bottle to",
+         
+#             ])
+
+#     metric = partial(logit_diff, correct_str=" Mary", wrong_str=" John")
+
+# if task=="ioi2":
+#     tokens = model.to_tokens(
+#         [    "When Mary and John were at the store, John gave a bottle to",
          
 #           ])
 
@@ -1253,13 +1266,12 @@ class IndirectLEAP:
 # #%%
 # model.reset_hooks()
 # from circuit_finder.plotting import make_html_graph
-
-# cfg = LEAPConfig(threshold=0.008,
+# cfg = LEAPConfig(threshold=0.04,
 #                  contrast_pairs=True, 
 #                  qk_enabled=True,
 #                  chained_attribs=True,
 #                  store_error_attribs=True,
-#                  allow_neg_feature_acts=False)
+#                  allow_neg_feature_acts=True)
 # leap = IndirectLEAP(
 #     cfg, tokens, model, attn_saes, transcoders, metric, corrupt_tokens=corrupt_tokens
 # )
@@ -1298,3 +1310,6 @@ class IndirectLEAP:
 
 # #%%
 # leap.mlp_feature_acts[2, 9, 4254]
+
+#%%
+1+1
