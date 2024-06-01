@@ -1,0 +1,336 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script>function neighbourhoodHighlight(params) {
+  // console.log("in nieghbourhoodhighlight");
+  allNodes = nodes.get({ returnType: "Object" });
+  // originalNodes = JSON.parse(JSON.stringify(allNodes));
+  // if something is selected:
+  if (params.nodes.length > 0) {
+    highlightActive = true;
+    var i, j;
+    var selectedNode = params.nodes[0];
+    var degrees = 2;
+
+    // mark all nodes as hard to read.
+    for (let nodeId in allNodes) {
+      // nodeColors[nodeId] = allNodes[nodeId].color;
+      allNodes[nodeId].color = "rgba(200,200,200,0.5)";
+      if (allNodes[nodeId].hiddenLabel === undefined) {
+        allNodes[nodeId].hiddenLabel = allNodes[nodeId].label;
+        allNodes[nodeId].label = undefined;
+      }
+    }
+    var connectedNodes = network.getConnectedNodes(selectedNode);
+    var allConnectedNodes = [];
+
+    // get the second degree nodes
+    for (i = 1; i < degrees; i++) {
+      for (j = 0; j < connectedNodes.length; j++) {
+        allConnectedNodes = allConnectedNodes.concat(
+          network.getConnectedNodes(connectedNodes[j])
+        );
+      }
+    }
+
+    // all second degree nodes get a different color and their label back
+    for (i = 0; i < allConnectedNodes.length; i++) {
+      // allNodes[allConnectedNodes[i]].color = "pink";
+      allNodes[allConnectedNodes[i]].color = "rgba(150,150,150,0.75)";
+      if (allNodes[allConnectedNodes[i]].hiddenLabel !== undefined) {
+        allNodes[allConnectedNodes[i]].label =
+          allNodes[allConnectedNodes[i]].hiddenLabel;
+        allNodes[allConnectedNodes[i]].hiddenLabel = undefined;
+      }
+    }
+
+    // all first degree nodes get their own color and their label back
+    for (i = 0; i < connectedNodes.length; i++) {
+      // allNodes[connectedNodes[i]].color = undefined;
+      allNodes[connectedNodes[i]].color = nodeColors[connectedNodes[i]];
+      if (allNodes[connectedNodes[i]].hiddenLabel !== undefined) {
+        allNodes[connectedNodes[i]].label =
+          allNodes[connectedNodes[i]].hiddenLabel;
+        allNodes[connectedNodes[i]].hiddenLabel = undefined;
+      }
+    }
+
+    // the main node gets its own color and its label back.
+    // allNodes[selectedNode].color = undefined;
+    allNodes[selectedNode].color = nodeColors[selectedNode];
+    if (allNodes[selectedNode].hiddenLabel !== undefined) {
+      allNodes[selectedNode].label = allNodes[selectedNode].hiddenLabel;
+      allNodes[selectedNode].hiddenLabel = undefined;
+    }
+  } else if (highlightActive === true) {
+    // console.log("highlightActive was true");
+    // reset all nodes
+    for (let nodeId in allNodes) {
+      // allNodes[nodeId].color = "purple";
+      allNodes[nodeId].color = nodeColors[nodeId];
+      // delete allNodes[nodeId].color;
+      if (allNodes[nodeId].hiddenLabel !== undefined) {
+        allNodes[nodeId].label = allNodes[nodeId].hiddenLabel;
+        allNodes[nodeId].hiddenLabel = undefined;
+      }
+    }
+    highlightActive = false;
+  }
+
+  // transform the object into an array
+  var updateArray = [];
+  if (params.nodes.length > 0) {
+    for (let nodeId in allNodes) {
+      if (allNodes.hasOwnProperty(nodeId)) {
+        // console.log(allNodes[nodeId]);
+        updateArray.push(allNodes[nodeId]);
+      }
+    }
+    nodes.update(updateArray);
+  } else {
+    // console.log("Nothing was selected");
+    for (let nodeId in allNodes) {
+      if (allNodes.hasOwnProperty(nodeId)) {
+        // console.log(allNodes[nodeId]);
+        // allNodes[nodeId].color = {};
+        updateArray.push(allNodes[nodeId]);
+      }
+    }
+    nodes.update(updateArray);
+  }
+}
+
+function filterHighlight(params) {
+  allNodes = nodes.get({ returnType: "Object" });
+  // if something is selected:
+  if (params.nodes.length > 0) {
+    filterActive = true;
+    let selectedNodes = params.nodes;
+
+    // hiding all nodes and saving the label
+    for (let nodeId in allNodes) {
+      allNodes[nodeId].hidden = true;
+      if (allNodes[nodeId].savedLabel === undefined) {
+        allNodes[nodeId].savedLabel = allNodes[nodeId].label;
+        allNodes[nodeId].label = undefined;
+      }
+    }
+
+    for (let i=0; i < selectedNodes.length; i++) {
+      allNodes[selectedNodes[i]].hidden = false;
+      if (allNodes[selectedNodes[i]].savedLabel !== undefined) {
+        allNodes[selectedNodes[i]].label = allNodes[selectedNodes[i]].savedLabel;
+        allNodes[selectedNodes[i]].savedLabel = undefined;
+      }
+    }
+
+  } else if (filterActive === true) {
+    // reset all nodes
+    for (let nodeId in allNodes) {
+      allNodes[nodeId].hidden = false;
+      if (allNodes[nodeId].savedLabel !== undefined) {
+        allNodes[nodeId].label = allNodes[nodeId].savedLabel;
+        allNodes[nodeId].savedLabel = undefined;
+      }
+    }
+    filterActive = false;
+  }
+
+  // transform the object into an array
+  var updateArray = [];
+  if (params.nodes.length > 0) {
+    for (let nodeId in allNodes) {
+      if (allNodes.hasOwnProperty(nodeId)) {
+        updateArray.push(allNodes[nodeId]);
+      }
+    }
+    nodes.update(updateArray);
+  } else {
+    for (let nodeId in allNodes) {
+      if (allNodes.hasOwnProperty(nodeId)) {
+        updateArray.push(allNodes[nodeId]);
+      }
+    }
+    nodes.update(updateArray);
+  }
+}
+
+function selectNode(nodes) {
+  network.selectNodes(nodes);
+  neighbourhoodHighlight({ nodes: nodes });
+  return nodes;
+}
+
+function selectNodes(nodes) {
+  network.selectNodes(nodes);
+  filterHighlight({nodes: nodes});
+  return nodes;
+}
+
+function highlightFilter(filter) {
+  let selectedNodes = []
+  let selectedProp = filter['property']
+  if (filter['item'] === 'node') {
+    let allNodes = nodes.get({ returnType: "Object" });
+    for (let nodeId in allNodes) {
+      if (allNodes[nodeId][selectedProp] && filter['value'].includes((allNodes[nodeId][selectedProp]).toString())) {
+        selectedNodes.push(nodeId)
+      }
+    }
+  }
+  else if (filter['item'] === 'edge'){
+    let allEdges = edges.get({returnType: 'object'});
+    // check if the selected property exists for selected edge and select the nodes connected to the edge
+    for (let edge in allEdges) {
+      if (allEdges[edge][selectedProp] && filter['value'].includes((allEdges[edge][selectedProp]).toString())) {
+        selectedNodes.push(allEdges[edge]['from'])
+        selectedNodes.push(allEdges[edge]['to'])
+      }
+    }
+  }
+  selectNodes(selectedNodes)
+}</script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+            
+            
+            
+            
+            
+
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 100%;
+                 height: 600px;
+                 background-color: #ffffff;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+        <div class="card" style="width: 100%">
+            
+            
+            <div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"color": "rgba(0, 0, 255, 0.6826016486797819)", "id": "mlp.10.10.1954", "label": "1954", "shape": "dot", "title": "layer 10 pos 10 id 1954 \ntotal_attrib: 0.630", "url": "https://www.neuronpedia.org/gpt2-small/10-tres-dc/1954", "x": 1515.0, "y": -800}, {"color": "rgba(0, 255, 0, 1)", "id": "metric.12.10.0", "label": "0", "shape": "dot", "title": "layer 12 pos 10 id 0 \ntotal_attrib: 1.000", "url": "", "x": 1500.0, "y": -960}, {"color": "rgba(0, 0, 255, 0.3872416044232261)", "id": "mlp.10.10.21238", "label": "21238", "shape": "dot", "title": "layer 10 pos 10 id 21238 \ntotal_attrib: 0.286", "url": "https://www.neuronpedia.org/gpt2-small/10-tres-dc/21238", "x": 1523.0, "y": -800}, {"color": "rgba(0, 0, 255, 0.27876901623908545)", "id": "mlp.10.10.2678", "label": "2678", "shape": "dot", "title": "layer 10 pos 10 id 2678 \ntotal_attrib: 0.160", "url": "https://www.neuronpedia.org/gpt2-small/10-tres-dc/2678", "x": 1531.0, "y": -800}, {"color": "rgba(0, 0, 255, 0.2)", "id": "mlp.10.10.4718", "label": "4718", "shape": "dot", "title": "layer 10 pos 10 id 4718 \ntotal_attrib: 0.068", "url": "https://www.neuronpedia.org/gpt2-small/10-tres-dc/4718", "x": 1539.0, "y": -800}, {"color": "rgba(0, 0, 255, 0.3802551553161274)", "id": "mlp.11.10.7110", "label": "7110", "shape": "dot", "title": "layer 11 pos 10 id 7110 \ntotal_attrib: 0.278", "url": "https://www.neuronpedia.org/gpt2-small/11-tres-dc/7110", "x": 1515.0, "y": -880}, {"color": "rgba(0, 0, 255, 0.507375532932217)", "id": "mlp.9.10.12072", "label": "12072", "shape": "dot", "title": "layer 9 pos 10 id 12072 \ntotal_attrib: 0.426", "url": "https://www.neuronpedia.org/gpt2-small/9-tres-dc/12072", "x": 1515.0, "y": -720}, {"color": "rgba(0, 0, 255, 0.4315751393017373)", "id": "mlp.9.10.13960", "label": "13960", "shape": "dot", "title": "layer 9 pos 10 id 13960 \ntotal_attrib: 0.338", "url": "https://www.neuronpedia.org/gpt2-small/9-tres-dc/13960", "x": 1523.0, "y": -720}, {"color": "rgba(0, 0, 255, 0.3751052829465327)", "id": "mlp.9.10.1485", "label": "1485", "shape": "dot", "title": "layer 9 pos 10 id 1485 \ntotal_attrib: 0.272", "url": "https://www.neuronpedia.org/gpt2-small/9-tres-dc/1485", "x": 1531.0, "y": -720}, {"color": "rgba(0, 0, 255, 0.423290685435956)", "id": "mlp.9.10.16128", "label": "16128", "shape": "dot", "title": "layer 9 pos 10 id 16128 \ntotal_attrib: 0.328", "url": "https://www.neuronpedia.org/gpt2-small/9-tres-dc/16128", "x": 1539.0, "y": -720}, {"color": "rgba(0, 0, 255, -0.012159630973722968)", "id": "mlp.9.10.9921", "label": "9921", "shape": "dot", "title": "layer 9 pos 10 id 9921 \ntotal_attrib: -0.179", "url": "https://www.neuronpedia.org/gpt2-small/9-tres-dc/9921", "x": 1547.0, "y": -720}, {"color": "black", "fixed": true, "font": {"size": 30}, "id": "clean_tokens_label", "label": "CLEAN TOKENS", "physics": false, "shape": "dot", "size": 0, "x": -300, "y": 100}, {"color": "black", "fixed": true, "font": {"size": 30}, "id": "corrupt_tokens_label", "label": "CORRUPT TOKENS", "physics": false, "shape": "dot", "size": 0, "x": -300, "y": 420}, {"color": "rgba(0,0,0,0)", "fixed": true, "id": "line_0_start", "label": "line_0_start", "physics": false, "shape": "dot", "size": 0, "x": 75.0, "y": 0}, {"color": "rgba(0,0,0,0)", "fixed": true, "id": "line_0_end", "label": "line_0_end", "physics": false, "shape": "dot", "size": 0, "x": 75.0, "y": -1000}, {"color": "black", "fixed": true, "font": {"size": 30}, "id": "label_0_0", "label": "\u003c", "physics": false, "shape": "dot", "size": 0, "x": 0, "y": 100}, {"color": "black", "fixed": true, "font": {"size": 30}, "id": "label_0_1", "label": "T", "physics": false, "shape": "dot", "size": 0, "x": 0, "y": 130}, {"color": "black", "fixed": true, "font": {"size": 30}, "id": "label_0_2", "label": " ", "physics": false, "shape": "dot", "size": 0, "x": 0, "y": 160}, {"color": "black", "fixed": true, "font": {"size": 30}, "id": "label_0_3", "label": " ", "physics": false, "shape": "dot", "size": 0, "x": 0, "y": 190}, {"color": "black", "fixed": true, "font": {"size": 30}, "id": "label_0_4", "label": " ", "physics": false, "shape": "dot", "size": 0, "x": 0, "y": 220}, {"color": "black", "fixed": true, "font": {"size": 30}, "id": "label_0_5", "label": " ", "physics": false, "shape": "dot", "size": 0, "x": 0, "y": 250}, {"color": "black", "fixed": true, "font": {"size": 30}, "id": "label_0_6", "label": " ", "physics": false, "shape": "dot", "size": 0, "x": 0, "y": 280}, {"color": "black", "fixed": true, "font": {"size": 30}, "id": "label_0_7", "label": " ", "physics": false, "shape": "dot", "size": 0, "x": 0, "y": 310}, {"color": "black", "fixed": true, "font": {"size": 30}, "id": "label_0_8", "label": "4", "physics": false, "shape": "dot", "size": 0, "x": 0, "y": 340}, {"color": "black", "fixed": true, "font": {"size": 30}, "id": "label_0_9", "label": " ", "physics": false, "shape": "dot", "size": 0, "x": 0, "y": 370}, {"color": "red", "fixed": true, "font": {"size": 30}, "id": "corrupt_label_0_0", "label": "\u003c", "physics": false, "shape": "dot", "size": 0, "x": 0, "y": 420}, {"color": "red", "fixed": true, "font": {"size": 30}, "id": "corrupt_label_0_1", "label": "T", "physics": false, "shape": "dot", "size": 0, "x": 0, "y": 450}, {"color": "red", "fixed": true, "font": {"size": 30}, "id": "corrupt_label_0_2", "label": " ", "physics": false, "shape": "dot", "size": 0, "x": 0, "y": 480}, {"color": "red", "fixed": true, "font": {"size": 30}, "id": "corrupt_label_0_3", "label": " ", "physics": false, "shape": "dot", "size": 0, "x": 0, "y": 510}, {"color": "red", "fixed": true, "font": {"size": 30}, "id": "corrupt_label_0_4", "label": " ", "physics": false, "shape": "dot", "size": 0, "x": 0, "y": 540}, {"color": "red", "fixed": true, "font": {"size": 30}, "id": "corrupt_label_0_5", "label": " ", "physics": false, "shape": "dot", "size": 0, "x": 0, "y": 570}, {"color": "red", "fixed": true, "font": {"size": 30}, "id": "corrupt_label_0_6", "label": " ", "physics": false, "shape": "dot", "size": 0, "x": 0, "y": 600}, {"color": "red", "fixed": true, "font": {"size": 30}, "id": "corrupt_label_0_7", "label": " ", "physics": false, "shape": "dot", "size": 0, "x": 0, "y": 630}, {"color": "red", "fixed": true, "font": {"size": 30}, "id": "corrupt_label_0_8", "label": "0", "physics": false, "shape": "dot", "size": 0, "x": 0, "y": 660}, {"color": "red", "fixed": true, "font": {"size": 30}, "id": "corrupt_label_0_9", "label": " ", "physics": false, "shape": "dot", "size": 0, "x": 0, "y": 690}, {"color": "rgba(0,0,0,0)", "fixed": true, "id": "line_1_start", "label": "line_1_start", "physics": false, "shape": "dot", "size": 0, "x": 225.0, "y": 0}, {"color": "rgba(0,0,0,0)", "fixed": true, "id": "line_1_end", "label": "line_1_end", "physics": false, "shape": "dot", "size": 0, "x": 225.0, "y": -1000}, {"color": "black", "fixed": true, "font": {"size": 30}, "id": "label_1_0", "label": "|", "physics": false, "shape": "dot", "size": 0, "x": 150, "y": 100}, {"color": "black", "fixed": true, "font": {"size": 30}, "id": "label_1_1", "label": "h", "physics": false, "shape": "dot", "size": 0, "x": 150, "y": 130}, {"color": "black", "fixed": true, "font": {"size": 30}, "id": "label_1_2", "label": "c", "physics": false, "shape": "dot", "size": 0, "x": 150, "y": 160}, {"color": "black", "fixed": true, "font": {"size": 30}, "id": "label_1_3", "label": "l", "physics": false, "shape": "dot", "size": 0, "x": 150, "y": 190}, {"color": "black", "fixed": true, "font": {"size": 30}, "id": "label_1_4", "label": "f", "physics": false, "shape": "dot", "size": 0, "x": 150, "y": 220}, {"color": "black", "fixed": true, "font": {"size": 30}, "id": "label_1_5", "label": "t", "physics": false, "shape": "dot", "size": 0, "x": 150, "y": 250}, {"color": "black", "fixed": true, "font": {"size": 30}, "id": "label_1_6", "label": "y", "physics": false, "shape": "dot", "size": 0, "x": 150, "y": 280}, {"color": "black", "fixed": true, "font": {"size": 30}, "id": "label_1_7", "label": "1", "physics": false, "shape": "dot", "size": 0, "x": 150, "y": 310}, {"color": "black", "fixed": true, "font": {"size": 30}, "id": "label_1_8", "label": "8", "physics": false, "shape": "dot", "size": 0, "x": 150, "y": 340}, {"color": "black", "fixed": true, "font": {"size": 30}, "id": "label_1_9", "label": "t", "physics": false, "shape": "dot", "size": 0, "x": 150, "y": 370}, {"color": "red", "fixed": true, "font": {"size": 30}, "id": "corrupt_label_1_0", "label": "|", "physics": false, "shape": "dot", "size": 0, "x": 150, "y": 420}, {"color": "red", "fixed": true, "font": {"size": 30}, "id": "corrupt_label_1_1", "label": "h", "physics": false, "shape": "dot", "size": 0, "x": 150, "y": 450}, {"color": "red", "fixed": true, "font": {"size": 30}, "id": "corrupt_label_1_2", "label": "c", "physics": false, "shape": "dot", "size": 0, "x": 150, "y": 480}, {"color": "red", "fixed": true, "font": {"size": 30}, "id": "corrupt_label_1_3", "label": "l", "physics": false, "shape": "dot", "size": 0, "x": 150, "y": 510}, {"color": "red", "fixed": true, "font": {"size": 30}, "id": "corrupt_label_1_4", "label": "f", "physics": false, "shape": "dot", "size": 0, "x": 150, "y": 540}, {"color": "red", "fixed": true, "font": {"size": 30}, "id": "corrupt_label_1_5", "label": "t", "physics": false, "shape": "dot", "size": 0, "x": 150, "y": 570}, {"color": "red", "fixed": true, "font": {"size": 30}, "id": "corrupt_label_1_6", "label": "y", "physics": false, "shape": "dot", "size": 0, "x": 150, "y": 600}, {"color": "red", "fixed": true, "font": {"size": 30}, "id": "corrupt_label_1_7", "label": "1", "physics": false, "shape": "dot", "size": 0, "x": 150, "y": 630}, {"color": "red", "fixed": true, "font": {"size": 30}, "id": "corrupt_label_1_8", "label": "1", "physics": false, "shape": "dot", "size": 0, "x": 150, "y": 660}, {"color": "red", "fixed": true, "font": {"size": 30}, "id": "corrupt_label_1_9", "label": "t", "physics": false, "shape": "dot", "size": 0, "x": 150, "y": 690}, {"color": "rgba(0,0,0,0)", "fixed": true, "id": "line_2_start", "label": "line_2_start", "physics": false, "shape": "dot", "size": 0, "x": 375.0, "y": 0}, {"color": "rgba(0,0,0,0)", "fixed": true, "id": "line_2_end", "label": "line_2_end", "physics": false, "shape": "dot", "size": 0, "x": 375.0, "y": -1000}, {"color": "black", "fixed": true, "font": {"size": 30}, "id": "label_2_0", "label": "e", "physics": false, "shape": "dot", "size": 0, "x": 300, "y": 100}, {"color": "black", "fixed": true, "font": {"size": 30}, "id": "label_2_1", "label": "e", "physics": false, "shape": "dot", "size": 0, "x": 300, "y": 130}, {"color": "black", "fixed": true, "font": {"size": 30}, "id": "label_2_2", "label": "o", "physics": false, "shape": "dot", "size": 0, "x": 300, "y": 160}, {"color": "black", "fixed": true, "font": {"size": 30}, "id": "label_2_3", "label": "a", "physics": false, "shape": "dot", "size": 0, "x": 300, "y": 190}, {"color": "black", "fixed": true, "font": {"size": 30}, "id": "label_2_4", "label": "r", "physics": false, "shape": "dot", "size": 0, "x": 300, "y": 220}, {"color": "black", "fixed": true, "font": {"size": 30}, "id": "label_2_5", "label": "h", "physics": false, "shape": "dot", "size": 0, "x": 300, "y": 250}, {"color": "black", "fixed": true, "font": {"size": 30}, "id": "label_2_6", "label": "e", "physics": false, "shape": "dot", "size": 0, "x": 300, "y": 280}, {"color": "black", "fixed": true, "font": {"size": 30}, "id": "label_2_7", "label": "7", "physics": false, "shape": "dot", "size": 0, "x": 300, "y": 310}, {"color": "black", "fixed": true, "font": {"size": 30}, "id": "label_2_9", "label": "o", "physics": false, "shape": "dot", "size": 0, "x": 300, "y": 340}, {"color": "red", "fixed": true, "font": {"size": 30}, "id": "corrupt_label_2_0", "label": "e", "physics": false, "shape": "dot", "size": 0, "x": 300, "y": 420}, {"color": "red", "fixed": true, "font": {"size": 30}, "id": "corrupt_label_2_1", "label": "e", "physics": false, "shape": "dot", "size": 0, "x": 300, "y": 450}, {"color": "red", "fixed": true, "font": {"size": 30}, "id": "corrupt_label_2_2", "label": "o", "physics": false, "shape": "dot", "size": 0, "x": 300, "y": 480}, {"color": "red", "fixed": true, "font": {"size": 30}, "id": "corrupt_label_2_3", "label": "a", "physics": false, "shape": "dot", "size": 0, "x": 300, "y": 510}, {"color": "red", "fixed": true, "font": {"size": 30}, "id": "corrupt_label_2_4", "label": "r", "physics": false, "shape": "dot", "size": 0, "x": 300, "y": 540}, {"color": "red", "fixed": true, "font": {"size": 30}, "id": "corrupt_label_2_5", "label": "h", "physics": false, "shape": "dot", "size": 0, "x": 300, "y": 570}, {"color": "red", "fixed": true, "font": {"size": 30}, "id": "corrupt_label_2_6", "label": "e", "physics": false, "shape": "dot", "size": 0, "x": 300, "y": 600}, {"color": "red", "fixed": true, "font": {"size": 30}, "id": "corrupt_label_2_7", "label": "7", "physics": false, "shape": "dot", "size": 0, "x": 300, "y": 630}, {"color": "red", "fixed": true, "font": {"size": 30}, "id": "corrupt_label_2_9", "label": "o", "physics": false, "shape": "dot", "size": 0, "x": 300, "y": 660}, {"color": "rgba(0,0,0,0)", "fixed": true, "id": "line_3_start", "label": "line_3_start", "physics": false, "shape": "dot", "size": 0, "x": 525.0, "y": 0}, {"color": "rgba(0,0,0,0)", "fixed": true, "id": "line_3_end", "label": "line_3_end", "physics": false, "shape": "dot", "size": 0, "x": 525.0, "y": -1000}, {"color": "black", "fixed": true, "font": {"size": 30}, "id": "label_3_0", "label": "n", "physics": false, "shape": "dot", "size": 0, "x": 450, "y": 100}, {"color": "black", "fixed": true, "font": {"size": 30}, "id": "label_3_2", "label": "n", "physics": false, "shape": "dot", "size": 0, "x": 450, "y": 130}, {"color": "black", "fixed": true, "font": {"size": 30}, "id": "label_3_3", "label": "s", "physics": false, "shape": "dot", "size": 0, "x": 450, "y": 160}, {"color": "black", "fixed": true, "font": {"size": 30}, "id": "label_3_4", "label": "o", "physics": false, "shape": "dot", "size": 0, "x": 450, "y": 190}, {"color": "black", "fixed": true, "font": {"size": 30}, "id": "label_3_5", "label": "e", "physics": false, "shape": "dot", "size": 0, "x": 450, "y": 220}, {"color": "black", "fixed": true, "font": {"size": 30}, "id": "label_3_6", "label": "a", "physics": false, "shape": "dot", "size": 0, "x": 450, "y": 250}, {"color": "red", "fixed": true, "font": {"size": 30}, "id": "corrupt_label_3_0", "label": "n", "physics": false, "shape": "dot", "size": 0, "x": 450, "y": 420}, {"color": "red", "fixed": true, "font": {"size": 30}, "id": "corrupt_label_3_2", "label": "n", "physics": false, "shape": "dot", "size": 0, "x": 450, "y": 450}, {"color": "red", "fixed": true, "font": {"size": 30}, "id": "corrupt_label_3_3", "label": "s", "physics": false, "shape": "dot", "size": 0, "x": 450, "y": 480}, {"color": "red", "fixed": true, "font": {"size": 30}, "id": "corrupt_label_3_4", "label": "o", "physics": false, "shape": "dot", "size": 0, "x": 450, "y": 510}, {"color": "red", "fixed": true, "font": {"size": 30}, "id": "corrupt_label_3_5", "label": "e", "physics": false, "shape": "dot", "size": 0, "x": 450, "y": 540}, {"color": "red", "fixed": true, "font": {"size": 30}, "id": "corrupt_label_3_6", "label": "a", "physics": false, "shape": "dot", "size": 0, "x": 450, "y": 570}, {"color": "rgba(0,0,0,0)", "fixed": true, "id": "line_4_start", "label": "line_4_start", "physics": false, "shape": "dot", "size": 0, "x": 675.0, "y": 0}, {"color": "rgba(0,0,0,0)", "fixed": true, "id": "line_4_end", "label": "line_4_end", "physics": false, "shape": "dot", "size": 0, "x": 675.0, "y": -1000}, {"color": "black", "fixed": true, "font": {"size": 30}, "id": "label_4_0", "label": "d", "physics": false, "shape": "dot", "size": 0, "x": 600, "y": 100}, {"color": "black", "fixed": true, "font": {"size": 30}, "id": "label_4_2", "label": "t", "physics": false, "shape": "dot", "size": 0, "x": 600, "y": 130}, {"color": "black", "fixed": true, "font": {"size": 30}, "id": "label_4_3", "label": "t", "physics": false, "shape": "dot", "size": 0, "x": 600, "y": 160}, {"color": "black", "fixed": true, "font": {"size": 30}, "id": "label_4_4", "label": "m", "physics": false, "shape": "dot", "size": 0, "x": 600, "y": 190}, {"color": "black", "fixed": true, "font": {"size": 30}, "id": "label_4_6", "label": "r", "physics": false, "shape": "dot", "size": 0, "x": 600, "y": 220}, {"color": "red", "fixed": true, "font": {"size": 30}, "id": "corrupt_label_4_0", "label": "d", "physics": false, "shape": "dot", "size": 0, "x": 600, "y": 420}, {"color": "red", "fixed": true, "font": {"size": 30}, "id": "corrupt_label_4_2", "label": "t", "physics": false, "shape": "dot", "size": 0, "x": 600, "y": 450}, {"color": "red", "fixed": true, "font": {"size": 30}, "id": "corrupt_label_4_3", "label": "t", "physics": false, "shape": "dot", "size": 0, "x": 600, "y": 480}, {"color": "red", "fixed": true, "font": {"size": 30}, "id": "corrupt_label_4_4", "label": "m", "physics": false, "shape": "dot", "size": 0, "x": 600, "y": 510}, {"color": "red", "fixed": true, "font": {"size": 30}, "id": "corrupt_label_4_6", "label": "r", "physics": false, "shape": "dot", "size": 0, "x": 600, "y": 540}, {"color": "rgba(0,0,0,0)", "fixed": true, "id": "line_5_start", "label": "line_5_start", "physics": false, "shape": "dot", "size": 0, "x": 825.0, "y": 0}, {"color": "rgba(0,0,0,0)", "fixed": true, "id": "line_5_end", "label": "line_5_end", "physics": false, "shape": "dot", "size": 0, "x": 825.0, "y": -1000}, {"color": "black", "fixed": true, "font": {"size": 30}, "id": "label_5_0", "label": "o", "physics": false, "shape": "dot", "size": 0, "x": 750, "y": 100}, {"color": "black", "fixed": true, "font": {"size": 30}, "id": "label_5_2", "label": "a", "physics": false, "shape": "dot", "size": 0, "x": 750, "y": 130}, {"color": "black", "fixed": true, "font": {"size": 30}, "id": "label_5_3", "label": "e", "physics": false, "shape": "dot", "size": 0, "x": 750, "y": 160}, {"color": "red", "fixed": true, "font": {"size": 30}, "id": "corrupt_label_5_0", "label": "o", "physics": false, "shape": "dot", "size": 0, "x": 750, "y": 420}, {"color": "red", "fixed": true, "font": {"size": 30}, "id": "corrupt_label_5_2", "label": "a", "physics": false, "shape": "dot", "size": 0, "x": 750, "y": 450}, {"color": "red", "fixed": true, "font": {"size": 30}, "id": "corrupt_label_5_3", "label": "e", "physics": false, "shape": "dot", "size": 0, "x": 750, "y": 480}, {"color": "rgba(0,0,0,0)", "fixed": true, "id": "line_6_start", "label": "line_6_start", "physics": false, "shape": "dot", "size": 0, "x": 975.0, "y": 0}, {"color": "rgba(0,0,0,0)", "fixed": true, "id": "line_6_end", "label": "line_6_end", "physics": false, "shape": "dot", "size": 0, "x": 975.0, "y": -1000}, {"color": "black", "fixed": true, "font": {"size": 30}, "id": "label_6_0", "label": "f", "physics": false, "shape": "dot", "size": 0, "x": 900, "y": 100}, {"color": "black", "fixed": true, "font": {"size": 30}, "id": "label_6_2", "label": "c", "physics": false, "shape": "dot", "size": 0, "x": 900, "y": 130}, {"color": "black", "fixed": true, "font": {"size": 30}, "id": "label_6_3", "label": "d", "physics": false, "shape": "dot", "size": 0, "x": 900, "y": 160}, {"color": "red", "fixed": true, "font": {"size": 30}, "id": "corrupt_label_6_0", "label": "f", "physics": false, "shape": "dot", "size": 0, "x": 900, "y": 420}, {"color": "red", "fixed": true, "font": {"size": 30}, "id": "corrupt_label_6_2", "label": "c", "physics": false, "shape": "dot", "size": 0, "x": 900, "y": 450}, {"color": "red", "fixed": true, "font": {"size": 30}, "id": "corrupt_label_6_3", "label": "d", "physics": false, "shape": "dot", "size": 0, "x": 900, "y": 480}, {"color": "rgba(0,0,0,0)", "fixed": true, "id": "line_7_start", "label": "line_7_start", "physics": false, "shape": "dot", "size": 0, "x": 1125.0, "y": 0}, {"color": "rgba(0,0,0,0)", "fixed": true, "id": "line_7_end", "label": "line_7_end", "physics": false, "shape": "dot", "size": 0, "x": 1125.0, "y": -1000}, {"color": "black", "fixed": true, "font": {"size": 30}, "id": "label_7_0", "label": "t", "physics": false, "shape": "dot", "size": 0, "x": 1050, "y": 100}, {"color": "black", "fixed": true, "font": {"size": 30}, "id": "label_7_2", "label": "t", "physics": false, "shape": "dot", "size": 0, "x": 1050, "y": 130}, {"color": "red", "fixed": true, "font": {"size": 30}, "id": "corrupt_label_7_0", "label": "t", "physics": false, "shape": "dot", "size": 0, "x": 1050, "y": 420}, {"color": "red", "fixed": true, "font": {"size": 30}, "id": "corrupt_label_7_2", "label": "t", "physics": false, "shape": "dot", "size": 0, "x": 1050, "y": 450}, {"color": "rgba(0,0,0,0)", "fixed": true, "id": "line_8_start", "label": "line_8_start", "physics": false, "shape": "dot", "size": 0, "x": 1275.0, "y": 0}, {"color": "rgba(0,0,0,0)", "fixed": true, "id": "line_8_end", "label": "line_8_end", "physics": false, "shape": "dot", "size": 0, "x": 1275.0, "y": -1000}, {"color": "black", "fixed": true, "font": {"size": 30}, "id": "label_8_0", "label": "e", "physics": false, "shape": "dot", "size": 0, "x": 1200, "y": 100}, {"color": "red", "fixed": true, "font": {"size": 30}, "id": "corrupt_label_8_0", "label": "e", "physics": false, "shape": "dot", "size": 0, "x": 1200, "y": 420}, {"color": "rgba(0,0,0,0)", "fixed": true, "id": "line_9_start", "label": "line_9_start", "physics": false, "shape": "dot", "size": 0, "x": 1425.0, "y": 0}, {"color": "rgba(0,0,0,0)", "fixed": true, "id": "line_9_end", "label": "line_9_end", "physics": false, "shape": "dot", "size": 0, "x": 1425.0, "y": -1000}, {"color": "black", "fixed": true, "font": {"size": 30}, "id": "label_9_0", "label": "x", "physics": false, "shape": "dot", "size": 0, "x": 1350, "y": 100}, {"color": "red", "fixed": true, "font": {"size": 30}, "id": "corrupt_label_9_0", "label": "x", "physics": false, "shape": "dot", "size": 0, "x": 1350, "y": 420}, {"color": "rgba(0,0,0,0)", "fixed": true, "id": "line_10_start", "label": "line_10_start", "physics": false, "shape": "dot", "size": 0, "x": 1575.0, "y": 0}, {"color": "rgba(0,0,0,0)", "fixed": true, "id": "line_10_end", "label": "line_10_end", "physics": false, "shape": "dot", "size": 0, "x": 1575.0, "y": -1000}, {"color": "black", "fixed": true, "font": {"size": 30}, "id": "label_10_0", "label": "t", "physics": false, "shape": "dot", "size": 0, "x": 1500, "y": 100}, {"color": "red", "fixed": true, "font": {"size": 30}, "id": "corrupt_label_10_0", "label": "t", "physics": false, "shape": "dot", "size": 0, "x": 1500, "y": 420}]);
+                  edges = new vis.DataSet([{"arrows": "to", "color": "rgba(0, 0, 0, 1.0)", "dashes": false, "from": "mlp.10.10.1954", "smooth": {"roundness": 0.0, "type": "curvedCCW"}, "title": "attrib: 0.485", "to": "metric.12.10.0", "width": 1}, {"arrows": "to", "color": "rgba(93, 93, 93, 0.631597150969424)", "dashes": false, "from": "mlp.10.10.21238", "smooth": {"roundness": 0.0, "type": "curvedCCW"}, "title": "attrib: 0.157", "to": "metric.12.10.0", "width": 1}, {"arrows": "to", "color": "rgba(118, 118, 118, 0.5358940122837705)", "dashes": false, "from": "mlp.10.10.2678", "smooth": {"roundness": 0.0, "type": "curvedCCW"}, "title": "attrib: 0.122", "to": "metric.12.10.0", "width": 1}, {"arrows": "to", "color": "rgba(131, 131, 131, 0.4833693559484939)", "dashes": false, "from": "mlp.10.10.4718", "smooth": {"roundness": 0.0, "type": "curvedCCW"}, "title": "attrib: 0.103", "to": "metric.12.10.0", "width": 1}, {"arrows": "to", "color": "rgba(9, 9, 9, 0.9622568985845172)", "dashes": false, "from": "mlp.11.10.7110", "smooth": {"roundness": 0.0, "type": "curvedCCW"}, "title": "attrib: 0.278", "to": "metric.12.10.0", "width": 1}, {"arrows": "to", "color": "rgba(0, 0, 0, 1.0)", "dashes": false, "from": "mlp.9.10.12072", "smooth": {"roundness": 0.0, "type": "curvedCCW"}, "title": "attrib: 0.292", "to": "metric.12.10.0", "width": 1}, {"arrows": "to", "color": "rgba(102, 102, 102, 0.5964222071253957)", "dashes": false, "from": "mlp.9.10.13960", "smooth": {"roundness": 0.0, "type": "curvedCCW"}, "title": "attrib: 0.144", "to": "metric.12.10.0", "width": 1}, {"arrows": "to", "color": "rgba(107, 107, 107, 0.5766950843191692)", "dashes": false, "from": "mlp.9.10.1485", "smooth": {"roundness": 0.0, "type": "curvedCCW"}, "title": "attrib: 0.137", "to": "metric.12.10.0", "width": 1}, {"arrows": "to", "color": "rgba(106, 106, 106, 0.5805601572323764)", "dashes": false, "from": "mlp.9.10.16128", "smooth": {"roundness": 0.0, "type": "curvedCCW"}, "title": "attrib: 0.139", "to": "metric.12.10.0", "width": 1}, {"arrows": "to", "color": "rgba(113, 113, 113, 0.5540373260942708)", "dashes": false, "from": "mlp.9.10.9921", "smooth": {"roundness": 0.0, "type": "curvedCCW"}, "title": "attrib: 0.129", "to": "metric.12.10.0", "width": 1}, {"arrows": "to", "color": "rgba(129, 129, 129, 0.492766720785899)", "dashes": false, "from": "mlp.9.10.12072", "smooth": {"roundness": 0.0, "type": "curvedCCW"}, "title": "attrib: 0.107", "to": "mlp.10.10.1954", "width": 1}, {"arrows": "to", "color": "rgba(200, 200, 200, 0.5)", "from": "line_0_start", "physics": false, "to": "line_0_end", "width": 0.5}, {"arrows": "to", "color": "rgba(200, 200, 200, 0.5)", "from": "line_1_start", "physics": false, "to": "line_1_end", "width": 0.5}, {"arrows": "to", "color": "rgba(200, 200, 200, 0.5)", "from": "line_2_start", "physics": false, "to": "line_2_end", "width": 0.5}, {"arrows": "to", "color": "rgba(200, 200, 200, 0.5)", "from": "line_3_start", "physics": false, "to": "line_3_end", "width": 0.5}, {"arrows": "to", "color": "rgba(200, 200, 200, 0.5)", "from": "line_4_start", "physics": false, "to": "line_4_end", "width": 0.5}, {"arrows": "to", "color": "rgba(200, 200, 200, 0.5)", "from": "line_5_start", "physics": false, "to": "line_5_end", "width": 0.5}, {"arrows": "to", "color": "rgba(200, 200, 200, 0.5)", "from": "line_6_start", "physics": false, "to": "line_6_end", "width": 0.5}, {"arrows": "to", "color": "rgba(200, 200, 200, 0.5)", "from": "line_7_start", "physics": false, "to": "line_7_end", "width": 0.5}, {"arrows": "to", "color": "rgba(200, 200, 200, 0.5)", "from": "line_8_start", "physics": false, "to": "line_8_end", "width": 0.5}, {"arrows": "to", "color": "rgba(200, 200, 200, 0.5)", "from": "line_9_start", "physics": false, "to": "line_9_end", "width": 0.5}, {"arrows": "to", "color": "rgba(200, 200, 200, 0.5)", "from": "line_10_start", "physics": false, "to": "line_10_end", "width": 0.5}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {"nodes": {"shape": "dot", "size": 5, "font": {"size": 0}, "fixed": {"x": true, "y": true}}, "interaction": {"hover": true}, "physics": {"enabled": false}};
+
+                  
+
+
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+
+                  
+
+
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    </body>
+</html>
+        <script type="text/javascript">
+        document.addEventListener("DOMContentLoaded", function() {
+            network.on("click", function(params) {
+                if (params.nodes.length > 0) {
+                    var nodeId = params.nodes[0];
+                    var node = network.body.nodes[nodeId];
+                    var url = node.options.url;
+                    if (url) {
+                        window.open(url, '_blank');
+                    }
+                }
+            });
+        });
+        </script>
+        
