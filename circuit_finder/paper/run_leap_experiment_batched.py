@@ -43,11 +43,21 @@ from circuit_finder.constants import ProjectDir
 from circuit_finder.patching.ablate import (
     splice_model_with_saes_and_transcoders,
     get_metric_with_ablation,
+    filter_sae_acts_and_errors,
     AblateType,
 )
 from circuit_finder.plotting import make_html_graph
 
 THRESHOLDS = [0.001, 0.003, 0.006, 0.01, 0.03, 0.06, 0.1]
+
+def get_sae_cache(model, transcoders, attn_saes, tokens):
+    with splice_model_with_saes_and_transcoders(
+        model, transcoders, attn_saes
+    ) as spliced_model:
+        _, cache = model.run_with_cache(
+            tokens, names_filter=filter_sae_acts_and_errors
+        )
+    return cache
 
 def get_batchmean_cache(cache: tl.ActivationCache):
     new_cache_dict = {}
@@ -250,12 +260,12 @@ def run_leap_experiment(config: LeapExperimentConfig):
                 ablate_cache = pickle.load(file)
 
         elif config.ablate_act_type == "corrupt":
-            _, _cache = model.run_with_cache(batch.corrupt)
+            _cache = get_sae_cache(model, list(hooked_mlp_transcoders.values()), list(attn_saes.values()), batch.corrupt)
             # Take the mean over the batch
             ablate_cache = get_batchmean_cache(_cache)
 
         elif config.ablate_act_type == "clean":
-            _, _cache = model.run_with_cache(batch.clean)
+            _cache = get_sae_cache(model, list(hooked_mlp_transcoders.values()), list(attn_saes.values()), batch.clean)
             # Take the mean over the batch
             ablate_cache = get_batchmean_cache(_cache)
         else:

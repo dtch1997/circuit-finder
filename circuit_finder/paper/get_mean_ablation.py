@@ -91,6 +91,8 @@ for hook_name, act in cache.items():
 import pickle
 from circuit_finder.constants import ProjectDir
 
+data_dir = ProjectDir / "data"
+data_dir.mkdir(parents = True, exist_ok = True)
 with open(ProjectDir / "data" / "c4_mean_acts.pkl", "wb") as file:
     pickle.dump(cache, file)
 
@@ -215,84 +217,6 @@ for dataset_path in ALL_DATASETS:
     del cache
 
 # %% [markdown]
-# # Auto-Circuit Datasets, Tokenwise
-# %%
-
-import torch
-from transformer_lens import ActivationCache
-from circuit_finder.patching.ablate import (
-    splice_model_with_saes_and_transcoders,
-    filter_sae_acts_and_errors,
-)
-
-
-def get_cache(train_loader):
-    n_tokens = 0
-    n_examples = 0
-    total_tokens = 100_000  # 100k tokens
-    # total_tokens = 100
-    print(f"Total tokens: {total_tokens}")
-
-    # A bit of a hack, run once to get cache shapes
-    batch = next(iter(train_loader))
-    with splice_model_with_saes_and_transcoders(model, transcoders, saes):
-        _, dummy_cache = model.run_with_cache(
-            batch.clean, names_filter=filter_sae_acts_and_errors
-        )
-
-    zero_cache_dict = {
-        hook_name: torch.zeros_like(act.sum(0))
-        for hook_name, act in dummy_cache.items()
-    }
-
-    # Run the model
-    with splice_model_with_saes_and_transcoders(model, transcoders, saes):
-        for batch in train_loader:
-            tokens = batch.clean
-            _, cache = model.run_with_cache(
-                tokens, names_filter=filter_sae_acts_and_errors
-            )
-
-            n_tokens += tokens.shape[1] * tokens.shape[0]
-            n_examples += tokens.shape[0]
-            for hook_name, act in cache.items():
-                zero_cache_dict[hook_name] += act.sum(0)
-
-            if n_tokens >= total_tokens:
-                break
-
-    print(n_tokens)
-
-    # Average the cache
-    for hook_name, act in zero_cache_dict.items():
-        zero_cache_dict[hook_name] /= n_examples
-
-    zero_cache = ActivationCache(zero_cache_dict, model)
-    return zero_cache
-
-
-# %%
-for dataset_path in ALL_DATASETS:
-    print("Processing", dataset_path)
-    train_loader, _ = load_datasets_from_json(
-        model,
-        ProjectDir / dataset_path,
-        device=torch.device("cuda"),
-        batch_size=batch_size,
-    )
-    cache = get_cache(train_loader)
-    with open(
-        ProjectDir / "data" / f"{pathlib.Path(dataset_path).stem}_tokenwise_acts.pkl",
-        "wb",
-    ) as file:
-        pickle.dump(cache, file)
-
-# %%
-for hook_name, act in cache.items():
-    print(hook_name, act.shape)
-
-del cache
-
 # # Auto-Circuit Datasets, Tokenwise
 # %%
 

@@ -176,7 +176,10 @@ def get_circuit_node_patch_hooks(
     nodes: list[Node],
     coefficient: float,
 ):
-    """Return a list of patch hooks"""
+    """Return a list of patch hooks
+    
+    Patches each node in the graph to (clean_value - corrupt_value) * coefficient + corrupt_value. 
+    """
 
     fwd_hooks = []
     for node in nodes:
@@ -266,17 +269,19 @@ def get_ablation_result(
             transcoders,
             attn_saes,
         ) as spliced_model:
-            for coefficient in coefficients:
-                # NOTE: In the noising setting, the clean and corrupt caches are swapped
+            for coefficient in coefficients:                
                 fwd_hooks = get_circuit_node_patch_hooks(
-                    corrupt_cache, clean_cache, nodes, coefficient
+                    clean_cache, corrupt_cache, nodes, coefficient
                 )
+                # Run the model 
                 with model.hooks(fwd_hooks=fwd_hooks):
-                    # NOTE: In the noising setting, the clean and corrupt tokens are swapped
+                    # NOTE: Run the model on corrupt tokens, so all activations are corrupt by default
+                    # The hooks will then interpolate towards the clean values
                     metric = metric_fn(model, corrupt_tokens).item()
                     metrics.append(metric)
-                    # NOTE: in the noising setting, the role of the coefficient is inverted
-                    coefs.append(1 - coefficient)
+                    coefs.append(coefficient)
+    else: 
+        raise ValueError(f"Unknown setting: {setting}")
 
     return AblationResult(coefs, metrics)
 
