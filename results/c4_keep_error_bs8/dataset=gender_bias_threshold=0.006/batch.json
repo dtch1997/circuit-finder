@@ -1,0 +1,42 @@
+{
+    "clean": [
+        "<|endoftext|><|endoftext|>The waitress said that",
+        "<|endoftext|><|endoftext|>The treasurer yelled because",
+        "<|endoftext|><|endoftext|>The instructor ate because",
+        "<|endoftext|>The physicist was promoted because",
+        "<|endoftext|><|endoftext|>The secretary wished that",
+        "<|endoftext|><|endoftext|>The psychiatrist wanted that",
+        "<|endoftext|><|endoftext|>The planner whispered that",
+        "<|endoftext|><|endoftext|>The goalkeeper yelled that"
+    ],
+    "answer": [
+        " she",
+        " she",
+        " she",
+        " he",
+        " she",
+        " she",
+        " she",
+        " he"
+    ],
+    "wrong_answer": [
+        " he",
+        " he",
+        " he",
+        " she",
+        " he",
+        " he",
+        " he",
+        " she"
+    ],
+    "corrupt": [
+        "<|endoftext|><|endoftext|>The man said that",
+        "<|endoftext|><|endoftext|>The man yelled because",
+        "<|endoftext|><|endoftext|>The man ate because",
+        "<|endoftext|>The woman was promoted because",
+        "<|endoftext|><|endoftext|>The man wished that",
+        "<|endoftext|><|endoftext|>The man wanted that",
+        "<|endoftext|><|endoftext|>The man whispered that",
+        "<|endoftext|><|endoftext|>The woman yelled that"
+    ]
+}
