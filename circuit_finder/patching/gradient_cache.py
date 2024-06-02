@@ -9,14 +9,13 @@ def get_gradient_cache(
     model: Model,
     tokens: Tokens,
     metric_fn: MetricFn,
+    names_filter = lambda x: True
+
 ) -> GradientCache:
     grad_cache = {}
 
     def backward_cache_hook(act, hook):
         grad_cache[hook.name] = act.detach()
-
-    def names_filter(x):
-        return True
 
     bwd_hooks = []
     for hook_name in model.hook_dict:
