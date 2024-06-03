@@ -91,20 +91,19 @@ def splice_model_with_saes_and_transcoders(
     model: tl.HookedSAETransformer,
     transcoders: list[HookedTranscoder],
     attn_saes: list[HookedSAE],
+    verbose: bool = False,
 ) -> Iterator[tl.HookedSAETransformer]:
     # Check if error term is used
     for tc in transcoders:
-        if not tc.cfg.use_error_term:
+        if verbose and not tc.cfg.use_error_term:
             print(
                 f"Warning: Transcoder {tc} does not use error term. Inference will not be exact."
             )
-            tc.cfg.use_error_term = True
     for sae in attn_saes:
-        if not sae.cfg.use_error_term:
+        if verbose and not sae.cfg.use_error_term:
             print(
                 f"Warning: SAE {sae} does not use error term. Inference will not be exact."
             )
-            sae.cfg.use_error_term = True
 
     try:
         with HookedTranscoderReplacementContext(
@@ -177,8 +176,8 @@ def get_circuit_node_patch_hooks(
     coefficient: float,
 ):
     """Return a list of patch hooks
-    
-    Patches each node in the graph to (clean_value - corrupt_value) * coefficient + corrupt_value. 
+
+    Patches each node in the graph to (clean_value - corrupt_value) * coefficient + corrupt_value.
     """
 
     fwd_hooks = []
@@ -269,18 +268,18 @@ def get_ablation_result(
             transcoders,
             attn_saes,
         ) as spliced_model:
-            for coefficient in coefficients:                
+            for coefficient in coefficients:
                 fwd_hooks = get_circuit_node_patch_hooks(
                     clean_cache, corrupt_cache, nodes, coefficient
                 )
-                # Run the model 
+                # Run the model
                 with model.hooks(fwd_hooks=fwd_hooks):
                     # NOTE: Run the model on corrupt tokens, so all activations are corrupt by default
                     # The hooks will then interpolate towards the clean values
                     metric = metric_fn(model, corrupt_tokens).item()
                     metrics.append(metric)
                     coefs.append(coefficient)
-    else: 
+    else:
         raise ValueError(f"Unknown setting: {setting}")
 
     return AblationResult(coefs, metrics)

@@ -42,28 +42,28 @@ from circuit_finder.metrics import batch_avg_answer_diff
 from circuit_finder.constants import ProjectDir
 from circuit_finder.patching.ablate import (
     splice_model_with_saes_and_transcoders,
-    get_metric_with_ablation,
     filter_sae_acts_and_errors,
     AblateType,
 )
 from circuit_finder.plotting import make_html_graph
 
-THRESHOLDS = [0.001, 0.003, 0.006, 0.01, 0.03, 0.06, 0.1]
+THRESHOLDS = [0.006, 0.01, 0.03, 0.06, 0.1]
+
 
 def get_sae_cache(model, transcoders, attn_saes, tokens):
     with splice_model_with_saes_and_transcoders(
         model, transcoders, attn_saes
     ) as spliced_model:
-        _, cache = model.run_with_cache(
-            tokens, names_filter=filter_sae_acts_and_errors
-        )
+        _, cache = model.run_with_cache(tokens, names_filter=filter_sae_acts_and_errors)
     return cache
+
 
 def get_batchmean_cache(cache: tl.ActivationCache):
     new_cache_dict = {}
     for hook_name, act in cache.items():
         new_cache_dict[hook_name] = act.mean(dim=0)
-    return tl.ActivationCache(new_cache_dict, model = cache.model)
+    return tl.ActivationCache(new_cache_dict, model=cache.model)
+
 
 def batch_to_str_dict(batch: PromptPairBatch, model):
     return {
@@ -101,10 +101,11 @@ class LeapExperimentConfig:
     feature_ablate_type: str | None = "value"
     error_ablate_type: str | None = None
     first_ablated_layer: int = 2
-    thresholds: tuple[float] = tuple(THRESHOLDS)
+    thresholds: tuple[float, ...] = tuple(THRESHOLDS)
     metric_fn_name: str = "logit_diff"
     batch_size: int = 1
     save_dir_prefix: str = "leap_experiment_results"
+    seed: int = 0
 
 
 @dataclass(frozen=True)
@@ -209,7 +210,7 @@ def run_leap(
 
     return LeapExperimentResult(
         config=leap_config,
-        batch = batch,
+        batch=batch,
         clean_metric=clean_metric,
         graph_ablated_metric=graph_ablated_metric,
         fully_ablated_metric=fully_ablated_metric,
@@ -225,7 +226,7 @@ def run_leap_experiment(config: LeapExperimentConfig):
     hooked_mlp_transcoders = load_hooked_mlp_transcoders()
 
     # Sweep over datasets
-    sweep_dir = ProjectDir / "results" / config.save_dir_prefix
+    sweep_dir = ProjectDir / "results_final" / config.save_dir_prefix
     sweep_dir.mkdir(parents=True, exist_ok=True)
     with open(sweep_dir / "config.json", "w") as f:
         json.dump(asdict(config), f)
@@ -241,6 +242,7 @@ def run_leap_experiment(config: LeapExperimentConfig):
             batch_size=config.batch_size,
             # NOTE: Do not specify total_dataset_size.
             # It leads to some weird indexing bug I don't understand
+            random_seed=config.seed,
         )
         batch = next(iter(train_loader))
 
@@ -260,12 +262,22 @@ def run_leap_experiment(config: LeapExperimentConfig):
                 ablate_cache = pickle.load(file)
 
         elif config.ablate_act_type == "corrupt":
-            _cache = get_sae_cache(model, list(hooked_mlp_transcoders.values()), list(attn_saes.values()), batch.corrupt)
+            _cache = get_sae_cache(
+                model,
+                list(hooked_mlp_transcoders.values()),
+                list(attn_saes.values()),
+                batch.corrupt,
+            )
             # Take the mean over the batch
             ablate_cache = get_batchmean_cache(_cache)
 
         elif config.ablate_act_type == "clean":
-            _cache = get_sae_cache(model, list(hooked_mlp_transcoders.values()), list(attn_saes.values()), batch.clean)
+            _cache = get_sae_cache(
+                model,
+                list(hooked_mlp_transcoders.values()),
+                list(attn_saes.values()),
+                batch.clean,
+            )
             # Take the mean over the batch
             ablate_cache = get_batchmean_cache(_cache)
         else:
