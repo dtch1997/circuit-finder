@@ -47,7 +47,24 @@ from circuit_finder.patching.ablate import (
 )
 from circuit_finder.plotting import make_html_graph
 
-THRESHOLDS = [0.006, 0.01, 0.03, 0.06, 0.1]
+THRESHOLDS = [
+    0.0003,
+    0.0006,
+    0.001,
+    0.002,
+    0.003,
+    0.004,
+    0.006,
+    0.01,
+    0.03,
+    0.06,
+    0.1,
+]
+# SELECTED_DATASETS = SELECTED_DATASETS
+SELECTED_DATASETS = [
+    "datasets/ioi/ioi_ABBA_template_3_prompts.json",
+    "datasets/ioi/ioi_BABA_template_3_prompts.json",
+]
 
 
 def get_sae_cache(model, transcoders, attn_saes, tokens):

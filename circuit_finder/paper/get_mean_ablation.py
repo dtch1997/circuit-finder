@@ -92,7 +92,7 @@ import pickle
 from circuit_finder.constants import ProjectDir
 
 data_dir = ProjectDir / "data"
-data_dir.mkdir(parents = True, exist_ok = True)
+data_dir.mkdir(parents=True, exist_ok=True)
 with open(ProjectDir / "data" / "c4_mean_acts.pkl", "wb") as file:
     pickle.dump(cache, file)
 
@@ -141,7 +141,7 @@ from circuit_finder.patching.ablate import (
     AblateType,
 )
 
-from circuit_finder.experiments.run_dataset_sweep import ALL_DATASETS
+from circuit_finder.experiments.run_dataset_sweep import SELECTED_DATASETS
 
 batch_size = 8
 print(ALL_DATASETS)
@@ -274,7 +274,7 @@ def get_cache(train_loader):
 
 
 # %%
-for dataset_path in ALL_DATASETS:
+for dataset_path in SELECTED_DATASETS:
     print("Processing", dataset_path)
     train_loader, _ = load_datasets_from_json(
         model,
@@ -294,3 +294,5 @@ for hook_name, act in cache.items():
     print(hook_name, act.shape)
 
 del cache
+
+# %%
